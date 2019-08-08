@@ -5,6 +5,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityScript.Lang;
 
+
+
+//OBSOLETE SCRIPT, DO NOT USE!
+
 // Token: 0x02000063 RID: 99
 [Serializable]
 public class LevelChangerScript : MonoBehaviour
