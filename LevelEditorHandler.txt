@@ -1,0 +1,1010 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.Networking;
+using UnityEngine.UI;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000E1 RID: 225
+	public class LevelEditorHandler : MonoBehaviour
+	{
+		// Token: 0x06000615 RID: 1557
+		private void Update()
+		{
+			if (Input.GetKeyDown(KeyCode.P))
+			{
+				this.PlayMode();
+			}
+			if (Input.GetKeyDown(KeyCode.N) && !this.PlayMod)
+			{
+				this.PrototypeLoad();
+			}
+			if (Input.GetKeyDown(KeyCode.M) && !this.PlayMod)
+			{
+				this.PrototypeSave();
+			}
+			if (!this.PlayMod)
+			{
+				if (this.Editing)
+				{
+					this.EditingMode();
+				}
+				RaycastHit raycastHit;
+				if (Input.GetMouseButtonDown(0) && !this.Editing && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
+				{
+					this.EnterEditMode(raycastHit.transform.gameObject);
+				}
+				if (Input.GetKeyDown(KeyCode.T) && !this.Editing)
+				{
+					GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+					gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
+					gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
+					gameObject.AddComponent<TextureTilingController>();
+					gameObject.layer = 8;
+					gameObject.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, this.EditorCamera.transform.position.z + 2.5f);
+					this.BrushLump.Add(gameObject);
+					this.EnterEditMode(gameObject);
+				}
+				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
+				{
+					GameObject gameObject2 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+					UnityEngine.Object.Destroy(gameObject2.GetComponent<SphereCollider>());
+					gameObject2.AddComponent<CapsuleCollider>();
+					gameObject2.layer = 8;
+					gameObject2.transform.localScale = new Vector3(gameObject2.transform.localScale.x, 4f, gameObject2.transform.localScale.x);
+					gameObject2.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, -0.1f);
+					gameObject2.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+					this.EnemySpawnpoints.Add(gameObject2.transform);
+					this.EnterEditMode(gameObject2);
+				}
+			}
+		}
+
+		// Token: 0x06000616 RID: 1558
+		public LevelEditorHandler()
+		{
+		}
+
+		// Token: 0x06000617 RID: 1559
+		private void Start()
+		{
+			this.LoadEditorAssets();
+			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
+			{
+				Directory.CreateDirectory(MFPEditorUtils.LoadFileFromDataFolder("Levels/default"));
+			}
+			this.root = GameObject.Find("Root").GetComponent<RootScript>();
+			UnityEngine.Object.FindObjectOfType<OptimizerScript>().enabled = false;
+			this.root.nrOfEnemiesTotal = 0;
+			this.HUD = GameObject.Find("HUD/Canvas");
+			this.Player = GameObject.Find("Player");
+			this.Camera = GameObject.Find("Main Camera");
+			this.Player.SetActive(false);
+			this.Camera.SetActive(false);
+			this.HUD.GetComponentInChildren<Canvas>().enabled = false;
+			this.EnemySample = GameObject.Find("New Enemy");
+			this.EnemySample.SetActive(false);
+			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			gameObject.layer = 8;
+			gameObject.transform.position = new Vector3(0f, -1f, 0f);
+			gameObject.transform.localScale = new Vector3(5f, 1f, 7f);
+			gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
+			gameObject.AddComponent<TextureTilingController>();
+			gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
+			this.BrushLump.Add(gameObject);
+			GameObject gameObject2 = new GameObject();
+			gameObject2.name = "EditorCamera";
+			this.EditorCamera = gameObject2.AddComponent<Camera>();
+			this.EditorCamera.depth = -1f;
+			this.EditorCamera.clearFlags = CameraClearFlags.Depth;
+			this.EditorCamera.transform.position = new Vector3(0f, 0f, -3f);
+			GameObject gameObject3 = new GameObject();
+			gameObject3.transform.position = new Vector3(0f, 0f, -15f);
+			CameraMovement cameraMovement = gameObject3.AddComponent<CameraMovement>();
+			cameraMovement.normalSpeed = 5f;
+			cameraMovement.runSpeed = 5f;
+			cameraMovement.doMove = true;
+			cameraMovement.crouch = false;
+			cameraMovement.cam = gameObject2.transform;
+			gameObject2.transform.parent = gameObject3.transform;
+			this.SpawnEditorHud();
+			LevelEditorHandler.Inst = this;
+			GameObject gameObject4 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			UnityEngine.Object.Destroy(gameObject4.GetComponent<SphereCollider>());
+			gameObject4.AddComponent<CapsuleCollider>();
+			gameObject4.transform.localScale = new Vector3(gameObject4.transform.localScale.x, 4f, gameObject4.transform.localScale.x);
+			gameObject4.name = "PlayerSpawn";
+			GameObject gameObject5 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			gameObject5.transform.position = new Vector3(5f, 0f, 0f);
+			gameObject5.name = "MFPEditor_End_Level";
+			gameObject5.AddComponent<LevelChangerScript>();
+			gameObject5.GetComponent<MeshRenderer>().material.color = Color.green;
+			this.FinishLevelTrigger = gameObject5;
+			this.PlayerSpawn = gameObject4.transform;
+			this.PlayerSpawn.transform.GetComponent<MeshRenderer>().material.color = new Color(1f, 0.5f, 1f);
+			this.PlayerSpawn.transform.position = new Vector3(0f, 1f, 0f);
+			this.PlayMod = false;
+			List<string> list = new List<string>();
+			foreach (Transform transform in UnityEngine.Object.FindObjectsOfType<Transform>())
+			{
+				list.Add(transform.name);
+			}
+			File.WriteAllLines("F:\\steamapps2\\steamapps\\common\\My Friend Pedro\\jhrino_log.txt", list.ToArray());
+		}
+
+		// Token: 0x06000618 RID: 1560
+		public void ChangeCameraState(LevelEditorHandler.CameraMode state, bool editorCamera)
+		{
+			if (state != LevelEditorHandler.CameraMode.Disabled)
+			{
+				if (state != LevelEditorHandler.CameraMode.Enabled)
+				{
+					return;
+				}
+				if (!this.EditorCamera)
+				{
+					this.Camera.GetComponent<Camera>().enabled = true;
+					return;
+				}
+				this.EditorCamera.enabled = true;
+				return;
+			}
+			else
+			{
+				if (!this.EditorCamera)
+				{
+					this.Camera.GetComponent<Camera>().enabled = false;
+					return;
+				}
+				this.EditorCamera.enabled = true;
+				return;
+			}
+		}
+
+		// Token: 0x06000619 RID: 1561
+		public void SpawnEditorHud()
+		{
+			GameObject gameObject = new GameObject();
+			gameObject.layer = 5;
+			RectTransform rectTransform = gameObject.AddComponent<RectTransform>();
+			rectTransform.anchorMin = new Vector2(0.5f, 0f);
+			rectTransform.anchorMax = new Vector2(0.5f, 0f);
+			Canvas canvas = gameObject.AddComponent<Canvas>();
+			canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+			canvas.pixelPerfect = false;
+			canvas.targetDisplay = 0;
+			canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.None;
+			CanvasScaler canvasScaler = gameObject.AddComponent<CanvasScaler>();
+			canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+			canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+			canvasScaler.referenceResolution = new Vector2(1920f, 1080f);
+			canvasScaler.scaleFactor = 0.5f;
+			canvasScaler.referencePixelsPerUnit = 100f;
+			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
+			GameObject gameObject5 = new GameObject();
+			gameObject5.transform.parent = gameObject.transform;
+			gameObject5.layer = 5;
+			gameObject5.AddComponent<RectTransform>();
+			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
+			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
+			Text text = gameObject5.AddComponent<Text>();
+			Material material = new Material(Shader.Find("UI/Default"));
+			text.material = material;
+			text.text = "GAME OVER";
+			text.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			text.fontStyle = FontStyle.Bold;
+			text.fontSize = 68;
+			text.lineSpacing = 1f;
+			text.supportRichText = false;
+			text.alignment = TextAnchor.MiddleCenter;
+			text.horizontalOverflow = HorizontalWrapMode.Overflow;
+			text.verticalOverflow = VerticalWrapMode.Overflow;
+			text.resizeTextForBestFit = false;
+			text.alignByGeometry = false;
+			text.GetComponent<RectTransform>().sizeDelta = new Vector2(472.9f, 100f);
+			this.DebugObject = text;
+			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
+			new GameObject();
+			GameObject gameObject2 = new GameObject();
+			gameObject2.name = "CoordinateField";
+			gameObject2.AddComponent<RectTransform>();
+			gameObject2.transform.parent = gameObject.transform;
+			gameObject2.layer = 5;
+			gameObject2.AddComponent<RectTransform>();
+			gameObject2.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject2.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
+			gameObject2.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
+			gameObject2.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 173.8f);
+			Image image = gameObject2.AddComponent<Image>();
+			image.sprite = (Resources.GetBuiltinResource(typeof(Sprite), "InputFieldBackground") as Sprite);
+			image.raycastTarget = true;
+			InputField inputField = gameObject2.AddComponent<InputField>();
+			this.CoordinateField = inputField;
+			inputField.interactable = true;
+			inputField.transition = Selectable.Transition.ColorTint;
+			inputField.targetGraphic = image;
+			inputField.textComponent = this.DebugObject;
+			inputField.contentType = InputField.ContentType.Standard;
+			inputField.lineType = InputField.LineType.SingleLine;
+			inputField.caretBlinkRate = 0.85f;
+			inputField.caretWidth = 1;
+			inputField.shouldHideMobileInput = true;
+			inputField.readOnly = false;
+			gameObject2.transform.parent = gameObject.transform;
+			this.DebugObject.transform.parent = gameObject2.transform;
+			inputField.gameObject.SetActive(false);
+			GameObject gameObject3 = new GameObject();
+			gameObject3.transform.parent = gameObject.transform;
+			gameObject3.layer = 5;
+			gameObject3.AddComponent<RectTransform>();
+			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			Image targetGraphic = gameObject3.AddComponent<Image>();
+			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
+			Button button = gameObject3.AddComponent<Button>();
+			button.transition = Selectable.Transition.ColorTint;
+			button.targetGraphic = targetGraphic;
+			button.interactable = true;
+			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
+			Texture2D ico_pos = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_position.png"));
+			Sprite spr_pos = Sprite.Create(ico_pos, new Rect(0,0, ico_pos.width, ico_pos.height), new Vector2(0,0), 100);
+			targetGraphic.sprite = spr_pos;
+			button.onClick.AddListener(delegate()
+			{
+				this.ChangeEditType("position");
+			});
+			GameObject gameObject6 = new GameObject();
+			gameObject6.transform.parent = gameObject.transform;
+			gameObject6.layer = 5;
+			gameObject6.AddComponent<RectTransform>();
+			gameObject6.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject6.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject6.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			Image targetGraphic2 = gameObject6.AddComponent<Image>();
+			gameObject6.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -255.9f);
+			Button button2 = gameObject6.AddComponent<Button>();
+
+			Texture2D ico_rot = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_rotation.png"));
+			Sprite spr_rot = Sprite.Create(ico_rot, new Rect(0,0, ico_rot.width, ico_rot.height), new Vector2(0,0), 100);
+			targetGraphic2.sprite = spr_rot;
+
+			button2.transition = Selectable.Transition.ColorTint;
+			button2.targetGraphic = targetGraphic2;
+			button2.interactable = true;
+			button2.onClick.AddListener(delegate()
+			{
+				this.ChangeEditType("rotation");
+			});
+			GameObject gameObject7 = new GameObject();
+			gameObject7.transform.parent = gameObject.transform;
+			gameObject7.layer = 5;
+			gameObject7.AddComponent<RectTransform>();
+			gameObject7.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject7.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject7.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			Image targetGraphic3 = gameObject7.AddComponent<Image>();
+			gameObject7.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -400f);
+			Button button3 = gameObject7.AddComponent<Button>();
+
+			Texture2D ico_sca = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_scale.png"));
+			Sprite spr_sca = Sprite.Create(ico_sca, new Rect(0,0, ico_sca.width, ico_sca.height), new Vector2(0,0), 100);
+			targetGraphic3.sprite = spr_sca;
+
+			button3.transition = Selectable.Transition.ColorTint;
+			button3.targetGraphic = targetGraphic3;
+			button3.interactable = true;
+			button3.onClick.AddListener(delegate()
+			{
+				this.ChangeEditType("scale");
+			});
+			GameObject gameObject4 = new GameObject();
+			gameObject4.transform.parent = gameObject.transform;
+			gameObject4.layer = 5;
+			gameObject4.AddComponent<RectTransform>();
+			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			gameObject4.AddComponent<Image>();
+			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
+			Button button4 = gameObject4.AddComponent<Button>();
+
+			Texture2D ico_col = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_color.png"));
+			Sprite spr_col = Sprite.Create(ico_col, new Rect(0,0, ico_col.width, ico_col.height), new Vector2(0,0), 100);
+			gameObject4.GetComponent<Image>().sprite = spr_col;
+
+			button4.transition = Selectable.Transition.ColorTint;
+			button4.targetGraphic = gameObject4.GetComponent<Image>();
+			button4.interactable = true;
+			button4.onClick.AddListener(delegate()
+			{
+				this.ChangeEditType("color");
+			});
+		}
+
+		// Token: 0x0600061A RID: 1562
+		public void EditingMode()
+		{
+			if (Input.GetKeyDown(KeyCode.L) && this.EditingObject != this.PlayerSpawn.gameObject && this.EditingObject != FinishLevelTrigger)
+			{
+				UnityEngine.Object.Destroy(this.EditingObject);
+				this.Editing = false;
+				this.EditingObject = null;
+				this.CoordinateField.DeactivateInputField();
+				this.CoordinateField.gameObject.SetActive(false);
+			}
+			bool isFocused = this.CoordinateField.isFocused;
+			if (this.CoordinateField.isFocused)
+			{
+				if (this.editType != "position")
+				{
+					this.UpdateCoordinates(this.editType, this.CoordinateField.text);
+					return;
+				}
+				this.ExitEditMode();
+			}
+		}
+
+		// Token: 0x0600061B RID: 1563
+		public void UpdateCoordinates(string type, string coordinates)
+		{
+			if (this.EditingObject != null)
+			{
+				coordinates = coordinates.Replace("(", "");
+				coordinates = coordinates.Replace(")", "");
+				coordinates = coordinates.Replace(",", "");
+				if (type == "color")
+				{
+					coordinates = coordinates.Replace("RGBA", "");
+				}
+				float num = float.Parse(coordinates.Split(new char[]
+				{
+					' '
+				})[0]);
+				float num2 = float.Parse(coordinates.Split(new char[]
+				{
+					' '
+				})[1]);
+				float num3 = float.Parse(coordinates.Split(new char[]
+				{
+					' '
+				})[2]);
+				if (type == "rotation")
+				{
+					this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
+				}
+				if (type == "scale")
+				{
+					this.EditingObject.transform.localScale = new Vector3(num, num2, num3);
+				}
+				if (type == "color")
+				{
+					this.EditingObject.GetComponent<MeshRenderer>().material.color = new Color(num, num2, num3, 1f);
+				}
+			}
+		}
+
+		// Token: 0x0600061C RID: 1564
+		public void ChangeEditType(string type)
+		{
+			this.ExitEditMode();
+			this.editType = type;
+		}
+
+		// Token: 0x0600061D RID: 1565
+		public void EnterEditMode(GameObject gobject)
+		{
+			this.EditingObject = gobject;
+			this.CoordinateField.gameObject.SetActive(true);
+			if (this.editType != "position")
+			{
+				this.CoordinateField.ActivateInputField();
+			}
+			if (this.editType == "position")
+			{
+				this.CoordinateField.text = gobject.transform.position.ToString();
+				gobject.GetComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(gobject.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Transparent);
+				Color color = gobject.GetComponent<MeshRenderer>().material.color;
+				color.a = 0.5f;
+				this.ToggleEditingObjectColliders(gobject, false);
+				Material material = new Material(Shader.Find("Standard"));
+				gobject.GetComponent<MeshRenderer>().material.color = color;
+				GameObject gameObject = new GameObject();
+				gameObject.name = "AxeContainer";
+				gameObject.transform.parent = gobject.transform;
+				GameObject gameObject2 = new GameObject();
+				gameObject2.AddComponent<MeshFilter>().mesh = this.EditorAxeMesh;
+				gameObject2.AddComponent<MeshRenderer>();
+				gameObject2.GetComponent<MeshRenderer>().material = material;
+				gameObject2.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+				gameObject2.transform.position = gobject.transform.position;
+				gameObject2.transform.eulerAngles = new Vector3(0f, 90f, 0f);
+				gameObject2.AddComponent<MeshCollider>().sharedMesh = this.EditorAxeMesh;
+				gameObject2.GetComponent<MeshCollider>().convex = true;
+				gameObject2.AddComponent<LevelEditorAxis>().axis = LevelEditorAxis.AxisType.x;
+				gameObject2.name = "X Axis";
+				GameObject gameObject3 = new GameObject();
+				gameObject3.AddComponent<MeshFilter>().mesh = this.EditorAxeMesh;
+				gameObject3.AddComponent<MeshRenderer>();
+				gameObject3.GetComponent<MeshRenderer>().material = material;
+				gameObject3.GetComponent<MeshRenderer>().material.color = new Color(0f, 1f, 0f);
+				gameObject3.transform.position = gobject.transform.position;
+				gameObject3.transform.eulerAngles = new Vector3(90f, 0f, 0f);
+				gameObject3.AddComponent<MeshCollider>().sharedMesh = this.EditorAxeMesh;
+				gameObject3.GetComponent<MeshCollider>().convex = true;
+				gameObject3.AddComponent<LevelEditorAxis>().axis = LevelEditorAxis.AxisType.y;
+				gameObject3.name = "Y Axis";
+				GameObject gameObject4 = new GameObject();
+				gameObject4.AddComponent<MeshFilter>().mesh = this.EditorAxeMesh;
+				gameObject4.AddComponent<MeshRenderer>();
+				gameObject4.GetComponent<MeshRenderer>().material = material;
+				gameObject4.GetComponent<MeshRenderer>().material.color = new Color(0f, 0f, 1f);
+				gameObject4.transform.position = gobject.transform.position;
+				gameObject4.AddComponent<MeshCollider>().sharedMesh = this.EditorAxeMesh;
+				gameObject4.GetComponent<MeshCollider>().convex = true;
+				gameObject4.AddComponent<LevelEditorAxis>().axis = LevelEditorAxis.AxisType.z;
+				gameObject4.name = "Z Axis";
+				gameObject2.transform.parent = gameObject.transform;
+				gameObject3.transform.parent = gameObject.transform;
+				gameObject4.transform.parent = gameObject.transform;
+				this.EditAxes = gameObject;
+			}
+			if (this.editType == "rotation")
+			{
+				if (this.EditingObject == this.PlayerSpawn.gameObject || this.EnemySpawnpoints.Contains(this.EditingObject.transform))
+				{
+					this.ExitEditMode();
+					this.Editing = false;
+				}
+				this.CoordinateField.text = gobject.transform.rotation.ToString();
+			}
+			if (this.editType == "scale")
+			{
+				if (this.EditingObject == this.PlayerSpawn.gameObject || this.EnemySpawnpoints.Contains(this.EditingObject.transform))
+				{
+					this.ExitEditMode();
+					this.Editing = false;
+				}
+				this.CoordinateField.text = gobject.transform.localScale.ToString();
+			}
+			if (this.editType == "color")
+			{
+				if (this.EditingObject == this.PlayerSpawn.gameObject || this.EnemySpawnpoints.Contains(this.EditingObject.transform))
+				{
+					this.ExitEditMode();
+					this.Editing = false;
+				}
+				this.CoordinateField.text = gobject.GetComponent<MeshRenderer>().material.color.ToString();
+				this.CoordinateField.text = this.CoordinateField.text.Replace("RGBA", "");
+			}
+			this.Editing = true;
+		}
+
+		// Token: 0x0600061E RID: 1566
+		public void PlayMode()
+		{
+			this.Player.transform.position = this.PlayerSpawn.transform.position;
+
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
+			{
+				if (this.EnemySpawnpoints[i] == null)
+				{
+					this.EnemySpawnpoints.RemoveAt(i);
+				}
+			}
+
+			if (!this.PlayMod)
+			{
+				if (this.Editing)
+				{
+					this.ExitEditMode();
+				}
+				this.root.nrOfEnemiesTotal = 0;
+				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = false;
+				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = false;
+				this.Player.transform.position = this.PlayerSpawn.transform.position;
+				this.HUD.GetComponentInChildren<Canvas>().enabled = true;
+				this.Player.SetActive(true);
+				this.Camera.SetActive(true);
+				this.CoordinateField.DeactivateInputField();
+				this.CoordinateField.gameObject.SetActive(false);
+				this.EditorCamera.enabled = false;
+				this.EditorCamera.transform.parent.GetComponent<CameraMovement>().enabled = false;
+				this.PlayMod = true;
+				TextureTilingController[] array = UnityEngine.Object.FindObjectsOfType<TextureTilingController>();
+				for (int i = 0; i < array.Length; i++)
+				{
+					array[i].enabled = false;
+				}
+				foreach (Transform transform in this.EnemySpawnpoints)
+				{
+					transform.GetComponent<MeshRenderer>().enabled = false;
+					transform.GetComponent<CapsuleCollider>().enabled = false;
+					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
+					this.Enemies.Add(gameObject);
+					gameObject.transform.position = transform.position;
+					gameObject.SetActive(true);
+					this.root.nrOfEnemiesTotal++;
+				}
+				this.root.nrOfEnemiesTotal /= 2;
+				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
+				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
+				return;
+			}
+			if (this.PlayMod)
+			{
+				this.Player.transform.position = this.PlayerSpawn.transform.position;
+				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
+				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
+				this.Player.SetActive(false);
+				this.Camera.SetActive(false);
+				this.EditorCamera.enabled = true;
+				this.EditorCamera.transform.parent.GetComponent<CameraMovement>().enabled = true;
+				this.PlayMod = false;
+				foreach (GameObject obj in this.Enemies)
+				{
+					UnityEngine.Object.Destroy(obj);
+				}
+				TextureTilingController[] array2 = UnityEngine.Object.FindObjectsOfType<TextureTilingController>();
+				for (int j = 0; j < array2.Length; j++)
+				{
+					array2[j].enabled = true;
+				}
+				foreach (Transform transform2 in this.EnemySpawnpoints)
+				{
+					transform2.gameObject.GetComponent<MeshRenderer>().enabled = true;
+					transform2.gameObject.GetComponent<CapsuleCollider>().enabled = true;
+				}
+				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = true;
+				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = true;
+				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = false;
+				this.Enemies.Clear();
+			}
+		}
+
+		// Token: 0x0600061F RID: 1567
+		public void ExitEditMode()
+		{
+			string text = this.CoordinateField.text;
+			this.CoordinateField.DeactivateInputField();
+			this.CoordinateField.gameObject.SetActive(false);
+			if (this.EditAxes != null)
+			{
+				UnityEngine.Object.Destroy(this.EditAxes);
+				this.EditingObject.GetComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(this.EditingObject.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Opaque);
+				Color color = this.EditingObject.GetComponent<MeshRenderer>().material.color;
+				color.a = 1f;
+				this.EditingObject.GetComponent<MeshRenderer>().material.color = color;
+			}
+			this.ToggleEditingObjectColliders(this.EditingObject, true);
+			this.EditingObject = null;
+			this.Editing = false;
+		}
+
+		// Token: 0x06000620 RID: 1568
+		public void LoadEditorAssets()
+		{
+			this.EditorAxeMesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/axe.obj"));
+			this.DefaultTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png"));
+			this.DefaultTexture.name = Path.GetFileName(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png"));
+		}
+
+		// Token: 0x06000621 RID: 1569
+		public string LoadFileFromDataFolder(string file)
+		{
+			return Application.dataPath + "/LevelEditor_Jhrino/" + file;
+		}
+
+		// Token: 0x06000622 RID: 1570
+		public void ToggleEditingObjectColliders(GameObject gobject, bool toggle)
+		{
+			if (gobject != null)
+			{
+				if (toggle)
+				{
+					gobject.GetComponent<Collider>();
+					gobject.GetComponent<Collider>().enabled = true;
+					return;
+				}
+				gobject.GetComponent<Collider>();
+				gobject.GetComponent<Collider>().enabled = false;
+			}
+		}
+
+		// Token: 0x06000623 RID: 1571
+		public void PrototypeSave()
+		{
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
+			{
+				if (this.EnemySpawnpoints[i] == null)
+				{
+					this.EnemySpawnpoints.RemoveAt(i);
+				}
+			}
+
+			for (int i = this.BrushLump.Count - 1; i > -1; i--)
+			{
+				if (this.BrushLump[i] == null)
+				{
+					this.BrushLump.RemoveAt(i);
+				}
+			}
+
+			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default")))
+			{
+				Directory.CreateDirectory(MFPEditorUtils.LoadFileFromDataFolder("Levels/default"));
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/spawnpoint.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/spawnpoint.txt")).Close();
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpposition.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpposition.txt")).Close();
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumprotation.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumprotation.txt")).Close();
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpscale.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpscale.txt")).Close();
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpcolor.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpcolor.txt")).Close();
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumptexturename.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumptexturename.txt")).Close();
+			}
+			if (!File.Exists(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpproperties.txt")))
+			{
+				File.Create(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpproperties.txt")).Close();
+			}
+			List<string> list = new List<string>();
+			List<string> list2 = new List<string>();
+			List<string> list3 = new List<string>();
+			List<string> list4 = new List<string>();
+			List<string> list5 = new List<string>();
+			List<string> list6 = new List<string>();
+			List<string> brushlump_properties = new List<string>();
+			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+			list.Add(item);
+			list.Add(item2);
+			MFPEditorLogger.Log("player coordinates added");
+			MFPEditorLogger.Log("----");
+			int num = 2;
+			while (this.EnemySpawnpoints.ElementAtOrDefault(num - 2) != null)
+			{
+				string text = this.EnemySpawnpoints[num - 2].transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+				list.Add(text);
+				MFPEditorLogger.Log("added coordinate " + text);
+				num++;
+			}
+			MFPEditorLogger.Log("----");
+			int brushid = 0;
+
+			foreach (GameObject lump in this.BrushLump)
+			{
+				MFPEditorLogger.Log("saving brush " + brushid);
+
+				string item3 = lump.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+				string item4 = lump.transform.rotation.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+				string item5 = lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+				MFPEditorLogger.Log("coords are on memory");
+				string item6 = lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", "");
+				MFPEditorLogger.Log("color is on memory");
+				list2.Add(item3);
+				list3.Add(item4);
+				list4.Add(item5);
+				list6.Add(item6);
+				MFPEditorLogger.Log("coordinate data added");
+				list5.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
+				MFPEditorLogger.Log("texturename added");
+				brushlump_properties.Add(lump.layer.ToString());
+				MFPEditorLogger.Log("object layer added");
+				MFPEditorLogger.Log("----");
+				brushid++;
+			}
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/spawnpoint.txt"), list.ToArray());
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpposition.txt"), list2.ToArray());
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumprotation.txt"), list3.ToArray());
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpcolor.txt"), list6.ToArray());
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpscale.txt"), list4.ToArray());
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumptexturename.txt"), list5.ToArray());
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpproperties.txt"), brushlump_properties.ToArray());
+			MFPEditorLogger.Log("saving of brush "  + brushid + " over");
+			MFPEditorLogger.Log("----");
+		}
+
+		// Token: 0x06000628 RID: 1576
+		public void PrototypeLoad()
+		{
+			if (this.Editing)
+			{
+				this.ExitEditMode();
+			}
+			string[] entityspawns = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/spawnpoint.txt"));
+			string[] blump_position = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpposition.txt"));
+			string[] blump_rotation = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumprotation.txt"));
+			string[] blump_color = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpcolor.txt"));
+			string[] blump_scale = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpscale.txt"));
+			string[] blump_texturename = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumptexturename.txt"));
+			string[] blump_properties = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/brushlumpproperties.txt"));
+			int num = 0;
+			foreach (GameObject obj in this.BrushLump)
+			{
+				UnityEngine.Object.Destroy(obj);
+			}
+			MFPEditorLogger.Log("loading brushes");
+			MFPEditorLogger.Log("----");
+			while (num <= blump_position.Count<string>() - 1)
+			{
+				MFPEditorLogger.Log("loading brush number " + num);
+
+				double loadedx_b = double.Parse(blump_position[num].Split(new char[]
+				{
+					' '
+				})[0]);
+				double loadedy_b = double.Parse(blump_position[num].Split(new char[]
+				{
+					' '
+				})[1]);
+				double loadedz_b = double.Parse(blump_position[num].Split(new char[]
+				{
+					' '
+				})[2]);
+				MFPEditorLogger.Log("brush coord loaded");
+				double rotX = double.Parse(blump_rotation[num].Split(new char[]
+				{
+					' '
+				})[0]);
+				double rotY = double.Parse(blump_rotation[num].Split(new char[]
+				{
+					' '
+				})[1]);
+				double rotZ = double.Parse(blump_rotation[num].Split(new char[]
+				{
+					' '
+				})[2]);
+				double rotQ = double.Parse(blump_rotation[num].Split(new char[]
+				{
+					' '
+				})[3]);
+				MFPEditorLogger.Log("brush rotation loaded");
+				double scaleX = double.Parse(blump_scale[num].Split(new char[]
+				{
+					' '
+				})[0]);
+				double scaleY = double.Parse(blump_scale[num].Split(new char[]
+				{
+					' '
+				})[1]);
+				double scaleZ = double.Parse(blump_scale[num].Split(new char[]
+				{
+					' '
+				})[2]);
+				MFPEditorLogger.Log("brush scale loaded");
+				string texname = blump_texturename[num].Replace(".png", "");
+				GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+				gameObject.layer = int.Parse(blump_properties[num]);
+				gameObject.AddComponent<TextureTilingController>();
+				gameObject.transform.position = new Vector3((float)loadedx_b, (float)loadedy_b, (float)loadedz_b);
+				gameObject.transform.rotation = new Quaternion((float)rotX, (float)rotY, (float)rotZ, (float)rotQ);
+				gameObject.transform.localScale = new Vector3((float)scaleX, (float)scaleY, (float)scaleZ);
+				string[] files = Directory.GetFiles(MFPEditorUtils.LoadFileFromDataFolder(""), "*.png", SearchOption.AllDirectories);
+				int num2 = 0;
+				foreach (string text in files)
+				{
+					if (text.Contains(texname))
+					{
+						gameObject.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(files[num2]);
+					}
+					num2++;
+				}
+				Color color = new Color(float.Parse(blump_color[num].Split(new char[]
+				{
+					' '
+				})[0]), float.Parse(blump_color[num].Split(new char[]
+				{
+					' '
+				})[1]), float.Parse(blump_color[num].Split(new char[]
+				{
+					' '
+				})[2]), 1f);
+				MFPEditorLogger.Log("brush color loaded");
+				gameObject.GetComponent<MeshRenderer>().material.color = color;
+				this.BrushLump.Add(gameObject);
+				MFPEditorLogger.Log("----");
+				num++;
+			}
+			MFPEditorLogger.Log("brushes ended");
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
+			{
+				if (this.EnemySpawnpoints[i] == null)
+				{
+					this.EnemySpawnpoints.RemoveAt(i);
+				}
+			}
+			MFPEditorLogger.Log("----");
+			MFPEditorLogger.Log("start entities");
+			MFPEditorLogger.Log("----");
+			foreach (Transform transform in this.EnemySpawnpoints)
+			{
+				UnityEngine.Object.Destroy(transform.gameObject);
+			}
+			MFPEditorLogger.Log("old spawnpoints cleared");
+			double num3 = double.Parse(entityspawns[0].Split(new char[]
+			{
+				' '
+			})[0]);
+			double num4 = double.Parse(entityspawns[0].Split(new char[]
+			{
+				' '
+			})[1]);
+			double num5 = double.Parse(entityspawns[0].Split(new char[]
+			{
+				' '
+			})[2]);
+			this.PlayerSpawn.position = new Vector3((float)num3, (float)num4, (float)num5);
+			num3 = double.Parse(entityspawns[1].Split(new char[]
+			{
+				' '
+			})[0]);
+			num4 = double.Parse(entityspawns[1].Split(new char[]
+			{
+				' '
+			})[1]);
+			num5 = double.Parse(entityspawns[1].Split(new char[]
+			{
+				' '
+			})[2]);
+			this.FinishLevelTrigger.transform.position = new Vector3((float)num3, (float)num4, (float)num5);
+			MFPEditorLogger.Log("got player coordinates");
+			int num6 = 2;
+			while (entityspawns.ElementAtOrDefault(num6) != null)
+			{
+				MFPEditorLogger.Log("loading spawn id: " + num6);
+				GameObject gameObject2 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+				UnityEngine.Object.Destroy(gameObject2.GetComponent<SphereCollider>());
+				gameObject2.AddComponent<CapsuleCollider>();
+				gameObject2.layer = 8;
+				gameObject2.transform.localScale = new Vector3(gameObject2.transform.localScale.x, 4f, gameObject2.transform.localScale.x);
+				num3 = double.Parse(entityspawns[num6].Split(new char[]
+				{
+					' '
+				})[0]);
+				num4 = double.Parse(entityspawns[num6].Split(new char[]
+				{
+					' '
+				})[1]);
+				num5 = double.Parse(entityspawns[num6].Split(new char[]
+				{
+					' '
+				})[2]);
+				gameObject2.transform.position = new Vector3((float)num3, (float)num4, (float)num5);
+				gameObject2.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+				this.EnemySpawnpoints.Add(gameObject2.transform);
+				num6++;
+			}
+			MFPEditorLogger.Log("----");
+			MFPEditorLogger.Log("end entities");
+			MFPEditorLogger.Log("----");
+			MFPEditorLogger.Log("Saving over");
+		}
+
+		// Token: 0x0600069F RID: 1695
+		private IEnumerator CheckVersion()
+		{
+			UnityWebRequest www = UnityWebRequest.Get("https://fronkln.github.io/MFPLevelEditor/version.txt");
+			yield return www.SendWebRequest();
+			if (www.isNetworkError)
+			{
+				MFPEditorLogger.Log("couldnt get web data");
+			}
+			else if (float.Parse(www.downloadHandler.text) != LevelEditorInfo.version)
+			{
+				Application.OpenURL("https://fronkln.github.io/MFPLevelEditor/outdated.html");
+			}
+			yield break;
+		}
+
+		// Token: 0x060006A0 RID: 1696
+		private void Awake()
+		{
+			base.StartCoroutine(this.CheckVersion());
+			File.WriteAllLines(MFPEditorLogger.logfile, new string[0]);
+			MFPEditorLogger.Log("--------LEVELEDITOR SESSION STARTED--------" );
+			MFPEditorLogger.Log(DateTime.Now.ToString("MM/dd/yyyy HH:mm"));
+			MFPEditorLogger.Log("------------------------------------------");
+		}
+
+		// Token: 0x04001338 RID: 4920
+		public GameObject Player;
+
+		// Token: 0x04001339 RID: 4921
+		public GameObject Camera;
+
+		// Token: 0x0400133A RID: 4922
+		public GameObject HUD;
+
+		// Token: 0x0400133B RID: 4923
+		public GameObject RootShared;
+
+		// Token: 0x0400133C RID: 4924
+		public Camera EditorCamera;
+
+		// Token: 0x0400133D RID: 4925
+		public Text DebugObject;
+
+		// Token: 0x0400133E RID: 4926
+		public GameObject EditingObject;
+
+		// Token: 0x0400133F RID: 4927
+		public InputField CoordinateField;
+
+		// Token: 0x04001340 RID: 4928
+		public bool Editing;
+
+		// Token: 0x04001341 RID: 4929
+		private string editType = "position";
+
+		// Token: 0x04001342 RID: 4930
+		public static LevelEditorHandler Inst;
+
+		// Token: 0x04001343 RID: 4931
+		public Transform PlayerSpawn;
+
+		// Token: 0x04001344 RID: 4932
+		public bool PlayMod;
+
+		// Token: 0x04001345 RID: 4933
+		public GameObject EnemySample;
+
+		// Token: 0x04001346 RID: 4934
+		public List<GameObject> Enemies = new List<GameObject>();
+
+		// Token: 0x04001347 RID: 4935
+		public List<Transform> EnemySpawnpoints = new List<Transform>();
+
+		// Token: 0x04001348 RID: 4936
+		public bool fart;
+
+		// Token: 0x04001349 RID: 4937
+		public GameObject FinishLevelTrigger;
+
+		// Token: 0x0400134A RID: 4938
+		public RootScript root;
+
+		// Token: 0x0400134B RID: 4939
+		public Mesh EditorAxeMesh;
+
+		// Token: 0x0400134C RID: 4940
+		public GameObject EditAxes;
+
+		// Token: 0x0400134D RID: 4941
+		public bool spawnpoints_saved;
+
+		// Token: 0x0400134E RID: 4942
+		public List<GameObject> BrushLump = new List<GameObject>();
+
+		// Token: 0x0400134F RID: 4943
+		public Texture2D DefaultTexture;
+
+		// Token: 0x020000E2 RID: 226
+		public enum CameraMode
+		{
+			// Token: 0x04001351 RID: 4945
+			Disabled,
+			// Token: 0x04001352 RID: 4946
+			Enabled
+		}
+	}
+}

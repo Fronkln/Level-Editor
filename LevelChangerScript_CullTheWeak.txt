@@ -1,0 +1,459 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityScript.Lang;
+
+// Token: 0x02000063 RID: 99
+[Serializable]
+public class LevelChangerScript : MonoBehaviour
+{
+	// Token: 0x06000274 RID: 628
+	public LevelChangerScript()
+	{
+		this.levelNumber = 1;
+		this.relative = true;
+		this.saveState = true;
+	}
+
+	// Token: 0x06000275 RID: 629
+	public virtual void OnTriggerEnter(Collider col)
+	{
+		if (col.tag == "Player")
+		{
+			this.doTheThing();
+		}
+	}
+
+	// Token: 0x06000276 RID: 630
+	public virtual void doTheThing()
+	{
+		if (this.dontShowEndScreen)
+		{
+			this.root.fadeToBlackAndChangeLevel();
+		}
+		else
+		{
+			this.root.levelEnded = true;
+		}
+		this.root.levelToLoad = ((!this.relative) ? this.levelNumber : (SceneManager.GetActiveScene().buildIndex + this.levelNumber));
+	}
+
+	// Token: 0x06000277 RID: 631
+	public virtual void Start()
+	{
+		this.root = (RootScript)GameObject.Find("Root").GetComponent(typeof(RootScript));
+		this.EnemyTest = GameObject.Find("Enemy (1)");
+		this.EnemyTest.SetActive(false);
+		base.Invoke("CullTheWeak", 4f);
+	}
+
+	// Token: 0x06000278 RID: 632
+	public virtual void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.U))
+		{
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemyTest);
+			gameObject.transform.position = GameObject.Find("Player").transform.position;
+			gameObject.SetActive(true);
+		}
+		if (Extensions.get_length(this.inputSwitch) > 0)
+		{
+			int num = -1;
+			int i = 0;
+			SwitchScript[] array = this.inputSwitch;
+			int length = array.Length;
+			while (i < length)
+			{
+				if (array[i].output > (float)num)
+				{
+					num = (int)array[i].output;
+				}
+				i++;
+			}
+			if (num >= 1)
+			{
+				this.doTheThing();
+			}
+		}
+	}
+
+	// Token: 0x06000279 RID: 633
+	public virtual void Main()
+	{
+	}
+
+	// Token: 0x0600027A RID: 634
+	public void CullTheWeak()
+	{
+		GameObject.Find("Player").transform.position = new Vector3(-39.9f, 5.79f, 0.05f);
+		GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+		gameObject.layer = 8;
+		gameObject.transform.position = new Vector3(-39.9f, 2.79f, 0.05f);
+		gameObject.transform.localScale = new Vector3(15f, 1f, 7f);
+		foreach (GameObject gameObj in UnityEngine.Object.FindObjectsOfType(typeof(GameObject)) as GameObject[])
+		{
+			if (gameObj.name.Contains("Metal_beam"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("background_wall_end"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("stairs_"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("FloorBuilder_S"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("WallBuilder_S"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Blackout"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Machine_ ("))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("PipeSmall"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("PipeBig"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("PipeBuilder"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("fence_wall"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("fence_wall"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("wall_collision"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Street_"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Pile"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Graffiti"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Building_fill_out"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Distant"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Building"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Steel_platform"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Light_Ceiling"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Floor"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Shelf_Industrial"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("cardboard"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Cardboard"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Metal_panel"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Light_"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Pillar"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Aircon"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Bottle"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("building"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("pulley"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.Contains("Crate"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("beam"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("metal_panel"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("metal_roof"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("platform"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("machine") && !gameObj.name.ToLower().Contains("gun"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("particle system ("))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("dust"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("door") && !gameObj.name.Contains("bulletcheck"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("tag_"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("microwave"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("fridge"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("broken_brick"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("wall"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("chain"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("scrap"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("edge"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("ceiling"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("fireexting"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("boardedup"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("choppingboard"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("ashtray"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("coffee"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("kitchen"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("floormop"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("mopbucket"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("pizza"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("caution"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("lightswitch"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("chair"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("car"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("window"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("book"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("z-pusher"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("bucket"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("blackfade"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("sign"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("toilet"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("wood"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("bath"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("paint"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("bicycle"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("pot"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("bed"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("sofa"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("stove"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("fryingpan"))
+			{
+				UnityEngine.Object.Destroy(gameObj);
+			}
+			if (gameObj.name.ToLower().Contains("enemy") && gameObj != this.EnemyTest)
+			{
+				gameObj.SetActive(false);
+			}
+		}
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 1"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 2"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 3"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 4"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 5"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 6"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 7"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 8"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift 9"));
+		UnityEngine.Object.Destroy(GameObject.Find("Platform Lift"));
+		List<string> RemainingObjects = new List<string>();
+		foreach (GameObject gameObj2 in UnityEngine.Object.FindObjectsOfType(typeof(GameObject)) as GameObject[])
+		{
+			RemainingObjects.Add(gameObj2.name);
+		}
+		File.WriteAllLines("F:/steamapps2/steamapps/common/My Friend Pedro/jhrino_log.txt", RemainingObjects.ToArray());
+	}
+
+	// Token: 0x04000732 RID: 1842
+	public SwitchScript[] inputSwitch;
+
+	// Token: 0x04000733 RID: 1843
+	private float switchInput;
+
+	// Token: 0x04000734 RID: 1844
+	public int levelNumber;
+
+	// Token: 0x04000735 RID: 1845
+	public bool relative;
+
+	// Token: 0x04000736 RID: 1846
+	public bool saveState;
+
+	// Token: 0x04000737 RID: 1847
+	public bool dontShowEndScreen;
+
+	// Token: 0x04000738 RID: 1848
+	private RootScript root;
+
+	// Token: 0x04000739 RID: 1849
+	public GameObject EnemyTest;
+}
