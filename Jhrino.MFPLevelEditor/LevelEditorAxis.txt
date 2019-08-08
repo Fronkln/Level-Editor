@@ -1,0 +1,102 @@
+using System;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000E9 RID: 233
+	public class LevelEditorAxis : MonoBehaviour
+	{
+		// Token: 0x0600064A RID: 1610 RVA: 0x00094F18 File Offset: 0x00093118
+		private void OnMouseDrag()
+		{
+			if (this.axis == LevelEditorAxis.AxisType.x)
+			{
+				base.transform.root.position = new Vector3(this.GetMouseAsWorldPoint().x + this.mOffset.x, base.transform.position.y, base.transform.position.z);
+			}
+			if (this.axis == LevelEditorAxis.AxisType.y)
+			{
+				base.transform.root.position = new Vector3(base.transform.position.x, this.GetMouseAsWorldPoint().y + this.mOffset.y, base.transform.position.z);
+			}
+			if (this.axis == LevelEditorAxis.AxisType.z)
+			{
+				base.transform.root.position = new Vector3(this.startPos.x, this.startPos.y, base.transform.root.position.z + Input.GetAxisRaw("Mouse Y"));
+			}
+		}
+
+		// Token: 0x0600064B RID: 1611 RVA: 0x000020A9 File Offset: 0x000002A9
+		public LevelEditorAxis()
+		{
+		}
+
+		// Token: 0x0600064C RID: 1612 RVA: 0x00095024 File Offset: 0x00093224
+		private void OnMouseDown()
+		{
+			if (this.axis != LevelEditorAxis.AxisType.z)
+			{
+				this.mZCoord = this.Cam.WorldToScreenPoint(base.gameObject.transform.position).z;
+				this.mOffset = base.gameObject.transform.position - this.GetMouseAsWorldPoint();
+				return;
+			}
+			this.startPos = base.transform.position;
+			this.dist = this.Cam.WorldToScreenPoint(base.transform.position);
+			this.posX = Input.mousePosition.x - this.dist.x;
+			this.posY = Input.mousePosition.y - this.dist.y;
+			this.posZ = Input.mousePosition.z - this.dist.z;
+		}
+
+		// Token: 0x0600064D RID: 1613 RVA: 0x00095104 File Offset: 0x00093304
+		private Vector3 GetMouseAsWorldPoint()
+		{
+			Vector3 mousePosition = Input.mousePosition;
+			mousePosition.z = this.mZCoord;
+			return this.Cam.ScreenToWorldPoint(mousePosition);
+		}
+
+		// Token: 0x0600064E RID: 1614 RVA: 0x00005047 File Offset: 0x00003247
+		public void Start()
+		{
+			this.Cam = GameObject.Find("EditorCamera").GetComponent<Camera>();
+		}
+
+		// Token: 0x0400136C RID: 4972
+		public LevelEditorAxis.AxisType axis;
+
+		// Token: 0x0400136D RID: 4973
+		private Vector3 lastMousePos;
+
+		// Token: 0x0400136E RID: 4974
+		private Vector3 mOffset;
+
+		// Token: 0x0400136F RID: 4975
+		private float mZCoord;
+
+		// Token: 0x04001370 RID: 4976
+		public Camera Cam;
+
+		// Token: 0x04001371 RID: 4977
+		private float posX;
+
+		// Token: 0x04001372 RID: 4978
+		private float posZ;
+
+		// Token: 0x04001373 RID: 4979
+		private float posY;
+
+		// Token: 0x04001374 RID: 4980
+		private Vector3 dist;
+
+		// Token: 0x04001375 RID: 4981
+		private Vector3 startPos;
+
+		// Token: 0x020000EA RID: 234
+		public enum AxisType
+		{
+			// Token: 0x04001377 RID: 4983
+			x,
+			// Token: 0x04001378 RID: 4984
+			y,
+			// Token: 0x04001379 RID: 4985
+			z
+		}
+	}
+}

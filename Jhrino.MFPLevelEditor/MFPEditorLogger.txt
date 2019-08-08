@@ -1,0 +1,28 @@
+using System;
+using System.IO;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000EE RID: 238
+	public class MFPEditorLogger
+	{
+		// Token: 0x06000656 RID: 1622 RVA: 0x000050A5 File Offset: 0x000032A5
+		public static void Log(string text)
+		{
+			File.AppendAllText(MFPEditorLogger.logfile, Environment.NewLine + text);
+		}
+
+		// Token: 0x06000657 RID: 1623 RVA: 0x00004FE3 File Offset: 0x000031E3
+		public MFPEditorLogger()
+		{
+		}
+
+		// Token: 0x06000658 RID: 1624 RVA: 0x000050BC File Offset: 0x000032BC
+		static MFPEditorLogger()
+		{
+		}
+
+		// Token: 0x0400137F RID: 4991
+		public static string logfile = MFPEditorUtils.LoadFileFromDataFolder("leveleditor_log.txt");
+	}
+}

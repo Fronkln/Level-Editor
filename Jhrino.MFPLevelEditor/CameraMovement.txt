@@ -1,0 +1,75 @@
+using System;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000E0 RID: 224
+	public class CameraMovement : MonoBehaviour
+	{
+		// Token: 0x06000612 RID: 1554 RVA: 0x00004E78 File Offset: 0x00003078
+		private void Start()
+		{
+			this.Up = 0f;
+			this.origHeight = this.coll.height;
+			this.speed = this.normalSpeed;
+		}
+
+		// Token: 0x06000613 RID: 1555 RVA: 0x00091DF8 File Offset: 0x0008FFF8
+		private void Update()
+		{
+			if (Input.GetKey(KeyCode.LeftShift))
+			{
+				this.speed = this.runSpeed;
+			}
+			else
+			{
+				this.speed = this.normalSpeed;
+			}
+			if (Input.GetKey(KeyCode.Q))
+			{
+				this.Up = -1f;
+			}
+			if (Input.GetKey(KeyCode.E))
+			{
+				this.Up = 1f;
+			}
+			if (!Input.GetKey(KeyCode.Q) && !Input.GetKey(KeyCode.E))
+			{
+				this.Up = 0f;
+			}
+			base.transform.Translate(new Vector3(Input.GetAxis("Horizontal"), this.Up, Input.GetAxis("Vertical")) * this.speed * Time.deltaTime);
+		}
+
+		// Token: 0x06000614 RID: 1556 RVA: 0x00004EA2 File Offset: 0x000030A2
+		public CameraMovement()
+		{
+		}
+
+		// Token: 0x0400132F RID: 4911
+		public float Up;
+
+		// Token: 0x04001330 RID: 4912
+		public float normalSpeed = 5f;
+
+		// Token: 0x04001331 RID: 4913
+		public float runSpeed = 15f;
+
+		// Token: 0x04001332 RID: 4914
+		private float speed = 5f;
+
+		// Token: 0x04001333 RID: 4915
+		public bool doMove = true;
+
+		// Token: 0x04001334 RID: 4916
+		public bool crouch;
+
+		// Token: 0x04001335 RID: 4917
+		private CapsuleCollider coll;
+
+		// Token: 0x04001336 RID: 4918
+		private float origHeight;
+
+		// Token: 0x04001337 RID: 4919
+		public Transform cam;
+	}
+}

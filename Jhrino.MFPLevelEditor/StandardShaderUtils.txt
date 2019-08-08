@@ -1,0 +1,68 @@
+using System;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000E7 RID: 231
+	public static class StandardShaderUtils
+	{
+		// Token: 0x06000649 RID: 1609 RVA: 0x00094DA8 File Offset: 0x00092FA8
+		public static Material ChangeRenderMode(Material standardShaderMaterial, StandardShaderUtils.BlendMode blendMode)
+		{
+			switch (blendMode)
+			{
+			case StandardShaderUtils.BlendMode.Opaque:
+				standardShaderMaterial.SetInt("_SrcBlend", 1);
+				standardShaderMaterial.SetInt("_DstBlend", 0);
+				standardShaderMaterial.SetInt("_ZWrite", 1);
+				standardShaderMaterial.DisableKeyword("_ALPHATEST_ON");
+				standardShaderMaterial.DisableKeyword("_ALPHABLEND_ON");
+				standardShaderMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+				standardShaderMaterial.renderQueue = -1;
+				return standardShaderMaterial;
+			case StandardShaderUtils.BlendMode.Cutout:
+				standardShaderMaterial.SetInt("_SrcBlend", 1);
+				standardShaderMaterial.SetInt("_DstBlend", 0);
+				standardShaderMaterial.SetInt("_ZWrite", 1);
+				standardShaderMaterial.EnableKeyword("_ALPHATEST_ON");
+				standardShaderMaterial.DisableKeyword("_ALPHABLEND_ON");
+				standardShaderMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+				standardShaderMaterial.renderQueue = 2450;
+				return standardShaderMaterial;
+			case StandardShaderUtils.BlendMode.Fade:
+				standardShaderMaterial.SetInt("_SrcBlend", 5);
+				standardShaderMaterial.SetInt("_DstBlend", 10);
+				standardShaderMaterial.SetInt("_ZWrite", 0);
+				standardShaderMaterial.DisableKeyword("_ALPHATEST_ON");
+				standardShaderMaterial.EnableKeyword("_ALPHABLEND_ON");
+				standardShaderMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+				standardShaderMaterial.renderQueue = 3000;
+				return standardShaderMaterial;
+			case StandardShaderUtils.BlendMode.Transparent:
+				standardShaderMaterial.SetInt("_SrcBlend", 1);
+				standardShaderMaterial.SetInt("_DstBlend", 10);
+				standardShaderMaterial.SetInt("_ZWrite", 0);
+				standardShaderMaterial.DisableKeyword("_ALPHATEST_ON");
+				standardShaderMaterial.DisableKeyword("_ALPHABLEND_ON");
+				standardShaderMaterial.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+				standardShaderMaterial.renderQueue = 3000;
+				return standardShaderMaterial;
+			default:
+				return standardShaderMaterial;
+			}
+		}
+
+		// Token: 0x020000E8 RID: 232
+		public enum BlendMode
+		{
+			// Token: 0x04001368 RID: 4968
+			Opaque,
+			// Token: 0x04001369 RID: 4969
+			Cutout,
+			// Token: 0x0400136A RID: 4970
+			Fade,
+			// Token: 0x0400136B RID: 4971
+			Transparent
+		}
+	}
+}

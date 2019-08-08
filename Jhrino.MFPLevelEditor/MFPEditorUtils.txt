@@ -1,0 +1,29 @@
+using System;
+using System.IO;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000EB RID: 235
+	public static class MFPEditorUtils
+	{
+		// Token: 0x0600064F RID: 1615 RVA: 0x00095130 File Offset: 0x00093330
+		public static Texture2D LoadPNG(string filePath)
+		{
+			Texture2D texture2D = null;
+			if (File.Exists(filePath))
+			{
+				byte[] data = File.ReadAllBytes(filePath);
+				texture2D = new Texture2D(2, 2);
+				texture2D.LoadImage(data);
+			}
+			return texture2D;
+		}
+
+		// Token: 0x06000650 RID: 1616 RVA: 0x0000505E File Offset: 0x0000325E
+		public static string LoadFileFromDataFolder(string file)
+		{
+			return Application.dataPath + "/LevelEditor_Jhrino/" + file;
+		}
+	}
+}
