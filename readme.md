@@ -4,7 +4,7 @@ You can take a look at it for yourself and maybe improve on it
 If you use any of this code the only requirement is that Jhrino and Aevo is credited
 
 DnSpy decompile and recompile is weird so you'll see stuff like gameObject7
-Nothing i can do about that
+Nothing i can do about that, You'll also notice that the code is in .txt files its because DnSpy doesnt allow adding .cs files into the module.
 
 Big thanks to Aevo for implementing the new improved saving system.
 
