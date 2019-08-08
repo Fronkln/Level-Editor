@@ -185,14 +185,14 @@ namespace Jhrino.MFPLevelEditor
 			canvasScaler.scaleFactor = 0.5f;
 			canvasScaler.referencePixelsPerUnit = 100f;
 			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
-			GameObject gameObject5 = new GameObject();
-			gameObject5.transform.parent = gameObject.transform;
-			gameObject5.layer = 5;
-			gameObject5.AddComponent<RectTransform>();
-			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
-			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
-			Text text = gameObject5.AddComponent<Text>();
+			GameObject gameObject4 = new GameObject();
+			gameObject4.transform.parent = gameObject.transform;
+			gameObject4.layer = 5;
+			gameObject4.AddComponent<RectTransform>();
+			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
+			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
+			Text text = gameObject4.AddComponent<Text>();
 			Material material = new Material(Shader.Find("UI/Default"));
 			text.material = material;
 			text.text = "GAME OVER";
@@ -208,7 +208,7 @@ namespace Jhrino.MFPLevelEditor
 			text.alignByGeometry = false;
 			text.GetComponent<RectTransform>().sizeDelta = new Vector2(472.9f, 100f);
 			this.DebugObject = text;
-			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
+			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
 			new GameObject();
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "CoordinateField";
@@ -238,22 +238,22 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
-			GameObject gameObject3 = new GameObject();
-			gameObject3.transform.parent = gameObject.transform;
-			gameObject3.layer = 5;
-			gameObject3.AddComponent<RectTransform>();
-			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic = gameObject3.AddComponent<Image>();
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
-			Button button = gameObject3.AddComponent<Button>();
+			GameObject gameObject5 = new GameObject();
+			gameObject5.transform.parent = gameObject.transform;
+			gameObject5.layer = 5;
+			gameObject5.AddComponent<RectTransform>();
+			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			Image targetGraphic = gameObject5.AddComponent<Image>();
+			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
+			Button button = gameObject5.AddComponent<Button>();
 			button.transition = Selectable.Transition.ColorTint;
 			button.targetGraphic = targetGraphic;
 			button.interactable = true;
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
+			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
 			Texture2D ico_pos = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_position.png"));
-			Sprite spr_pos = Sprite.Create(ico_pos, new Rect(0,0, ico_pos.width, ico_pos.height), new Vector2(0,0), 100);
+			Sprite spr_pos = Sprite.Create(ico_pos, new Rect(0f, 0f, (float)ico_pos.width, (float)ico_pos.height), new Vector2(0f, 0f), 100f);
 			targetGraphic.sprite = spr_pos;
 			button.onClick.AddListener(delegate()
 			{
@@ -269,11 +269,9 @@ namespace Jhrino.MFPLevelEditor
 			Image targetGraphic2 = gameObject6.AddComponent<Image>();
 			gameObject6.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -255.9f);
 			Button button2 = gameObject6.AddComponent<Button>();
-
 			Texture2D ico_rot = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_rotation.png"));
-			Sprite spr_rot = Sprite.Create(ico_rot, new Rect(0,0, ico_rot.width, ico_rot.height), new Vector2(0,0), 100);
+			Sprite spr_rot = Sprite.Create(ico_rot, new Rect(0f, 0f, (float)ico_rot.width, (float)ico_rot.height), new Vector2(0f, 0f), 100f);
 			targetGraphic2.sprite = spr_rot;
-
 			button2.transition = Selectable.Transition.ColorTint;
 			button2.targetGraphic = targetGraphic2;
 			button2.interactable = true;
@@ -291,11 +289,9 @@ namespace Jhrino.MFPLevelEditor
 			Image targetGraphic3 = gameObject7.AddComponent<Image>();
 			gameObject7.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -400f);
 			Button button3 = gameObject7.AddComponent<Button>();
-
 			Texture2D ico_sca = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_scale.png"));
-			Sprite spr_sca = Sprite.Create(ico_sca, new Rect(0,0, ico_sca.width, ico_sca.height), new Vector2(0,0), 100);
+			Sprite spr_sca = Sprite.Create(ico_sca, new Rect(0f, 0f, (float)ico_sca.width, (float)ico_sca.height), new Vector2(0f, 0f), 100f);
 			targetGraphic3.sprite = spr_sca;
-
 			button3.transition = Selectable.Transition.ColorTint;
 			button3.targetGraphic = targetGraphic3;
 			button3.interactable = true;
@@ -303,23 +299,21 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.ChangeEditType("scale");
 			});
-			GameObject gameObject4 = new GameObject();
-			gameObject4.transform.parent = gameObject.transform;
-			gameObject4.layer = 5;
-			gameObject4.AddComponent<RectTransform>();
-			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			gameObject4.AddComponent<Image>();
-			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
-			Button button4 = gameObject4.AddComponent<Button>();
-
+			GameObject gameObject3 = new GameObject();
+			gameObject3.transform.parent = gameObject.transform;
+			gameObject3.layer = 5;
+			gameObject3.AddComponent<RectTransform>();
+			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			gameObject3.AddComponent<Image>();
+			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
+			Button button4 = gameObject3.AddComponent<Button>();
 			Texture2D ico_col = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_color.png"));
-			Sprite spr_col = Sprite.Create(ico_col, new Rect(0,0, ico_col.width, ico_col.height), new Vector2(0,0), 100);
-			gameObject4.GetComponent<Image>().sprite = spr_col;
-
+			Sprite spr_col = Sprite.Create(ico_col, new Rect(0f, 0f, (float)ico_col.width, (float)ico_col.height), new Vector2(0f, 0f), 100f);
+			gameObject3.GetComponent<Image>().sprite = spr_col;
 			button4.transition = Selectable.Transition.ColorTint;
-			button4.targetGraphic = gameObject4.GetComponent<Image>();
+			button4.targetGraphic = gameObject3.GetComponent<Image>();
 			button4.interactable = true;
 			button4.onClick.AddListener(delegate()
 			{
@@ -330,7 +324,7 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x0600061A RID: 1562
 		public void EditingMode()
 		{
-			if (Input.GetKeyDown(KeyCode.L) && this.EditingObject != this.PlayerSpawn.gameObject && this.EditingObject != FinishLevelTrigger)
+			if (Input.GetKeyDown(KeyCode.L) && this.EditingObject != this.PlayerSpawn.gameObject && this.EditingObject != this.FinishLevelTrigger)
 			{
 				UnityEngine.Object.Destroy(this.EditingObject);
 				this.Editing = false;
@@ -489,7 +483,6 @@ namespace Jhrino.MFPLevelEditor
 		public void PlayMode()
 		{
 			this.Player.transform.position = this.PlayerSpawn.transform.position;
-
 			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
 			{
 				if (this.EnemySpawnpoints[i] == null)
@@ -497,7 +490,6 @@ namespace Jhrino.MFPLevelEditor
 					this.EnemySpawnpoints.RemoveAt(i);
 				}
 			}
-
 			if (!this.PlayMod)
 			{
 				if (this.Editing)
@@ -517,9 +509,9 @@ namespace Jhrino.MFPLevelEditor
 				this.EditorCamera.transform.parent.GetComponent<CameraMovement>().enabled = false;
 				this.PlayMod = true;
 				TextureTilingController[] array = UnityEngine.Object.FindObjectsOfType<TextureTilingController>();
-				for (int i = 0; i < array.Length; i++)
+				for (int j = 0; j < array.Length; j++)
 				{
-					array[i].enabled = false;
+					array[j].enabled = false;
 				}
 				foreach (Transform transform in this.EnemySpawnpoints)
 				{
@@ -551,9 +543,9 @@ namespace Jhrino.MFPLevelEditor
 					UnityEngine.Object.Destroy(obj);
 				}
 				TextureTilingController[] array2 = UnityEngine.Object.FindObjectsOfType<TextureTilingController>();
-				for (int j = 0; j < array2.Length; j++)
+				for (int k = 0; k < array2.Length; k++)
 				{
-					array2[j].enabled = true;
+					array2[k].enabled = true;
 				}
 				foreach (Transform transform2 in this.EnemySpawnpoints)
 				{
@@ -629,17 +621,13 @@ namespace Jhrino.MFPLevelEditor
 					this.EnemySpawnpoints.RemoveAt(i);
 				}
 			}
-
-			for (int i = this.BrushLump.Count - 1; i > -1; i--)
+			for (int j = this.BrushLump.Count - 1; j > -1; j--)
 			{
-				if (this.BrushLump[i] == null)
+				if (this.BrushLump[j] == null)
 				{
-					this.BrushLump.RemoveAt(i);
+					this.BrushLump.RemoveAt(j);
 				}
 			}
-
-
-
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
@@ -653,83 +641,65 @@ namespace Jhrino.MFPLevelEditor
 			while (this.EnemySpawnpoints.ElementAtOrDefault(num - 2) != null)
 			{
 				string text = this.EnemySpawnpoints[num - 2].transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
-				SavedLevel.Add("!Enemy");
+				SavedLevel.Add("!EnemySpawn");
 				SavedLevel.Add(text);
 				MFPEditorLogger.Log("added coordinate " + text);
 				num++;
 			}
 			MFPEditorLogger.Log("----");
-
-
 			foreach (GameObject lump in this.BrushLump)
 			{
-				
 				SavedLevel.Add("!Brush");
 				SavedLevel.Add(lump.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.rotation.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
-				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA",""));
+				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
 				SavedLevel.Add(lump.layer.ToString());
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
-
 			}
-
+			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			MFPEditorLogger.Log("----");
 		}
 
-		// Token: 0x06000628 RID: 1576
+		// Token: 0x06000624 RID: 1572
 		public void PrototypeLoad()
 		{
-			 
-        if (this.Editing)
-        {
-            this.ExitEditMode();
-        }
-        
-
-       string[] levelFile = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
-
-        
-        foreach (GameObject gameObject in this.BrushLump) //KILL THOSE BRUSHLUMPS
-        {
-            Destroy(gameObject);
-        }
-        for (int k = this.EnemySpawnpoints.Count - 1; k > -1; k--) //DO WHATEVER THIS DOES
-        {
-            if (this.EnemySpawnpoints[k] == null)
-            {
-                this.EnemySpawnpoints.RemoveAt(k);
-            }
-        }
-
-
-		  for (int k = this.BrushLump.Count - 1; k > -1; k--) //DO WHATEVER THIS DOES
-        {
-            if (this.BrushLump[k] == null)
-            {
-                this.BrushLump.RemoveAt(k);
-            }
-        }
-
-        foreach (Transform transform in this.EnemySpawnpoints) //KILL THOSE SPAWN POINTS
-        {
-            Destroy(transform.gameObject);
-        }
-        
-
-        
-        MFPEditorLogger.Log("Loading File");
-        MFPEditorLogger.Log("------------");
-        
-
-        String[] tags =
-        {
-            "!Brush",
-            "!PlayerSpawn",
-            "!EnemySpawn",
-            "!LevelEnd"
-        };
-
+			if (this.Editing)
+			{
+				this.ExitEditMode();
+			}
+			string[] levelFile = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
+			foreach (GameObject obj in this.BrushLump)
+			{
+				UnityEngine.Object.Destroy(obj);
+			}
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
+			{
+				if (this.EnemySpawnpoints[i] == null)
+				{
+					this.EnemySpawnpoints.RemoveAt(i);
+				}
+			}
+			for (int j = this.BrushLump.Count - 1; j > -1; j--)
+			{
+				if (this.BrushLump[j] == null)
+				{
+					this.BrushLump.RemoveAt(j);
+				}
+			}
+			foreach (Transform transform in this.EnemySpawnpoints)
+			{
+				UnityEngine.Object.Destroy(transform.gameObject);
+			}
+			MFPEditorLogger.Log("Loading File");
+			MFPEditorLogger.Log("------------");
+			string[] array = new string[]
+			{
+				"!Brush",
+				"!PlayerSpawn",
+				"!EnemySpawn",
+				"!LevelEnd"
+			};
         for (int i = 0; i < levelFile.Length; i++) //WE'RE JUST GONNA READ THE WHOLE THING
         {
             String tag = levelFile[i]; //It SHOULD only hit this line if its a tag
@@ -749,6 +719,8 @@ namespace Jhrino.MFPLevelEditor
                     newBrush.transform.rotation = new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]);
                     newBrush.transform.localScale = new Vector3(scale[0], scale[1], scale[2]);
                     newBrush.GetComponent<MeshRenderer>().material.color = new Color(color[0], color[1], color[2]);
+					newBrush.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(texturename));
+					newBrush.AddComponent<TextureTilingController>();
                     newBrush.layer = property;
                     this.BrushLump.Add(newBrush);
 
@@ -790,7 +762,7 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorLogger.Log("Loading over");
 		}
 
-		// Token: 0x0600069F RID: 1695
+		// Token: 0x06000625 RID: 1573
 		private IEnumerator CheckVersion()
 		{
 			UnityWebRequest www = UnityWebRequest.Get("https://fronkln.github.io/MFPLevelEditor/version.txt");
@@ -806,12 +778,12 @@ namespace Jhrino.MFPLevelEditor
 			yield break;
 		}
 
-		// Token: 0x060006A0 RID: 1696
+		// Token: 0x06000626 RID: 1574
 		private void Awake()
 		{
 			base.StartCoroutine(this.CheckVersion());
 			File.WriteAllLines(MFPEditorLogger.logfile, new string[0]);
-			MFPEditorLogger.Log("--------LEVELEDITOR SESSION STARTED--------" );
+			MFPEditorLogger.Log("--------LEVELEDITOR SESSION STARTED--------");
 			MFPEditorLogger.Log(DateTime.Now.ToString("MM/dd/yyyy HH:mm"));
 			MFPEditorLogger.Log("------------------------------------------");
 		}
