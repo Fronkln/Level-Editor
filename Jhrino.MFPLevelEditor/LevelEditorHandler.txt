@@ -95,6 +95,7 @@ namespace Jhrino.MFPLevelEditor
 			gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
 			gameObject.AddComponent<TextureTilingController>();
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
+			gameObject.GetComponent<MeshRenderer>().material.mainTexture.name = "EditorAssets/dev_measuregeneric01b.png";
 			this.BrushLump.Add(gameObject);
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "EditorCamera";
