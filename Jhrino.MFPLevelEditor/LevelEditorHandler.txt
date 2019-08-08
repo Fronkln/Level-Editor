@@ -338,7 +338,6 @@ namespace Jhrino.MFPLevelEditor
 
 
 	    GameObject PanelOBJ = new GameObject();
-		PanelOBJ = EntitySpawnRoot;
         PanelOBJ.transform.parent = gameObject.transform;
         PanelOBJ.name = "EntitiesListContainer";
  
@@ -387,7 +386,12 @@ namespace Jhrino.MFPLevelEditor
         plButtonText.verticalOverflow = VerticalWrapMode.Overflow;
         plButtonText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
+		EntitySpawnRoot = PanelOBJ;
+
+		MFPEditorLogger.Log("Hud load complete");
+
 		EntitySpawnRoot.SetActive(false);
+
 
 		}
 
@@ -706,6 +710,9 @@ namespace Jhrino.MFPLevelEditor
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
+			SavedLevel.Add("!World");
+			SavedLevel.Add("allowPostProcess = " + allowPostProcess.ToString());
+			SavedLevel.Add("theme = " + theme);
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
@@ -780,6 +787,26 @@ namespace Jhrino.MFPLevelEditor
             String tag = levelFile[i]; //It SHOULD only hit this line if its a tag
             switch (tag)
             {
+				case "!World":
+					if(levelFile[i + 1] == "allowPostProcessing = true")
+							allowPostProcess = true;
+					else
+							allowPostProcess = false;
+					theme = int.Parse(levelFile[i + 2].Replace("theme = ", ""));
+						root.theme = theme;
+						if(allowPostProcess)
+							{
+							Camera.GetComponent<PostProcessingBehaviour>().enabled = true;
+							EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = true;
+							}
+						else
+							{
+							Camera.GetComponent<PostProcessingBehaviour>().enabled = false;
+							EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = false;
+							}
+					i += 2;
+					break;
+
                 case "!Brush": //ITS A BRUSH
                     //These basically just grab the correct line, split it into an array, and parse it to a float array in 1 line
                     float[] position = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
@@ -938,6 +965,10 @@ namespace Jhrino.MFPLevelEditor
 		public GameObject EditorButtonsRoot;
 
 		public GameObject EntitySpawnRoot;
+
+		
+		public int theme = 1;
+		public bool allowPostProcess = true;
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
