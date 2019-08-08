@@ -137,6 +137,8 @@ namespace Jhrino.MFPLevelEditor
 			{
 				list.Add(transform.name);
 			}
+
+
 			File.WriteAllLines("F:\\steamapps2\\steamapps\\common\\My Friend Pedro\\jhrino_log.txt", list.ToArray());
 		}
 
@@ -323,6 +325,15 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.ChangeEditType("color");
 			});
+
+
+			
+			EditorButtonsRoot = new GameObject();
+			EditorButtonsRoot.transform.parent = canvas.transform;
+			gameObject5.transform.parent = EditorButtonsRoot.transform;
+			gameObject3.transform.parent = EditorButtonsRoot.transform;
+			gameObject7.transform.parent = EditorButtonsRoot.transform;
+			gameObject6.transform.parent = EditorButtonsRoot.transform;
 		}
 
 		// Token: 0x0600061A RID: 1562
@@ -500,6 +511,8 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.ExitEditMode();
 				}
+				EditorButtonsRoot.SetActive(false);
+
 				this.root.nrOfEnemiesTotal = 0;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = false;
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = false;
@@ -534,6 +547,8 @@ namespace Jhrino.MFPLevelEditor
 			}
 			if (this.PlayMod)
 			{
+				EditorButtonsRoot.SetActive(true);
+
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
 				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
@@ -863,6 +878,8 @@ namespace Jhrino.MFPLevelEditor
 
 		// Token: 0x0400134F RID: 4943
 		public Texture2D DefaultTexture;
+
+		public GameObject EditorButtonsRoot;
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
