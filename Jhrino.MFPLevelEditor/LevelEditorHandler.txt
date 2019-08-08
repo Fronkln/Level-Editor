@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.PostProcessing;
 
 namespace Jhrino.MFPLevelEditor
 {
@@ -100,6 +101,8 @@ namespace Jhrino.MFPLevelEditor
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "EditorCamera";
 			this.EditorCamera = gameObject2.AddComponent<Camera>();
+			EditorCamera.gameObject.AddComponent<PostProcessingBehaviour>();
+			EditorCamera.gameObject.GetComponent<PostProcessingBehaviour>().profile = Camera.GetComponent<PostProcessingBehaviour>().profile;
 			this.EditorCamera.depth = -1f;
 			this.EditorCamera.clearFlags = CameraClearFlags.Depth;
 			this.EditorCamera.transform.position = new Vector3(0f, 0f, -3f);
