@@ -169,6 +169,7 @@ namespace Jhrino.MFPLevelEditor
 			gameObject4.name = "PlayerSpawn";
 			GameObject gameObject5 = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject5.transform.position = new Vector3(5f, 0f, 0f);
+			gameObject5.transform.localScale = new Vector3(1,1,4);
 			gameObject5.name = "MFPEditor_End_Level";
 			gameObject5.AddComponent<LevelChangerScript>();
 			gameObject5.GetComponent<MeshRenderer>().material.color = Color.green;
