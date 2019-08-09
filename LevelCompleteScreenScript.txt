@@ -1,0 +1,1500 @@
+using System;
+using Boo.Lang.Runtime;
+using ConfigurationLibrary;
+using Jhrino.MFPLevelEditor;
+using Rewired;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityScript.Lang;
+
+// Token: 0x02000064 RID: 100
+[Serializable]
+public class LevelCompleteScreenScript : MonoBehaviour
+{
+	// Token: 0x0600027E RID: 638
+	public LevelCompleteScreenScript()
+	{
+	}
+
+	// Token: 0x0600027F RID: 639
+	public virtual void Awake()
+	{
+		this.player = ReInput.players.GetPlayer(0);
+	}
+
+	// Token: 0x06000280 RID: 640
+	public virtual void Start()
+	{
+		this.root = (RootScript)GameObject.Find("Root").GetComponent(typeof(RootScript));
+		this.rootShared = (RootSharedScript)GameObject.Find("RootShared").GetComponent(typeof(RootSharedScript));
+		this.statsTracker = (StatsTrackerScript)GameObject.Find("RootShared").GetComponent(typeof(StatsTrackerScript));
+		this.theRect = (RectTransform)base.GetComponent(typeof(RectTransform));
+		this.theRectStartPos = this.theRect.anchoredPosition;
+		this.theRectStartScale = this.theRect.sizeDelta;
+		this.yellowTint = (Image)base.transform.parent.GetComponent(typeof(Image));
+		this.yellowTintStartColour = this.yellowTint.color;
+		this.levelCompleteText = (RectTransform)base.transform.Find("LevelCompleteText").GetComponent(typeof(RectTransform));
+		this.levelCompleteTextStartPos = this.levelCompleteText.anchoredPosition;
+		this.pedro = (RectTransform)base.transform.Find("Pedro").GetComponent(typeof(RectTransform));
+		this.pedroStartPos = this.pedro.anchoredPosition;
+		this.pedroFace = (RectTransform)this.pedro.Find("Face").GetComponent(typeof(RectTransform));
+		this.pedroFaceImage = (Image)this.pedroFace.GetComponent(typeof(Image));
+		this.gameScoreText = (Text)base.transform.Find("GameScoreText").GetComponent(typeof(Text));
+		this.gameScoreTextScore = (Text)this.gameScoreText.transform.Find("ScoreText").GetComponent(typeof(Text));
+		this.timeBonusText = (Text)base.transform.Find("TimeBonusText").GetComponent(typeof(Text));
+		this.timeBonusTextScore = (Text)this.timeBonusText.transform.Find("ScoreText").GetComponent(typeof(Text));
+		this.killsText = (Text)base.transform.Find("KillsText").GetComponent(typeof(Text));
+		this.killsTextScore = (Text)this.killsText.transform.Find("ScoreText").GetComponent(typeof(Text));
+		this.noDeathBonusText = (Text)base.transform.Find("NoDeathBonusText").GetComponent(typeof(Text));
+		this.noDeathBonusTextScore = (Text)this.noDeathBonusText.transform.Find("ScoreText").GetComponent(typeof(Text));
+		this.difficultyBonusText = (Text)base.transform.Find("DifficultyBonusText").GetComponent(typeof(Text));
+		this.difficultyBonusTextScore = (Text)this.difficultyBonusText.transform.Find("ScoreText").GetComponent(typeof(Text));
+		this.finalRatingText = (Text)base.transform.Find("FinalRatingText").GetComponent(typeof(Text));
+		this.finalRatingTextScore = (Text)this.finalRatingText.transform.Find("ScoreText").GetComponent(typeof(Text));
+		this.finalRatingBackground = (Image)base.transform.Find("FinalRatingBackground").GetComponent(typeof(Image));
+		this.finalRatingLetterText = (Text)base.transform.Find("FinalRatingLetterText").GetComponent(typeof(Text));
+		this.finalRatingForText = (Text)base.transform.Find("FinalRatingForText").GetComponent(typeof(Text));
+		this.finalRatingBar1 = (Image)base.transform.Find("FinalRatingBar1").GetComponent(typeof(Image));
+		this.finalRatingBar1Bar = (Image)this.finalRatingBar1.transform.Find("Bar").GetComponent(typeof(Image));
+		this.finalRatingBar2 = (Image)base.transform.Find("FinalRatingBar2").GetComponent(typeof(Image));
+		this.finalRatingBar2Bar = (Image)this.finalRatingBar2.transform.Find("Bar").GetComponent(typeof(Image));
+		this.finalRatingBar3 = (Image)base.transform.Find("FinalRatingBar3").GetComponent(typeof(Image));
+		this.finalRatingBar3Bar = (Image)this.finalRatingBar3.transform.Find("Bar").GetComponent(typeof(Image));
+		this.nextLevelButton = (RectTransform)base.transform.Find("NextLevelButton").GetComponent(typeof(RectTransform));
+		this.nextLevelUIButton = (Button)this.nextLevelButton.GetComponent(typeof(Button));
+		this.nextLevelButtonScript = (UIButtonScript)this.nextLevelButton.GetComponent(typeof(UIButtonScript));
+		this.restartLevelButton = (RectTransform)base.transform.Find("RestartLevelButton").GetComponent(typeof(RectTransform));
+		this.restartLevelUIButton = (Button)this.restartLevelButton.GetComponent(typeof(Button));
+		this.restartLevelButtonScript = (UIButtonScript)this.restartLevelButton.GetComponent(typeof(UIButtonScript));
+		this.exitButton = (RectTransform)base.transform.Find("ExitButton").GetComponent(typeof(RectTransform));
+		this.exitUIButton = (Button)this.exitButton.GetComponent(typeof(Button));
+		this.exitButtonScript = (UIButtonScript)this.exitButton.GetComponent(typeof(UIButtonScript));
+		this.weaponPanel = (RectTransform)base.transform.parent.parent.Find("WeaponPanel").GetComponent(typeof(RectTransform));
+		this.healthAndSlowMoPanel = (RectTransform)base.transform.parent.parent.Find("HealthAndSlowMo").GetComponent(typeof(RectTransform));
+		this.scoreHud = (RectTransform)base.transform.parent.parent.Find("ScoreHud").GetComponent(typeof(RectTransform));
+		this.bigFace = (RectTransform)base.transform.parent.parent.Find("BigScreenReaction/BigFace").GetComponent(typeof(RectTransform));
+		this.bigText = (RectTransform)base.transform.parent.parent.Find("BigScreenReaction/BigText").GetComponent(typeof(RectTransform));
+		this.pedroHint = (RectTransform)base.transform.parent.parent.Find("PedroHint").GetComponent(typeof(RectTransform));
+		this.reactionPedro = (RectTransform)base.transform.parent.parent.Find("ReactionPedro").GetComponent(typeof(RectTransform));
+		this.gameHighlight = (RectTransform)base.transform.Find("GameHighlight").GetComponent(typeof(RectTransform));
+		this.gameHighlightStartPos = this.gameHighlight.anchoredPosition;
+		this.gameHighlightTweetPrompt = this.gameHighlight.transform.Find("TweetPrompt").gameObject;
+		this.gameHighlightPinPrompt = this.gameHighlight.transform.Find("PinPrompt").gameObject;
+		this.gameHighlightImage = (RawImage)this.gameHighlight.GetComponent(typeof(RawImage));
+		this.mainCursor = (RectTransform)GameObject.Find("HUD/Canvas/Cursors/MainCursor").GetComponent(typeof(RectTransform));
+		this.previousScoreDisplay = (RectTransform)base.transform.Find("PreviousScoreDisplay").GetComponent(typeof(RectTransform));
+		this.previousScoreDisplayStartPos = this.previousScoreDisplay.anchoredPosition;
+		float x = this.previousScoreDisplay.anchoredPosition.x - this.previousScoreDisplay.sizeDelta.x * 1.5f;
+		Vector2 anchoredPosition = this.previousScoreDisplay.anchoredPosition;
+		anchoredPosition.x = x;
+		this.previousScoreDisplay.anchoredPosition = anchoredPosition;
+		this.personalBestScoreHeader = (Text)this.previousScoreDisplay.Find("PersonalBest").GetComponent(typeof(Text));
+		this.personalBestScore = (Text)this.personalBestScoreHeader.transform.Find("Score").GetComponent(typeof(Text));
+		this.leaderboardBestScoreHeader = (Text)this.previousScoreDisplay.Find("LeaderboardBest").GetComponent(typeof(Text));
+		this.leaderboardBestScore = (Text)this.leaderboardBestScoreHeader.transform.Find("Score").GetComponent(typeof(Text));
+		this.personalBestScore.text = "-";
+		int num = 0;
+		Color color = this.leaderboardBestScore.color;
+		color.a = (float)num;
+		this.leaderboardBestScore.color = color;
+		int num2 = num;
+		Color color2 = this.leaderboardBestScoreHeader.color;
+		color2.a = (float)num2;
+		this.leaderboardBestScoreHeader.color = color2;
+		this.leaderboardBestScore.text = "-";
+		this.theAudioSource = (AudioSource)base.GetComponent(typeof(AudioSource));
+		this.theAudioSource.clip = this.appearSound;
+		this.theAudioSource.volume = 0.6f;
+		this.theAudioSource.pitch = 1f;
+		this.theAudioSource.Play();
+		int num3 = 0;
+		Color color3 = this.gameScoreTextScore.color;
+		color3.a = (float)num3;
+		this.gameScoreTextScore.color = color3;
+		int num4 = num3;
+		Color color4 = this.gameScoreText.color;
+		color4.a = (float)num4;
+		this.gameScoreText.color = color4;
+		int num5 = 0;
+		Color color5 = this.timeBonusTextScore.color;
+		color5.a = (float)num5;
+		this.timeBonusTextScore.color = color5;
+		int num6 = num5;
+		Color color6 = this.timeBonusText.color;
+		color6.a = (float)num6;
+		this.timeBonusText.color = color6;
+		int num7 = 0;
+		Color color7 = this.killsTextScore.color;
+		color7.a = (float)num7;
+		this.killsTextScore.color = color7;
+		int num8 = num7;
+		Color color8 = this.killsText.color;
+		color8.a = (float)num8;
+		this.killsText.color = color8;
+		int num9 = 0;
+		Color color9 = this.noDeathBonusTextScore.color;
+		color9.a = (float)num9;
+		this.noDeathBonusTextScore.color = color9;
+		int num10 = num9;
+		Color color10 = this.noDeathBonusText.color;
+		color10.a = (float)num10;
+		this.noDeathBonusText.color = color10;
+		int num11 = 0;
+		Color color11 = this.difficultyBonusTextScore.color;
+		color11.a = (float)num11;
+		this.difficultyBonusTextScore.color = color11;
+		int num12 = num11;
+		Color color12 = this.difficultyBonusText.color;
+		color12.a = (float)num12;
+		this.difficultyBonusText.color = color12;
+		int num13 = 0;
+		Color color13 = this.finalRatingTextScore.color;
+		color13.a = (float)num13;
+		this.finalRatingTextScore.color = color13;
+		int num14 = num13;
+		Color color14 = this.finalRatingText.color;
+		color14.a = (float)num14;
+		this.finalRatingText.color = color14;
+		int num15 = 0;
+		Color color15 = this.finalRatingBackground.color;
+		color15.a = (float)num15;
+		this.finalRatingBackground.color = color15;
+		int num16 = 0;
+		Color color16 = this.finalRatingLetterText.color;
+		color16.a = (float)num16;
+		this.finalRatingLetterText.color = color16;
+		int num17 = 0;
+		Color color17 = this.finalRatingForText.color;
+		color17.a = (float)num17;
+		this.finalRatingForText.color = color17;
+		int num18 = 0;
+		Color color18 = this.finalRatingBar1Bar.color;
+		color18.a = (float)num18;
+		this.finalRatingBar1Bar.color = color18;
+		int num19 = num18;
+		Color color19 = this.finalRatingBar1.color;
+		color19.a = (float)num19;
+		this.finalRatingBar1.color = color19;
+		int num20 = 0;
+		Color color20 = this.finalRatingBar2Bar.color;
+		color20.a = (float)num20;
+		this.finalRatingBar2Bar.color = color20;
+		int num21 = num20;
+		Color color21 = this.finalRatingBar2.color;
+		color21.a = (float)num21;
+		this.finalRatingBar2.color = color21;
+		int num22 = 0;
+		Color color22 = this.finalRatingBar3Bar.color;
+		color22.a = (float)num22;
+		this.finalRatingBar3Bar.color = color22;
+		int num23 = num22;
+		Color color23 = this.finalRatingBar3.color;
+		color23.a = (float)num23;
+		this.finalRatingBar3.color = color23;
+		this.nextLevelButton.gameObject.SetActive(false);
+		this.restartLevelButton.gameObject.SetActive(false);
+		this.exitButton.gameObject.SetActive(false);
+		this.gameHighlight.gameObject.SetActive(false);
+		int num24 = -Screen.width;
+		Vector2 anchoredPosition2 = this.theRect.anchoredPosition;
+		anchoredPosition2.x = (float)num24;
+		this.theRect.anchoredPosition = anchoredPosition2;
+		int num25 = 0;
+		Vector2 sizeDelta = this.theRect.sizeDelta;
+		sizeDelta.y = (float)num25;
+		this.theRect.sizeDelta = sizeDelta;
+		int num26 = -10;
+		Vector2 anchoredPosition3 = this.levelCompleteText.anchoredPosition;
+		anchoredPosition3.y = (float)num26;
+		this.levelCompleteText.anchoredPosition = anchoredPosition3;
+		this.levelCompleteTextXSpeed = 10f;
+		this.yellowTint.color = new Color(0.95f, 0.95f, 0.85f, 0.6f);
+		float x2 = this.pedro.anchoredPosition.x - 400f;
+		Vector2 anchoredPosition4 = this.pedro.anchoredPosition;
+		anchoredPosition4.x = x2;
+		this.pedro.anchoredPosition = anchoredPosition4;
+		int num27 = 0;
+		Vector3 localScale = this.finalRatingBar1Bar.transform.localScale;
+		localScale.x = (float)num27;
+		this.finalRatingBar1Bar.transform.localScale = localScale;
+		int num28 = 0;
+		Vector3 localScale2 = this.finalRatingBar2Bar.transform.localScale;
+		localScale2.x = (float)num28;
+		this.finalRatingBar2Bar.transform.localScale = localScale2;
+		int num29 = 0;
+		Vector3 localScale3 = this.finalRatingBar3Bar.transform.localScale;
+		localScale3.x = (float)num29;
+		this.finalRatingBar3Bar.transform.localScale = localScale3;
+		if (this.root.isAlarmLevel)
+		{
+			this.killsText.text = this.root.GetTranslation("esNoAlarm");
+		}
+		this.useGamepadIcons = this.root.useGamepadIcons;
+		this.createNavigationHints();
+		this.uiConfirmHintCanvasGroup.alpha = 0f;
+		this.gifSaveButton = (Button)this.gameHighlight.Find("SaveGifButton").GetComponent(typeof(Button));
+		if (this.gifSaveButton != null)
+		{
+			this.gifSaveButtonScript = (UIButtonScript)this.gifSaveButton.GetComponent(typeof(UIButtonScript));
+		}
+		this.tweeetButtonScript = (UIButtonScript)this.gameHighlight.Find("TweetGifButton").GetComponent(typeof(UIButtonScript));
+		this.gifSaveButtonPrompt = ((InputHelperScript)GameObject.Find("Rewired Input Manager").GetComponent(typeof(InputHelperScript))).GetInputSymbol("UISPECIAL1", false);
+		RectTransform rectTransform = (RectTransform)this.gifSaveButtonPrompt.GetComponent(typeof(RectTransform));
+		rectTransform.SetParent(this.gameHighlight.Find("SaveGifButton/ButtonGraphic"), false);
+		rectTransform.anchoredPosition = new Vector2(35.5f, 9.5f);
+		rectTransform.localScale = Vector3.one * 0.7f;
+		if (this.rootShared.isDemo)
+		{
+			((Button)this.gameHighlight.Find("TweetGifButton").GetComponent(typeof(Button))).interactable = false;
+			((Button)this.restartLevelButton.GetComponent(typeof(Button))).interactable = false;
+			((Button)this.exitButton.GetComponent(typeof(Button))).interactable = false;
+		}
+		if (this.rootShared.runningOnConsole)
+		{
+			this.gameHighlight.Find("SaveGifButton").gameObject.SetActive(false);
+			this.gameHighlight.Find("TweetGifButton").gameObject.SetActive(false);
+		}
+		if (this.rootShared.chineseBuild)
+		{
+			RectTransform rectTransform2 = (RectTransform)this.gameHighlight.Find("TweetGifButton").GetComponent(typeof(RectTransform));
+			rectTransform2.anchoredPosition = Vector2.one * -9999f;
+			rectTransform2.localScale = Vector3.one * 0.001f;
+		}
+		GameObject x3 = GameObject.Find("NvidiaHighlights");
+		this.gameHighlight.Find("NvidiaHighlightsButton").gameObject.SetActive(x3 != null);
+		if (!this.useGamepadIcons)
+		{
+			this.gifSaveButtonPrompt.SetActive(false);
+		}
+		int buildIndex = SceneManager.GetActiveScene().buildIndex;
+		this.rootShared.DoEndOfLevelShowTopLeaderboardScore(this.rootShared.GetLeaderboardName(LevelEditorHandler.levelHash, (!this.root.GetCCheck()) ? string.Empty : "-999"));
+	}
+
+	// Token: 0x06000281 RID: 641
+	public virtual void Update()
+	{
+		float num = Mathf.Clamp(Time.unscaledDeltaTime * 60f, 0f, 3f);
+		bool flag;
+		if (!(flag = !this.root.isAlarmLevel) && (flag = this.root.isAlarmLevel))
+		{
+			flag = !this.root.hasTriggeredAlarm;
+		}
+		bool flag4 = flag;
+		bool flag2 = this.root.nrOfDeaths <= 0;
+		bool flag3 = this.root.difficultyMode > 0;
+		float num2 = 360f;
+		if (flag4)
+		{
+			num2 += 130f;
+		}
+		if (flag2)
+		{
+			num2 += 130f;
+		}
+		if (flag3)
+		{
+			num2 += 130f;
+		}
+		if (this.timer > 100f && this.timer < num2 + 5f)
+		{
+			this.timer += 2f * num;
+			if (this.timer < num2 && (this.player.GetButtonDown("Fire") || this.player.GetButtonDown("UISubmit")))
+			{
+				this.timer = num2;
+			}
+		}
+		else
+		{
+			this.timer += num;
+		}
+		if (!this.enabledDoOnce)
+		{
+			this.weaponPanel.gameObject.SetActive(false);
+			this.healthAndSlowMoPanel.gameObject.SetActive(false);
+			this.scoreHud.gameObject.SetActive(false);
+			this.bigFace.gameObject.SetActive(false);
+			this.bigText.gameObject.SetActive(false);
+			this.pedroHint.gameObject.SetActive(false);
+			this.reactionPedro.gameObject.SetActive(false);
+			this.timeBonusTextScore.text = this.root.convertToTimeFormat(0f);
+			if (!this.root.isAlarmLevel)
+			{
+				this.killsTextScore.text = "0/" + this.root.nrOfEnemiesTotal;
+			}
+			if (this.root.maxScoreReference == 0f)
+			{
+				this.root.maxScoreReference = (float)(this.root.nrOfEnemiesTotal * 320 * this.root.potentialMultipliersFromEnemies + 115000);
+			}
+			this.root.maxScoreReference = this.root.maxScoreReference + (float)(25000 * this.root.difficultyMode);
+			this.mainCursor.gameObject.SetActive(false);
+			if (!this.rootShared.neverChangeMouseCursor)
+			{
+				Cursor.SetCursor(Resources.Load("HUD/menu_cursor") as Texture2D, new Vector2(3f, 3f), CursorMode.Auto);
+			}
+			this.root.SetCursorState();
+			this.enabledDoOnce = true;
+		}
+		float x = this.root.DampUnscaled(this.theRectStartPos.x, this.theRect.anchoredPosition.x, 0.3f);
+		Vector2 anchoredPosition = this.theRect.anchoredPosition;
+		anchoredPosition.x = x;
+		this.theRect.anchoredPosition = anchoredPosition;
+		this.yellowTint.color = this.yellowTint.color + (this.yellowTintStartColour - this.yellowTint.color) * Mathf.Clamp01(0.2f * num);
+		if (!this.root.dontShowPedroAtEndScreen)
+		{
+			float x2 = this.root.DampUnscaled(this.pedroStartPos.x, this.pedro.anchoredPosition.x, 0.1f);
+			Vector2 anchoredPosition2 = this.pedro.anchoredPosition;
+			anchoredPosition2.x = x2;
+			this.pedro.anchoredPosition = anchoredPosition2;
+			this.pedroXSpeed += this.root.DampAddUnscaled(this.pedroStartPos.x, this.pedro.anchoredPosition.x, 0.06f);
+			this.pedroXSpeed *= Mathf.Pow(0.85f, num);
+			float x3 = this.pedro.anchoredPosition.x + this.pedroXSpeed * num;
+			Vector2 anchoredPosition3 = this.pedro.anchoredPosition;
+			anchoredPosition3.x = x3;
+			this.pedro.anchoredPosition = anchoredPosition3;
+			float y = Mathf.Sin(Time.unscaledTime) * 5f;
+			Vector2 anchoredPosition4 = this.pedro.anchoredPosition;
+			anchoredPosition4.y = y;
+			this.pedro.anchoredPosition = anchoredPosition4;
+			float z = 5f + Mathf.Sin(Time.unscaledTime + 10f) * 3f + this.pedroXSpeed * 0.25f;
+			Quaternion rotation = this.pedro.rotation;
+			Vector3 eulerAngles = rotation.eulerAngles;
+			eulerAngles.z = z;
+			rotation.eulerAngles = eulerAngles;
+			this.pedro.rotation = rotation;
+		}
+		this.levelCompleteTextXSpeed -= 0.5f * num;
+		float x4 = this.levelCompleteText.anchoredPosition.x + this.levelCompleteTextXSpeed * num;
+		Vector2 anchoredPosition5 = this.levelCompleteText.anchoredPosition;
+		anchoredPosition5.x = x4;
+		this.levelCompleteText.anchoredPosition = anchoredPosition5;
+		if (this.levelCompleteText.anchoredPosition.x < this.levelCompleteTextStartPos.x)
+		{
+			float x5 = this.levelCompleteTextStartPos.x;
+			Vector2 anchoredPosition6 = this.levelCompleteText.anchoredPosition;
+			anchoredPosition6.x = x5;
+			this.levelCompleteText.anchoredPosition = anchoredPosition6;
+			this.levelCompleteTextXSpeed *= -0.5f;
+		}
+		if (this.timer < 80f)
+		{
+			float y2 = this.root.DampUnscaled(30f, this.theRect.sizeDelta.y, 0.3f);
+			Vector2 sizeDelta = this.theRect.sizeDelta;
+			sizeDelta.y = y2;
+			this.theRect.sizeDelta = sizeDelta;
+		}
+		else if (this.timer < 300f)
+		{
+			float y3 = this.root.DampUnscaled(165f, this.theRect.sizeDelta.y, 0.3f);
+			Vector2 sizeDelta2 = this.theRect.sizeDelta;
+			sizeDelta2.y = y3;
+			this.theRect.sizeDelta = sizeDelta2;
+			float y4 = this.root.DampUnscaled(this.levelCompleteTextStartPos.y, this.levelCompleteText.anchoredPosition.y, 0.3f);
+			Vector2 anchoredPosition7 = this.levelCompleteText.anchoredPosition;
+			anchoredPosition7.y = y4;
+			this.levelCompleteText.anchoredPosition = anchoredPosition7;
+			float num63 = this.timer - 85f;
+			float num3 = Mathf.Clamp(num63, 0f, 10f) / 20f;
+			Color color = this.gameScoreTextScore.color;
+			color.a = num3;
+			this.gameScoreTextScore.color = color;
+			float a = num3;
+			Color color2 = this.gameScoreText.color;
+			color2.a = a;
+			this.gameScoreText.color = color2;
+			float num4 = Mathf.Clamp(num63 - 5f, 0f, 10f) / 20f;
+			Color color3 = this.timeBonusTextScore.color;
+			color3.a = num4;
+			this.timeBonusTextScore.color = color3;
+			float a2 = num4;
+			Color color4 = this.timeBonusText.color;
+			color4.a = a2;
+			this.timeBonusText.color = color4;
+			float num5 = Mathf.Clamp(num63 - 10f, 0f, 10f) / 20f;
+			Color color5 = this.killsTextScore.color;
+			color5.a = num5;
+			this.killsTextScore.color = color5;
+			float a3 = num5;
+			Color color6 = this.killsText.color;
+			color6.a = a3;
+			this.killsText.color = color6;
+			float num6 = Mathf.Clamp(num63 - 15f, 0f, 10f) / 20f;
+			Color color7 = this.noDeathBonusTextScore.color;
+			color7.a = num6;
+			this.noDeathBonusTextScore.color = color7;
+			float a4 = num6;
+			Color color8 = this.noDeathBonusText.color;
+			color8.a = a4;
+			this.noDeathBonusText.color = color8;
+			float num7 = Mathf.Clamp(num63 - 20f, 0f, 10f) / 20f;
+			Color color9 = this.difficultyBonusTextScore.color;
+			color9.a = num7;
+			this.difficultyBonusTextScore.color = color9;
+			float a5 = num7;
+			Color color10 = this.difficultyBonusText.color;
+			color10.a = a5;
+			this.difficultyBonusText.color = color10;
+			float num8 = Mathf.Clamp(num63 - 20f, 0f, 10f) / 10f;
+			Color color11 = this.finalRatingTextScore.color;
+			color11.a = num8;
+			this.finalRatingTextScore.color = color11;
+			float a6 = num8;
+			Color color12 = this.finalRatingText.color;
+			color12.a = a6;
+			this.finalRatingText.color = color12;
+			float num9 = Mathf.Clamp(num63 - 25f, 0f, 10f) / 10f;
+			Color color13 = this.finalRatingBar1Bar.color;
+			color13.a = num9;
+			this.finalRatingBar1Bar.color = color13;
+			float a7 = num9;
+			Color color14 = this.finalRatingBar1.color;
+			color14.a = a7;
+			this.finalRatingBar1.color = color14;
+			float num10 = Mathf.Clamp(num63 - 30f, 0f, 10f) / 10f;
+			Color color15 = this.finalRatingBar2Bar.color;
+			color15.a = num10;
+			this.finalRatingBar2Bar.color = color15;
+			float a8 = num10;
+			Color color16 = this.finalRatingBar2.color;
+			color16.a = a8;
+			this.finalRatingBar2.color = color16;
+			float num11 = Mathf.Clamp(num63 - 35f, 0f, 10f) / 10f;
+			Color color17 = this.finalRatingBar3Bar.color;
+			color17.a = num11;
+			this.finalRatingBar3Bar.color = color17;
+			float a9 = num11;
+			Color color18 = this.finalRatingBar3.color;
+			color18.a = a9;
+			this.finalRatingBar3.color = color18;
+		}
+		else
+		{
+			int num12 = 1;
+			Color color19 = this.finalRatingTextScore.color;
+			color19.a = (float)num12;
+			this.finalRatingTextScore.color = color19;
+			int num13 = num12;
+			Color color20 = this.finalRatingText.color;
+			color20.a = (float)num13;
+			this.finalRatingText.color = color20;
+			int num14 = 1;
+			Color color21 = this.finalRatingBar1Bar.color;
+			color21.a = (float)num14;
+			this.finalRatingBar1Bar.color = color21;
+			int num15 = num14;
+			Color color22 = this.finalRatingBar1.color;
+			color22.a = (float)num15;
+			this.finalRatingBar1.color = color22;
+			int num16 = 1;
+			Color color23 = this.finalRatingBar2Bar.color;
+			color23.a = (float)num16;
+			this.finalRatingBar2Bar.color = color23;
+			int num17 = num16;
+			Color color24 = this.finalRatingBar2.color;
+			color24.a = (float)num17;
+			this.finalRatingBar2.color = color24;
+			int num18 = 1;
+			Color color25 = this.finalRatingBar3Bar.color;
+			color25.a = (float)num18;
+			this.finalRatingBar3Bar.color = color25;
+			int num19 = num18;
+			Color color26 = this.finalRatingBar3.color;
+			color26.a = (float)num19;
+			this.finalRatingBar3.color = color26;
+		}
+		float num20 = 0f;
+		float num21 = this.timer - 100f;
+		if (num21 > 0f)
+		{
+			int num22 = 1;
+			Color color27 = this.gameScoreTextScore.color;
+			color27.a = (float)num22;
+			this.gameScoreTextScore.color = color27;
+			int num23 = num22;
+			Color color28 = this.gameScoreText.color;
+			color28.a = (float)num23;
+			this.gameScoreText.color = color28;
+			float num24 = Mathf.Round(Mathf.Clamp01(num21 / 120f) * this.root.score);
+			num20 += num24;
+			this.gameScoreTextScore.text = this.root.addCommasToNumber(num24);
+		}
+		if (num21 > 130f)
+		{
+			num21 -= 130f;
+			int num25 = 1;
+			Color color29 = this.timeBonusTextScore.color;
+			color29.a = (float)num25;
+			this.timeBonusTextScore.color = color29;
+			int num26 = num25;
+			Color color30 = this.timeBonusText.color;
+			color30.a = (float)num26;
+			this.timeBonusText.color = color30;
+			float num27 = Mathf.Round(Mathf.Clamp01(num21 / 120f) * (900f - Mathf.Clamp(LevelEditorHandler.levelTimer, 0f, 900f)) * 50f);
+			num20 += num27;
+			this.timeBonusTextScore.text = this.root.convertToTimeFormat(Mathf.Clamp01(num21 / 120f) * LevelEditorHandler.levelTimer);
+			if (num21 > 120f)
+			{
+				this.timeBonusTextScore.text = this.timeBonusTextScore.text + "  =  " + this.root.addCommasToNumber(num27);
+			}
+		}
+		if (flag4 && num21 > 130f)
+		{
+			num21 -= 130f;
+			int num28 = 1;
+			Color color31 = this.killsTextScore.color;
+			color31.a = (float)num28;
+			this.killsTextScore.color = color31;
+			int num29 = num28;
+			Color color32 = this.killsText.color;
+			color32.a = (float)num29;
+			this.killsText.color = color32;
+			if (!this.root.isAlarmLevel)
+			{
+				this.countedKills = Mathf.Round(Mathf.Clamp01(num21 / 120f) * (float)this.root.nrOfEnemiesKilled);
+				this.killsTextScore.text = this.countedKills + "/" + this.root.nrOfEnemiesTotal;
+				if (num21 > 120f)
+				{
+					if (this.root.nrOfEnemiesKilled >= this.root.nrOfEnemiesTotal)
+					{
+						this.killsTextScore.text = string.Concat(new string[]
+						{
+							this.killsTextScore.text,
+							"  =  ",
+							this.root.GetTranslation("esBonus"),
+							" ",
+							this.root.addCommasToNumber(10000f)
+						});
+						num20 += 10000f;
+					}
+					else
+					{
+						this.killsTextScore.text = this.killsTextScore.text + "  =  " + this.root.GetTranslation("esNoBonus");
+					}
+				}
+			}
+			else
+			{
+				float num30 = Mathf.Round(Mathf.Clamp01(num21 / 120f) * 200000f);
+				num20 += num30;
+				this.killsTextScore.text = this.root.addCommasToNumber(num30);
+			}
+		}
+		if (flag2 && num21 > 130f)
+		{
+			num21 -= 130f;
+			int num31 = 1;
+			Color color33 = this.noDeathBonusTextScore.color;
+			color33.a = (float)num31;
+			this.noDeathBonusTextScore.color = color33;
+			int num32 = num31;
+			Color color34 = this.noDeathBonusText.color;
+			color34.a = (float)num32;
+			this.noDeathBonusText.color = color34;
+			float num33 = Mathf.Round(Mathf.Clamp01(num21 / 120f) * 20000f);
+			num20 += num33;
+			this.noDeathBonusTextScore.text = this.root.addCommasToNumber(num33);
+		}
+		if (flag3 && num21 > 130f)
+		{
+			num21 -= 130f;
+			int num34 = 1;
+			Color color35 = this.difficultyBonusTextScore.color;
+			color35.a = (float)num34;
+			this.difficultyBonusTextScore.color = color35;
+			int num35 = num34;
+			Color color36 = this.difficultyBonusText.color;
+			color36.a = (float)num35;
+			this.difficultyBonusText.color = color36;
+			float num36 = Mathf.Round(Mathf.Clamp01(num21 / 120f) * (float)(25000 * this.root.difficultyMode));
+			num20 += num36;
+			this.difficultyBonusTextScore.text = this.root.addCommasToNumber(num36);
+		}
+		this.finalRatingTextScore.text = this.root.addCommasToNumber(num20);
+		if (this.prevTotalScore != num20)
+		{
+			this.doCountingSound(num20 / this.root.maxScoreReference);
+			this.prevTotalScore = num20;
+		}
+		if (this.prevCountedKills != this.countedKills)
+		{
+			this.doCountingSound(num20 / this.root.maxScoreReference + this.countedKills / (float)this.root.nrOfEnemiesTotal * 0.2f);
+			this.prevCountedKills = this.countedKills;
+		}
+		float num37 = Mathf.Clamp01(num20 / this.root.maxScoreReference);
+		float x6 = Mathf.Clamp01(num37 * 3f - 2f);
+		Vector3 localScale = this.finalRatingBar3Bar.transform.localScale;
+		localScale.x = x6;
+		this.finalRatingBar3Bar.transform.localScale = localScale;
+		float x7 = Mathf.Clamp01(num37 * 3f - 1f);
+		Vector3 localScale2 = this.finalRatingBar2Bar.transform.localScale;
+		localScale2.x = x7;
+		this.finalRatingBar2Bar.transform.localScale = localScale2;
+		float x8 = Mathf.Clamp01(num37 * 3f);
+		Vector3 localScale3 = this.finalRatingBar1Bar.transform.localScale;
+		localScale3.x = x8;
+		this.finalRatingBar1Bar.transform.localScale = localScale3;
+		if (num21 > 130f)
+		{
+			num21 -= 130f;
+			if (!this.ratingTextDoOnce)
+			{
+				this.pedroFaceImage.sprite = this.root.pedroExpressions[(int)Mathf.Clamp(num37 * (float)(Extensions.get_length(this.root.pedroExpressions) - 1), 0f, 26f)];
+				this.theAudioSource.clip = this.ratingSound;
+				this.theAudioSource.pitch = 0.8f + num37 * 0.7f;
+				this.theAudioSource.volume = 0.7f + num37 * 0.2f;
+				this.theAudioSource.Play();
+				this.root.rumble(0, 0.9f, 0.2f);
+				this.root.rumble(1, 0.8f, 0.15f);
+				float value = UnityEngine.Random.value;
+				int num38;
+				if (num37 >= 1f)
+				{
+					this.pedroFaceImage.sprite = this.root.pedroExpressions[UnityEngine.Random.Range(27, 30)];
+					this.finalRatingLetterText.text = this.root.GetTranslation("esRateS");
+					if (value > 0.75f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esSFor1");
+					}
+					else if (value > 0.5f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esSFor2");
+					}
+					else if (value > 0.25f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esSFor3");
+					}
+					else
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esSFor4");
+					}
+					num38 = 4;
+				}
+				else if (num37 > 0.6666667f)
+				{
+					this.finalRatingLetterText.text = this.root.GetTranslation("esRateA");
+					if (value > 0.75f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esAFor1");
+					}
+					else if (value > 0.5f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esAFor2");
+					}
+					else if (value > 0.25f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esAFor3");
+					}
+					else
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esAFor4");
+					}
+					num38 = 3;
+				}
+				else if (num37 > 0.333333343f)
+				{
+					this.finalRatingLetterText.text = this.root.GetTranslation("esRateB");
+					if (value > 0.75f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esBFor1");
+					}
+					else if (value > 0.5f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esBFor2");
+					}
+					else if (value > 0.25f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esBFor3");
+					}
+					else
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esBFor4");
+					}
+					num38 = 2;
+				}
+				else
+				{
+					this.finalRatingLetterText.text = this.root.GetTranslation("esRateC");
+					if (value > 0.75f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esCFor1");
+					}
+					else if (value > 0.5f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esCFor2");
+					}
+					else if (value > 0.25f)
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esCFor3");
+					}
+					else
+					{
+						this.finalRatingForText.text = this.root.GetTranslation("esCFor4");
+					}
+					num38 = 1;
+				}
+				int levelHash = LevelEditorHandler.levelHash;
+				float bestScoreForLevel = this.rootShared.GetBestScoreForLevel(levelHash, false);
+				if (num20 > bestScoreForLevel)
+				{
+					this.newRecord = true;
+				}
+				if (num38 > SavedData.GetInt(CryptoString.Encrypt(string.Concat(new object[]
+				{
+					"lvlRating",
+					levelHash,
+					"diff",
+					this.root.difficultyMode
+				}))))
+				{
+					SavedData.SetInt(CryptoString.Encrypt(string.Concat(new object[]
+					{
+						"lvlRating",
+						levelHash,
+						"diff",
+						this.root.difficultyMode
+					})), num38);
+				}
+				if (num20 < 9999999f && num20 > (float)SavedData.GetInt(CryptoString.Encrypt(string.Concat(new object[]
+				{
+					"lvlScore",
+					levelHash,
+					"diff",
+					this.root.difficultyMode
+				}))))
+				{
+					SavedData.SetInt(CryptoString.Encrypt(string.Concat(new object[]
+					{
+						"lvlScore",
+						levelHash,
+						"diff",
+						this.root.difficultyMode
+					})), (int)num20);
+					SavedData.SetString(CryptoString.Encrypt(string.Concat(new object[]
+					{
+						"lvlScore",
+						levelHash,
+						"diff",
+						this.root.difficultyMode,
+						"ID"
+					})), (!this.root.GetCCheck()) ? this.rootShared.userID : "-999");
+				}
+				if (!SavedData.HasKey(CryptoString.Encrypt(string.Concat(new object[]
+				{
+					"lvlTime",
+					levelHash,
+					"diff",
+					this.root.difficultyMode
+				}))) || this.root.finishTime - this.root.startTime <= SavedData.GetFloat(CryptoString.Encrypt(string.Concat(new object[]
+				{
+					"lvlTime",
+					levelHash,
+					"diff",
+					this.root.difficultyMode
+				}))))
+				{
+					SavedData.SetFloat(CryptoString.Encrypt(string.Concat(new object[]
+					{
+						"lvlTime",
+						levelHash,
+						"diff",
+						this.root.difficultyMode
+					})), this.root.finishTime - this.root.startTime);
+				}
+				if (bestScoreForLevel > 0f)
+				{
+					if (this.newRecord)
+					{
+						this.personalBestScore.text = this.root.addCommasToNumber(num20);
+					}
+					else
+					{
+						this.personalBestScore.text = this.rootShared.addCommasToNumber(bestScoreForLevel);
+					}
+				}
+				this.statsTracker.countSRatings();
+				this.statsTracker.checkChapterComplete();
+				if (num20 < 9999999f && this.rootShared.OkToUploadScore())
+				{
+					this.rootShared.DoUploadScore((int)num20, this.rootShared.GetLeaderboardName(LevelEditorHandler.levelHash, (!this.root.GetCCheck()) ? string.Empty : "-999"));
+				}
+				this.ratingTextDoOnce = true;
+			}
+			if (this.personalBestScore.text != "-")
+			{
+				if (this.leaderboardBestScore.text != "-")
+				{
+					float num39 = Mathf.Clamp01(this.leaderboardBestScore.color.a + 0.02f * num);
+					Color color37 = this.leaderboardBestScore.color;
+					color37.a = num39;
+					this.leaderboardBestScore.color = color37;
+					float a10 = num39;
+					Color color38 = this.leaderboardBestScoreHeader.color;
+					color38.a = a10;
+					this.leaderboardBestScoreHeader.color = color38;
+					float x9 = this.root.DampUnscaled(this.previousScoreDisplayStartPos.x, this.previousScoreDisplay.anchoredPosition.x, 0.3f);
+					Vector2 anchoredPosition8 = this.previousScoreDisplay.anchoredPosition;
+					anchoredPosition8.x = x9;
+					this.previousScoreDisplay.anchoredPosition = anchoredPosition8;
+				}
+				else
+				{
+					float x10 = this.root.DampUnscaled(this.previousScoreDisplayStartPos.x - 107f, this.previousScoreDisplay.anchoredPosition.x, 0.3f);
+					Vector2 anchoredPosition9 = this.previousScoreDisplay.anchoredPosition;
+					anchoredPosition9.x = x10;
+					this.previousScoreDisplay.anchoredPosition = anchoredPosition9;
+				}
+				if (this.newRecord)
+				{
+					this.personalBestScoreHeader.text = ((Mathf.Sin(Time.unscaledTime * 3f) <= 0f) ? this.root.GetTranslation("esNRecord") : this.root.GetTranslation("esPBest"));
+				}
+			}
+			float y5 = this.root.DampUnscaled(this.theRectStartScale.y, this.theRect.sizeDelta.y, 0.3f);
+			Vector2 sizeDelta3 = this.theRect.sizeDelta;
+			sizeDelta3.y = y5;
+			this.theRect.sizeDelta = sizeDelta3;
+			float a11 = Mathf.Clamp(num21, 0f, 20f) / 20f * 0.1f;
+			Color color39 = this.finalRatingBackground.color;
+			color39.a = a11;
+			this.finalRatingBackground.color = color39;
+			float num40 = Mathf.Clamp(num21, 0f, 20f) / 20f;
+			Color color40 = this.finalRatingForText.color;
+			color40.a = num40;
+			this.finalRatingForText.color = color40;
+			float a12 = num40;
+			Color color41 = this.finalRatingLetterText.color;
+			color41.a = a12;
+			this.finalRatingLetterText.color = color41;
+			this.finalRatingLetterText.transform.localScale = Vector3.one * Mathf.Clamp(15f - num21, 1f, 15f);
+			float z2 = Mathf.Clamp01(1f - num21 * 0.1f) * 10f;
+			Vector3 eulerAngles2 = this.finalRatingLetterText.transform.eulerAngles;
+			eulerAngles2.z = z2;
+			this.finalRatingLetterText.transform.eulerAngles = eulerAngles2;
+			if (num21 > 10f && num21 < 20f)
+			{
+				this.finalRatingLetterText.transform.localScale = this.finalRatingLetterText.transform.localScale - Vector3.one * ((20f - num21) / 20f) * 0.5f;
+				float y6 = this.theRectStartPos.y + (float)UnityEngine.Random.Range(-1, 1) * ((20f - num21) / 20f) * 30f;
+				Vector2 anchoredPosition10 = this.theRect.anchoredPosition;
+				anchoredPosition10.y = y6;
+				this.theRect.anchoredPosition = anchoredPosition10;
+				float x11 = this.theRectStartPos.x + (float)UnityEngine.Random.Range(-1, 1) * ((20f - num21) / 20f) * 10f;
+				Vector2 anchoredPosition11 = this.theRect.anchoredPosition;
+				anchoredPosition11.x = x11;
+				this.theRect.anchoredPosition = anchoredPosition11;
+			}
+			if (num21 > 60f)
+			{
+				num21 -= 60f;
+				if (this.gameHighlightTweetPrompt.activeInHierarchy || this.gameHighlightPinPrompt.activeInHierarchy)
+				{
+					this.gameHighlight.anchoredPosition = this.root.DampV2Unscaled(this.gameHighlightStartPos + new Vector2(-this.gameHighlight.sizeDelta.x, 0f), this.gameHighlight.anchoredPosition, 0.3f);
+					int num41 = 0;
+					Color color42 = this.gameScoreTextScore.color;
+					color42.a = (float)num41;
+					this.gameScoreTextScore.color = color42;
+					int num42 = num41;
+					Color color43 = this.gameScoreText.color;
+					color43.a = (float)num42;
+					this.gameScoreText.color = color43;
+					int num43 = 0;
+					Color color44 = this.timeBonusTextScore.color;
+					color44.a = (float)num43;
+					this.timeBonusTextScore.color = color44;
+					int num44 = num43;
+					Color color45 = this.timeBonusText.color;
+					color45.a = (float)num44;
+					this.timeBonusText.color = color45;
+					int num45 = 0;
+					Color color46 = this.killsTextScore.color;
+					color46.a = (float)num45;
+					this.killsTextScore.color = color46;
+					int num46 = num45;
+					Color color47 = this.killsText.color;
+					color47.a = (float)num46;
+					this.killsText.color = color47;
+					int num47 = 0;
+					Color color48 = this.noDeathBonusTextScore.color;
+					color48.a = (float)num47;
+					this.noDeathBonusTextScore.color = color48;
+					int num48 = num47;
+					Color color49 = this.noDeathBonusText.color;
+					color49.a = (float)num48;
+					this.noDeathBonusText.color = color49;
+					int num49 = 0;
+					Color color50 = this.difficultyBonusTextScore.color;
+					color50.a = (float)num49;
+					this.difficultyBonusTextScore.color = color50;
+					int num50 = num49;
+					Color color51 = this.difficultyBonusText.color;
+					color51.a = (float)num50;
+					this.difficultyBonusText.color = color51;
+					int num51 = 0;
+					Color color52 = this.finalRatingTextScore.color;
+					color52.a = (float)num51;
+					this.finalRatingTextScore.color = color52;
+					int num52 = num51;
+					Color color53 = this.finalRatingText.color;
+					color53.a = (float)num52;
+					this.finalRatingText.color = color53;
+					int num53 = 0;
+					Color color54 = this.finalRatingBackground.color;
+					color54.a = (float)num53;
+					this.finalRatingBackground.color = color54;
+					int num54 = 0;
+					Color color55 = this.finalRatingLetterText.color;
+					color55.a = (float)num54;
+					this.finalRatingLetterText.color = color55;
+					int num55 = 0;
+					Color color56 = this.finalRatingForText.color;
+					color56.a = (float)num55;
+					this.finalRatingForText.color = color56;
+					int num56 = 0;
+					Color color57 = this.finalRatingBar1Bar.color;
+					color57.a = (float)num56;
+					this.finalRatingBar1Bar.color = color57;
+					int num57 = num56;
+					Color color58 = this.finalRatingBar1.color;
+					color58.a = (float)num57;
+					this.finalRatingBar1.color = color58;
+					int num58 = 0;
+					Color color59 = this.finalRatingBar2Bar.color;
+					color59.a = (float)num58;
+					this.finalRatingBar2Bar.color = color59;
+					int num59 = num58;
+					Color color60 = this.finalRatingBar2.color;
+					color60.a = (float)num59;
+					this.finalRatingBar2.color = color60;
+					int num60 = 0;
+					Color color61 = this.finalRatingBar3Bar.color;
+					color61.a = (float)num60;
+					this.finalRatingBar3Bar.color = color61;
+					int num61 = num60;
+					Color color62 = this.finalRatingBar3.color;
+					color62.a = (float)num61;
+					this.finalRatingBar3.color = color62;
+					if (!this.tweetUIStuffDoOnce)
+					{
+						this.nextLevelUIButton.interactable = false;
+						this.restartLevelUIButton.interactable = false;
+						this.exitUIButton.interactable = false;
+						this.tweetUIStuffDoOnce = true;
+					}
+				}
+				else
+				{
+					this.gameHighlight.anchoredPosition = this.root.DampV2Unscaled(this.gameHighlightStartPos, this.gameHighlight.anchoredPosition, 0.3f);
+					if (this.tweetUIStuffDoOnce)
+					{
+						this.nextLevelUIButton.interactable = true;
+						this.restartLevelUIButton.interactable = true;
+						this.exitUIButton.interactable = true;
+						this.tweetUIStuffDoOnce = false;
+					}
+				}
+				if (!this.nextLevelButton.gameObject.activeInHierarchy)
+				{
+					this.nextLevelButton.gameObject.SetActive(true);
+					this.restartLevelButton.gameObject.SetActive(true);
+					this.exitButton.gameObject.SetActive(true);
+					if (this.root.hasCapturedMoment)
+					{
+						this.gameHighlight.gameObject.SetActive(true);
+					}
+					this.optionSelected = 0;
+					this.DoOptionSelectStuff();
+				}
+				float num62 = (Mathf.Sin(Time.unscaledTime * 0.33f) * 0.1f + Mathf.Sin(Time.unscaledTime * 1.3f) * 0.3f + Mathf.Sin(Time.unscaledTime * 5.3f) * 1.5f) * (1f - num37) * 0.025f;
+				this.theAudioSource.pitch = 0.8f + num37 * 0.7f + num62;
+				this.theAudioSource.volume = this.theAudioSource.volume + (0.7f + num37 * 0.2f + num62 * 10f - this.theAudioSource.volume) * 0.2f;
+				if (this.timer > 622f)
+				{
+					this.uiConfirmHintCanvasGroup.alpha = (float)((!this.nextLevelUIButton.interactable) ? 0 : 1);
+					if (this.player.GetAxisRaw("UIYAxis") > 0.5f)
+					{
+						if (!this.optionNavDoOnce)
+						{
+							if (!this.rootShared.isDemo)
+							{
+								this.optionSelected = Mathf.Clamp(this.optionSelected - 1, 0, 2);
+								this.DoOptionSelectStuff();
+							}
+							this.optionNavDoOnce = true;
+						}
+					}
+					else if (this.player.GetAxisRaw("UIYAxis") < -0.5f)
+					{
+						if (!this.optionNavDoOnce)
+						{
+							if (!this.rootShared.isDemo)
+							{
+								this.optionSelected = Mathf.Clamp(this.optionSelected + 1, 0, 2);
+								this.DoOptionSelectStuff();
+							}
+							this.optionNavDoOnce = true;
+						}
+					}
+					else if (this.player.GetButton("UISubmit"))
+					{
+						if (!this.optionNavDoOnce)
+						{
+							if (this.optionSelected == 0)
+							{
+								this.nextLevelButtonScript.mousePressed = true;
+							}
+							else if (this.optionSelected == 1)
+							{
+								this.restartLevelButtonScript.mousePressed = true;
+							}
+							else if (this.optionSelected == 2)
+							{
+								this.exitButtonScript.mousePressed = true;
+							}
+							this.optionNavDoOnce = true;
+						}
+					}
+					else if (this.optionNavDoOnce)
+					{
+						if (this.nextLevelUIButton.interactable)
+						{
+							if (this.nextLevelButtonScript.mousePressed)
+							{
+								((Button)this.nextLevelButton.GetComponent(typeof(Button))).onClick.Invoke();
+							}
+							else if (this.restartLevelButtonScript.mousePressed)
+							{
+								((Button)this.restartLevelButtonScript.GetComponent(typeof(Button))).onClick.Invoke();
+							}
+							else if (this.exitButtonScript.mousePressed)
+							{
+								((Button)this.exitButtonScript.GetComponent(typeof(Button))).onClick.Invoke();
+							}
+						}
+						this.nextLevelButtonScript.mousePressed = false;
+						this.restartLevelButtonScript.mousePressed = false;
+						this.exitButtonScript.mousePressed = false;
+						this.optionNavDoOnce = false;
+					}
+					if ((this.gifSaveButtonScript != null && this.gifSaveButtonScript.actualMouseUsed) || (this.tweeetButtonScript != null && this.tweeetButtonScript.actualMouseUsed))
+					{
+						if (this.gifSaveButtonScript != null)
+						{
+							this.gifSaveButtonScript.actualMouseUsed = false;
+						}
+						if (this.tweeetButtonScript != null)
+						{
+							this.tweeetButtonScript.actualMouseUsed = false;
+						}
+						this.optionSelected = -1;
+						this.DoOptionSelectStuff();
+						this.nextLevelButtonScript.mousePressed = false;
+						this.nextLevelButtonScript.mouseOver = false;
+						this.restartLevelButtonScript.mousePressed = false;
+						this.restartLevelButtonScript.mouseOver = false;
+						this.exitButtonScript.mousePressed = false;
+						this.exitButtonScript.mouseOver = false;
+					}
+					if (this.nextLevelButtonScript.actualMouseUsed)
+					{
+						this.optionSelected = 0;
+						this.DoOptionSelectStuff();
+						this.restartLevelButtonScript.mousePressed = false;
+						this.restartLevelButtonScript.mouseOver = false;
+						this.exitButtonScript.mousePressed = false;
+						this.exitButtonScript.mouseOver = false;
+					}
+					if (this.restartLevelButtonScript.actualMouseUsed)
+					{
+						this.optionSelected = 1;
+						this.DoOptionSelectStuff();
+						this.nextLevelButtonScript.mousePressed = false;
+						this.nextLevelButtonScript.mouseOver = false;
+						this.exitButtonScript.mousePressed = false;
+						this.exitButtonScript.mouseOver = false;
+					}
+					if (this.exitButtonScript.actualMouseUsed)
+					{
+						this.optionSelected = 2;
+						this.DoOptionSelectStuff();
+						this.nextLevelButtonScript.mousePressed = false;
+						this.nextLevelButtonScript.mouseOver = false;
+						this.restartLevelButtonScript.mousePressed = false;
+						this.restartLevelButtonScript.mouseOver = false;
+					}
+					if (!this.rootShared.runningOnConsole)
+					{
+						if (this.player.GetButtonDown("UISpecial1") && !this.hasExportedGifFromGamepad)
+						{
+							((HUDFunnelScript)base.transform.GetComponentInParent(typeof(HUDFunnelScript))).saveGif();
+							this.gifSaveButtonPrompt.SetActive(false);
+							this.hasExportedGifFromGamepad = true;
+						}
+						if ((!this.useGamepadIcons || !this.gifSaveButton.interactable) && this.gifSaveButtonPrompt.activeSelf)
+						{
+							this.gifSaveButtonPrompt.SetActive(false);
+							return;
+						}
+						if (this.useGamepadIcons && this.gifSaveButton.interactable && !this.gifSaveButtonPrompt.activeSelf)
+						{
+							this.gifSaveButtonPrompt.SetActive(true);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Token: 0x06000282 RID: 642
+	public virtual void DoOptionSelectStuff()
+	{
+		if (this.optionSelected == 0)
+		{
+			this.nextLevelButtonScript.mouseOver = true;
+			this.nextLevelButtonScript.actualMouseUsed = false;
+			this.restartLevelButtonScript.mouseOver = false;
+			this.restartLevelButtonScript.actualMouseUsed = false;
+			this.exitButtonScript.mouseOver = false;
+			this.exitButtonScript.actualMouseUsed = false;
+		}
+		else if (this.optionSelected == 1)
+		{
+			this.nextLevelButtonScript.mouseOver = false;
+			this.nextLevelButtonScript.actualMouseUsed = false;
+			this.restartLevelButtonScript.mouseOver = true;
+			this.restartLevelButtonScript.actualMouseUsed = false;
+			this.exitButtonScript.mouseOver = false;
+			this.exitButtonScript.actualMouseUsed = false;
+		}
+		else if (this.optionSelected == 2)
+		{
+			this.nextLevelButtonScript.mouseOver = false;
+			this.nextLevelButtonScript.actualMouseUsed = false;
+			this.restartLevelButtonScript.mouseOver = false;
+			this.restartLevelButtonScript.actualMouseUsed = false;
+			this.exitButtonScript.mouseOver = true;
+			this.exitButtonScript.actualMouseUsed = false;
+		}
+		Controller lastActiveController = this.player.controllers.GetLastActiveController();
+		if (!RuntimeServices.EqualityOperator(lastActiveController, null))
+		{
+			if (this.useGamepadIcons && lastActiveController.type == ControllerType.Keyboard)
+			{
+				this.useGamepadIcons = false;
+				this.createNavigationHints();
+			}
+			else if (!this.useGamepadIcons && lastActiveController.type == ControllerType.Joystick)
+			{
+				this.useGamepadIcons = true;
+				this.createNavigationHints();
+			}
+		}
+		if (!this.hasExportedGifFromGamepad && this.useGamepadIcons && this.gifSaveButtonPrompt != null && !this.gifSaveButtonPrompt.activeInHierarchy)
+		{
+			this.gifSaveButtonPrompt.SetActive(true);
+			return;
+		}
+		if (!this.useGamepadIcons && this.gifSaveButtonPrompt != null && this.gifSaveButtonPrompt.activeInHierarchy)
+		{
+			this.gifSaveButtonPrompt.SetActive(false);
+		}
+	}
+
+	// Token: 0x06000283 RID: 643
+	public virtual void doCountingSound(float refNr)
+	{
+		if (!this.theAudioSource.isPlaying || this.theAudioSource.clip == this.appearSound)
+		{
+			this.theAudioSource.clip = this.countSound;
+			this.theAudioSource.volume = Mathf.Clamp01(0.5f + refNr * 0.5f);
+			this.theAudioSource.pitch = Mathf.Clamp(0.5f + refNr, 0f, 1.8f);
+			this.theAudioSource.Play();
+		}
+	}
+
+	// Token: 0x06000284 RID: 644
+	public virtual void createNavigationHints()
+	{
+		float alpha = 1f;
+		if (this.uiConfirmHint != null)
+		{
+			alpha = this.uiConfirmHintCanvasGroup.alpha;
+			UnityEngine.Object.Destroy(this.uiConfirmHint);
+		}
+		this.uiConfirmHint = this.rootShared.createHintText("<UISUBMIT> " + this.rootShared.GetTranslation("uiConfirm"), "uiConfirm", base.transform.parent, this.useGamepadIcons, false);
+		this.uiConfirmHintCanvasGroup = (CanvasGroup)this.uiConfirmHint.AddComponent(typeof(CanvasGroup));
+		this.uiConfirmHintCanvasGroup.alpha = alpha;
+		this.uiConfirmHint.transform.localScale = this.uiConfirmHint.transform.localScale * 0.75f;
+		RectTransform rectTransform = (RectTransform)this.uiConfirmHint.GetComponent(typeof(RectTransform));
+		Vector2 vector = new Vector2(0f, 0f);
+		rectTransform.anchorMax = vector;
+		rectTransform.anchorMin = vector;
+		rectTransform.anchoredPosition = new Vector2(26f, 24f);
+	}
+
+	// Token: 0x06000285 RID: 645
+	public virtual void Main()
+	{
+	}
+
+	// Token: 0x0400073D RID: 1853
+	private RootScript root;
+
+	// Token: 0x0400073E RID: 1854
+	private RootSharedScript rootShared;
+
+	// Token: 0x0400073F RID: 1855
+	private StatsTrackerScript statsTracker;
+
+	// Token: 0x04000740 RID: 1856
+	private RectTransform theRect;
+
+	// Token: 0x04000741 RID: 1857
+	private Vector2 theRectStartPos;
+
+	// Token: 0x04000742 RID: 1858
+	private Vector2 theRectStartScale;
+
+	// Token: 0x04000743 RID: 1859
+	private Image yellowTint;
+
+	// Token: 0x04000744 RID: 1860
+	private Color yellowTintStartColour;
+
+	// Token: 0x04000745 RID: 1861
+	private RectTransform levelCompleteText;
+
+	// Token: 0x04000746 RID: 1862
+	private Vector2 levelCompleteTextStartPos;
+
+	// Token: 0x04000747 RID: 1863
+	private float levelCompleteTextXSpeed;
+
+	// Token: 0x04000748 RID: 1864
+	private RectTransform pedro;
+
+	// Token: 0x04000749 RID: 1865
+	private Vector2 pedroStartPos;
+
+	// Token: 0x0400074A RID: 1866
+	private float pedroXSpeed;
+
+	// Token: 0x0400074B RID: 1867
+	private RectTransform pedroFace;
+
+	// Token: 0x0400074C RID: 1868
+	private Image pedroFaceImage;
+
+	// Token: 0x0400074D RID: 1869
+	private Text gameScoreText;
+
+	// Token: 0x0400074E RID: 1870
+	private Text gameScoreTextScore;
+
+	// Token: 0x0400074F RID: 1871
+	private Text timeBonusText;
+
+	// Token: 0x04000750 RID: 1872
+	private Text timeBonusTextScore;
+
+	// Token: 0x04000751 RID: 1873
+	private Text killsText;
+
+	// Token: 0x04000752 RID: 1874
+	private Text killsTextScore;
+
+	// Token: 0x04000753 RID: 1875
+	private Text noDeathBonusText;
+
+	// Token: 0x04000754 RID: 1876
+	private Text noDeathBonusTextScore;
+
+	// Token: 0x04000755 RID: 1877
+	private Text difficultyBonusText;
+
+	// Token: 0x04000756 RID: 1878
+	private Text difficultyBonusTextScore;
+
+	// Token: 0x04000757 RID: 1879
+	private Text finalRatingText;
+
+	// Token: 0x04000758 RID: 1880
+	private Text finalRatingTextScore;
+
+	// Token: 0x04000759 RID: 1881
+	private Image finalRatingBackground;
+
+	// Token: 0x0400075A RID: 1882
+	private Text finalRatingLetterText;
+
+	// Token: 0x0400075B RID: 1883
+	private Text finalRatingForText;
+
+	// Token: 0x0400075C RID: 1884
+	private Image finalRatingBar1;
+
+	// Token: 0x0400075D RID: 1885
+	private Image finalRatingBar1Bar;
+
+	// Token: 0x0400075E RID: 1886
+	private Image finalRatingBar2;
+
+	// Token: 0x0400075F RID: 1887
+	private Image finalRatingBar2Bar;
+
+	// Token: 0x04000760 RID: 1888
+	private Image finalRatingBar3;
+
+	// Token: 0x04000761 RID: 1889
+	private Image finalRatingBar3Bar;
+
+	// Token: 0x04000762 RID: 1890
+	private RectTransform nextLevelButton;
+
+	// Token: 0x04000763 RID: 1891
+	private RectTransform restartLevelButton;
+
+	// Token: 0x04000764 RID: 1892
+	private RectTransform exitButton;
+
+	// Token: 0x04000765 RID: 1893
+	private RectTransform weaponPanel;
+
+	// Token: 0x04000766 RID: 1894
+	private RectTransform healthAndSlowMoPanel;
+
+	// Token: 0x04000767 RID: 1895
+	private RectTransform scoreHud;
+
+	// Token: 0x04000768 RID: 1896
+	private RectTransform bigFace;
+
+	// Token: 0x04000769 RID: 1897
+	private RectTransform bigText;
+
+	// Token: 0x0400076A RID: 1898
+	private RectTransform pedroHint;
+
+	// Token: 0x0400076B RID: 1899
+	private RectTransform reactionPedro;
+
+	// Token: 0x0400076C RID: 1900
+	private RectTransform gameHighlight;
+
+	// Token: 0x0400076D RID: 1901
+	private Vector2 gameHighlightStartPos;
+
+	// Token: 0x0400076E RID: 1902
+	private GameObject gameHighlightTweetPrompt;
+
+	// Token: 0x0400076F RID: 1903
+	private GameObject gameHighlightPinPrompt;
+
+	// Token: 0x04000770 RID: 1904
+	private RawImage gameHighlightImage;
+
+	// Token: 0x04000771 RID: 1905
+	private RectTransform mainCursor;
+
+	// Token: 0x04000772 RID: 1906
+	private AudioSource theAudioSource;
+
+	// Token: 0x04000773 RID: 1907
+	public AudioClip appearSound;
+
+	// Token: 0x04000774 RID: 1908
+	public AudioClip countSound;
+
+	// Token: 0x04000775 RID: 1909
+	public AudioClip ratingSound;
+
+	// Token: 0x04000776 RID: 1910
+	private float prevTotalScore;
+
+	// Token: 0x04000777 RID: 1911
+	private float countedKills;
+
+	// Token: 0x04000778 RID: 1912
+	private float prevCountedKills;
+
+	// Token: 0x04000779 RID: 1913
+	private float timer;
+
+	// Token: 0x0400077A RID: 1914
+	private bool enabledDoOnce;
+
+	// Token: 0x0400077B RID: 1915
+	private bool ratingTextDoOnce;
+
+	// Token: 0x0400077C RID: 1916
+	private RectTransform previousScoreDisplay;
+
+	// Token: 0x0400077D RID: 1917
+	private Vector2 previousScoreDisplayStartPos;
+
+	// Token: 0x0400077E RID: 1918
+	private Text personalBestScoreHeader;
+
+	// Token: 0x0400077F RID: 1919
+	private Text personalBestScore;
+
+	// Token: 0x04000780 RID: 1920
+	private Text leaderboardBestScoreHeader;
+
+	// Token: 0x04000781 RID: 1921
+	private Text leaderboardBestScore;
+
+	// Token: 0x04000782 RID: 1922
+	private bool newRecord;
+
+	// Token: 0x04000783 RID: 1923
+	private int optionSelected;
+
+	// Token: 0x04000784 RID: 1924
+	private bool optionNavDoOnce;
+
+	// Token: 0x04000785 RID: 1925
+	private Button nextLevelUIButton;
+
+	// Token: 0x04000786 RID: 1926
+	private Button restartLevelUIButton;
+
+	// Token: 0x04000787 RID: 1927
+	private Button exitUIButton;
+
+	// Token: 0x04000788 RID: 1928
+	private Button gifSaveButton;
+
+	// Token: 0x04000789 RID: 1929
+	private UIButtonScript nextLevelButtonScript;
+
+	// Token: 0x0400078A RID: 1930
+	private UIButtonScript restartLevelButtonScript;
+
+	// Token: 0x0400078B RID: 1931
+	private UIButtonScript exitButtonScript;
+
+	// Token: 0x0400078C RID: 1932
+	private UIButtonScript gifSaveButtonScript;
+
+	// Token: 0x0400078D RID: 1933
+	private UIButtonScript tweeetButtonScript;
+
+	// Token: 0x0400078E RID: 1934
+	private GameObject gifSaveButtonPrompt;
+
+	// Token: 0x0400078F RID: 1935
+	private bool hasExportedGifFromGamepad;
+
+	// Token: 0x04000790 RID: 1936
+	private bool tweetUIStuffDoOnce;
+
+	// Token: 0x04000791 RID: 1937
+	private GameObject uiConfirmHint;
+
+	// Token: 0x04000792 RID: 1938
+	private CanvasGroup uiConfirmHintCanvasGroup;
+
+	// Token: 0x04000793 RID: 1939
+	private bool useGamepadIcons;
+
+	// Token: 0x04000794 RID: 1940
+	private Player player;
+}

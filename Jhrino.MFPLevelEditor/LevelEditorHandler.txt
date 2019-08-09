@@ -7,12 +7,53 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.PostProcessing;
+using System.Security.Cryptography;
 
 namespace Jhrino.MFPLevelEditor
 {
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
+
+		protected string GetMD5HashFromFile(string fileName)
+		{
+			 using (var md5 = MD5.Create())
+			 {
+			  using (var stream = File.OpenRead(fileName))
+			 {
+				 return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-",string.Empty);
+			 }
+		 }
+		}
+
+	 public static string RemoveExcessCharacters(string value, int maxLen)
+    {
+        return (value.Length > maxLen) ? value.Substring(0, maxLen) : value;
+    }
+
+		public void CalculateLevelHash()
+			{
+				
+			string LevelHash;
+			LevelHash = GetMD5HashFromFile(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
+
+			LevelHash = new string(LevelHash.Where(c=>(Char.IsDigit(c)||c=='.'||c==',')).ToArray());
+
+			LevelHash = RemoveExcessCharacters(LevelHash, 16);
+
+			MFPEditorLogger.Log(LevelHash);
+
+			ulong hashnumb = ulong.Parse(LevelHash);
+
+			hashnumb = hashnumb % 150000 + 200;
+
+			MFPEditorLogger.Log(hashnumb.ToString());
+
+			levelHash = (int)hashnumb;
+
+			MFPEditorLogger.Log(levelHash.ToString());
+			}
+
 		// Token: 0x06000615 RID: 1557
 		private void Update()
 		{
@@ -28,6 +69,10 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.PrototypeSave();
 			}
+
+			if(this.PlayMod)
+				levelTimer += Time.timeScale;
+
 			if (!this.PlayMod)
 			{
 				if (this.Editing)
@@ -574,6 +619,7 @@ namespace Jhrino.MFPLevelEditor
 				EntitySpawnRoot.SetActive(false);
 
 				this.root.nrOfEnemiesTotal = 0;
+				levelTimer = 0;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = false;
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = false;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
@@ -603,12 +649,15 @@ namespace Jhrino.MFPLevelEditor
 				this.root.nrOfEnemiesTotal /= 2;
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
+
+				CalculateLevelHash();
 				return;
 			}
 			if (this.PlayMod)
 			{
 				EditorButtonsRoot.SetActive(true);
 
+				levelTimer = 0;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
 				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
@@ -707,6 +756,8 @@ namespace Jhrino.MFPLevelEditor
 					this.BrushLump.RemoveAt(j);
 				}
 			}
+
+
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
@@ -740,6 +791,9 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
+
+			CalculateLevelHash();
+
 			MFPEditorLogger.Log("----");
 		}
 
@@ -861,6 +915,7 @@ namespace Jhrino.MFPLevelEditor
                     break;
             }
         }
+			CalculateLevelHash();
 			MFPEditorLogger.Log("Loading over");
 		}
 
@@ -969,6 +1024,12 @@ namespace Jhrino.MFPLevelEditor
 		
 		public int theme = 1;
 		public bool allowPostProcess = true;
+
+		public static int levelHash = 55;
+
+
+		public static float levelTimer = 0;
+		
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
