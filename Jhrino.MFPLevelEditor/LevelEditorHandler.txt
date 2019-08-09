@@ -917,7 +917,7 @@ namespace Jhrino.MFPLevelEditor
 					this.FinishLevelTrigger.transform.localScale = new Vector3(finishscale[0], finishscale[1], finishscale[2]);
 					
 
-                    i++;
+                    i += 2;
                     break;
             }
         }
