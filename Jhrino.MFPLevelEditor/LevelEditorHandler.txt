@@ -768,6 +768,7 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
 			SavedLevel.Add(item2);
+			SavedLevel.Add(FinishLevelTrigger.transform.localScale);
 			MFPEditorLogger.Log("player coordinates added");
 			MFPEditorLogger.Log("----");
 			int num = 2;
@@ -909,8 +910,11 @@ namespace Jhrino.MFPLevelEditor
 
                 case "!LevelEnd":
                     float[] finishposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
+					float[] finishscale = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
 
                    this.FinishLevelTrigger.transform.position = new Vector3(finishposition[0], finishposition[1], finishposition[2]);
+					this.FinishLevelTrigger.transform.localScale = new Vector3(finishscale[0], finishscale[1], finishscale[2]);
+					
 
                     i++;
                     break;
