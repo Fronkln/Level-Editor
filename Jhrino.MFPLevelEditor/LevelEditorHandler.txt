@@ -876,6 +876,7 @@ namespace Jhrino.MFPLevelEditor
                     newBrush.transform.localScale = new Vector3(scale[0], scale[1], scale[2]);
                     newBrush.GetComponent<MeshRenderer>().material.color = new Color(color[0], color[1], color[2]);
 					newBrush.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(texturename));
+					newBrush.GetComponent<MeshRenderer>().material.mainTexture.name = texturename;
 					newBrush.AddComponent<TextureTilingController>();
                     newBrush.layer = property;
                     this.BrushLump.Add(newBrush);
