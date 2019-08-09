@@ -498,6 +498,13 @@ namespace Jhrino.MFPLevelEditor
 				}
 				if (type == "color")
 				{
+					if(num > 10)
+						num = 10;
+					if(num2 > 10)
+						num2 = 10;
+					if(num3 > 10)
+						num3 = 10;
+
 					this.EditingObject.GetComponent<MeshRenderer>().material.color = new Color(num, num2, num3, 1f);
 				}
 			}
