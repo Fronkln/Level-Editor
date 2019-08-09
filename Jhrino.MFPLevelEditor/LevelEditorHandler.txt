@@ -769,7 +769,7 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
 			SavedLevel.Add(item2);
-			SavedLevel.Add(FinishLevelTrigger.transform.localScale.ToString());
+			SavedLevel.Add(this.FinishLevelTrigger.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 			MFPEditorLogger.Log("player coordinates added");
 			MFPEditorLogger.Log("----");
 			int num = 2;
