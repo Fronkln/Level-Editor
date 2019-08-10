@@ -472,22 +472,23 @@ namespace Jhrino.MFPLevelEditor
 				coordinates = coordinates.Replace("(", "");
 				coordinates = coordinates.Replace(")", "");
 				coordinates = coordinates.Replace(",", "");
-				if (type == "color")
-				{
-					coordinates = coordinates.Replace("RGBA", "");
-				}
-				float num = float.Parse(coordinates.Split(new char[]
-				{
-					' '
-				})[0]);
-				float num2 = float.Parse(coordinates.Split(new char[]
-				{
-					' '
-				})[1]);
-				float num3 = float.Parse(coordinates.Split(new char[]
-				{
-					' '
-				})[2]);
+		
+			if(editType != "color")
+			{
+					float num = float.Parse(coordinates.Split(new char[]
+					{
+						' '
+					})[0]);
+					float num2 = float.Parse(coordinates.Split(new char[]
+					{
+						' '
+					})[1]);
+					float num3 = float.Parse(coordinates.Split(new char[]
+					{
+						' '
+					})[2]);
+
+
 				if (type == "rotation")
 				{
 					this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
@@ -496,17 +497,24 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.EditingObject.transform.localScale = new Vector3(num, num2, num3);
 				}
+			}
+			else
+			{
 				if (type == "color")
-				{
-					if(num > 10)
-						num = 10;
-					if(num2 > 10)
-						num2 = 10;
-					if(num3 > 10)
-						num3 = 10;
+					{
 
-					this.EditingObject.GetComponent<MeshRenderer>().material.color = new Color(num, num2, num3, 1f);
+							byte bit1 = Convert.ToByte(coordinates.Split(' ')[0]);
+							byte bit2 = Convert.ToByte(coordinates.Split(' ')[1]);
+							byte bit3 = Convert.ToByte(coordinates.Split(' ')[2]);
+
+						Color32 color255 = new Color32(bit1, bit2, bit3, 255);
+
+						MFPEditorLogger.Log(color255.ToString());
+						this.EditingObject.GetComponent<MeshRenderer>().material.color = color255;
+					}
 				}
+
+
 			}
 		}
 
@@ -593,6 +601,7 @@ namespace Jhrino.MFPLevelEditor
 				}
 				this.CoordinateField.text = gobject.transform.localScale.ToString();
 			}
+
 			if (this.editType == "color")
 			{
 				if (this.EditingObject == this.PlayerSpawn.gameObject || this.EnemySpawnpoints.Contains(this.EditingObject.transform))
@@ -600,8 +609,16 @@ namespace Jhrino.MFPLevelEditor
 					this.ExitEditMode();
 					this.Editing = false;
 				}
-				this.CoordinateField.text = gobject.GetComponent<MeshRenderer>().material.color.ToString();
-				this.CoordinateField.text = this.CoordinateField.text.Replace("RGBA", "");
+				
+
+				Color32 colorto255 = (Color32)gobject.GetComponent<MeshRenderer>().material.color;
+				string totext255 = colorto255.ToString();
+
+				totext255 = totext255.Replace("RGBA", "");
+
+				MFPEditorLogger.Log(totext255.ToString());
+
+				this.CoordinateField.text = totext255;
 			}
 			this.Editing = true;
 		}
