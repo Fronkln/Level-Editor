@@ -3,64 +3,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.UI;
 using UnityEngine.PostProcessing;
-using System.Security.Cryptography;
+using UnityEngine.UI;
 
 namespace Jhrino.MFPLevelEditor
 {
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
-
-		protected string GetMD5HashFromFile(string fileName)
-		{
-			 using (var md5 = MD5.Create())
-			 {
-			  using (var stream = File.OpenRead(fileName))
-			 {
-				 return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-",string.Empty);
-			 }
-		 }
-		}
-
-	 public static string RemoveExcessCharacters(string value, int maxLen)
-    {
-        return (value.Length > maxLen) ? value.Substring(0, maxLen) : value;
-    }
-
-		public void CalculateLevelHash()
-			{
-				
-			string LevelHash;
-			LevelHash = GetMD5HashFromFile(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
-
-			LevelHash = new string(LevelHash.Where(c=>(Char.IsDigit(c)||c=='.'||c==',')).ToArray());
-
-			LevelHash = RemoveExcessCharacters(LevelHash, 16);
-
-			MFPEditorLogger.Log(LevelHash);
-
-			ulong hashnumb = ulong.Parse(LevelHash);
-
-			hashnumb = hashnumb % 150000 + 200;
-
-			MFPEditorLogger.Log(hashnumb.ToString());
-
-			levelHash = (int)hashnumb;
-
-			MFPEditorLogger.Log(levelHash.ToString());
-			}
-
 		// Token: 0x06000615 RID: 1557
 		private void Update()
 		{
 			if (Input.GetKeyDown(KeyCode.P))
 			{
 				this.PlayMode();
-				PrototypeSave();
+				this.PrototypeSave();
 			}
 			if (Input.GetKeyDown(KeyCode.N) && !this.PlayMod)
 			{
@@ -70,19 +30,14 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.PrototypeSave();
 			}
-
-			if(this.PlayMod)
+			if (this.PlayMod)
 			{
-				levelTimer += Time.timeScale;
-
-				if(Player.GetComponent<PlayerScript>().health < 0.02)
-					{
-						PlayerisDeadAndForceAutoLoad = true;
-					}
+				LevelEditorHandler.levelTimer += Time.timeScale;
+				if ((double)this.Player.GetComponent<PlayerScript>().health < 0.02)
+				{
+					LevelEditorHandler.PlayerisDeadAndForceAutoLoad = true;
+				}
 			}
-
-			
-
 			if (!this.PlayMod)
 			{
 				if (this.Editing)
@@ -90,7 +45,7 @@ namespace Jhrino.MFPLevelEditor
 					this.EditingMode();
 				}
 				RaycastHit raycastHit;
-				if (Input.GetMouseButtonDown(0) && !this.Editing && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
+				if (Input.GetMouseButtonDown(0) && !this.Editing && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
 				{
 					this.EnterEditMode(raycastHit.transform.gameObject);
 				}
@@ -148,7 +103,7 @@ namespace Jhrino.MFPLevelEditor
 			gameObject.layer = 8;
 			gameObject.transform.position = new Vector3(0f, -1f, 0f);
 			gameObject.transform.localScale = new Vector3(5f, 1f, 7f);
-			gameObject.GetComponent<MeshRenderer>().material.color = new Color32(255,255,255,255);
+			gameObject.GetComponent<MeshRenderer>().material.color = new Color32(byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
 			gameObject.AddComponent<TextureTilingController>();
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture.name = "EditorAssets/dev_measuregeneric01b.png";
@@ -156,8 +111,8 @@ namespace Jhrino.MFPLevelEditor
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "EditorCamera";
 			this.EditorCamera = gameObject2.AddComponent<Camera>();
-			EditorCamera.gameObject.AddComponent<PostProcessingBehaviour>();
-			EditorCamera.gameObject.GetComponent<PostProcessingBehaviour>().profile = Camera.GetComponent<PostProcessingBehaviour>().profile;
+			this.EditorCamera.gameObject.AddComponent<PostProcessingBehaviour>();
+			this.EditorCamera.gameObject.GetComponent<PostProcessingBehaviour>().profile = this.Camera.GetComponent<PostProcessingBehaviour>().profile;
 			this.EditorCamera.depth = -1f;
 			this.EditorCamera.clearFlags = CameraClearFlags.Depth;
 			this.EditorCamera.transform.position = new Vector3(0f, 0f, -3f);
@@ -179,7 +134,7 @@ namespace Jhrino.MFPLevelEditor
 			gameObject4.name = "PlayerSpawn";
 			GameObject gameObject5 = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject5.transform.position = new Vector3(5f, 0f, 0f);
-			gameObject5.transform.localScale = new Vector3(1,1,4);
+			gameObject5.transform.localScale = new Vector3(1f, 1f, 4f);
 			gameObject5.name = "MFPEditor_End_Level";
 			gameObject5.AddComponent<LevelChangerScript>();
 			gameObject5.GetComponent<MeshRenderer>().material.color = Color.green;
@@ -193,13 +148,11 @@ namespace Jhrino.MFPLevelEditor
 			{
 				list.Add(transform.name);
 			}
-
-			if(PlayerisDeadAndForceAutoLoad)
-				{
-					PrototypeLoad();
-					PlayerisDeadAndForceAutoLoad = false;
-				}
-
+			if (LevelEditorHandler.PlayerisDeadAndForceAutoLoad)
+			{
+				this.PrototypeLoad();
+				LevelEditorHandler.PlayerisDeadAndForceAutoLoad = false;
+			}
 			File.WriteAllLines("F:\\steamapps2\\steamapps\\common\\My Friend Pedro\\jhrino_log.txt", list.ToArray());
 		}
 
@@ -237,6 +190,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 			GameObject gameObject = new GameObject();
 			gameObject.layer = 5;
+			gameObject.name = "Canvus";
 			RectTransform rectTransform = gameObject.AddComponent<RectTransform>();
 			rectTransform.anchorMin = new Vector2(0.5f, 0f);
 			rectTransform.anchorMax = new Vector2(0.5f, 0f);
@@ -252,14 +206,14 @@ namespace Jhrino.MFPLevelEditor
 			canvasScaler.scaleFactor = 0.5f;
 			canvasScaler.referencePixelsPerUnit = 100f;
 			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
-			GameObject gameObject4 = new GameObject();
-			gameObject4.transform.parent = gameObject.transform;
-			gameObject4.layer = 5;
-			gameObject4.AddComponent<RectTransform>();
-			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
-			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
-			Text text = gameObject4.AddComponent<Text>();
+			GameObject gameObject5 = new GameObject();
+			gameObject5.transform.parent = gameObject.transform;
+			gameObject5.layer = 5;
+			gameObject5.AddComponent<RectTransform>();
+			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
+			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
+			Text text = gameObject5.AddComponent<Text>();
 			Material material = new Material(Shader.Find("UI/Default"));
 			text.material = material;
 			text.text = "GAME OVER";
@@ -275,7 +229,7 @@ namespace Jhrino.MFPLevelEditor
 			text.alignByGeometry = false;
 			text.GetComponent<RectTransform>().sizeDelta = new Vector2(472.9f, 100f);
 			this.DebugObject = text;
-			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
+			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
 			new GameObject();
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "CoordinateField";
@@ -305,20 +259,20 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
-			GameObject gameObject5 = new GameObject();
-			gameObject5.transform.parent = gameObject.transform;
-			gameObject5.layer = 5;
-			gameObject5.AddComponent<RectTransform>();
-			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic = gameObject5.AddComponent<Image>();
-			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
-			Button button = gameObject5.AddComponent<Button>();
+			GameObject gameObject3 = new GameObject();
+			gameObject3.transform.parent = gameObject.transform;
+			gameObject3.layer = 5;
+			gameObject3.AddComponent<RectTransform>();
+			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			Image targetGraphic = gameObject3.AddComponent<Image>();
+			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
+			Button button = gameObject3.AddComponent<Button>();
 			button.transition = Selectable.Transition.ColorTint;
 			button.targetGraphic = targetGraphic;
 			button.interactable = true;
-			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
+			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
 			Texture2D ico_pos = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_position.png"));
 			Sprite spr_pos = Sprite.Create(ico_pos, new Rect(0f, 0f, (float)ico_pos.width, (float)ico_pos.height), new Vector2(0f, 0f), 100f);
 			targetGraphic.sprite = spr_pos;
@@ -366,94 +320,165 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.ChangeEditType("scale");
 			});
-			GameObject gameObject3 = new GameObject();
-			gameObject3.transform.parent = gameObject.transform;
-			gameObject3.layer = 5;
-			gameObject3.AddComponent<RectTransform>();
-			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			gameObject3.AddComponent<Image>();
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
-			Button button4 = gameObject3.AddComponent<Button>();
+			GameObject gameObject4 = new GameObject();
+			gameObject4.transform.parent = gameObject.transform;
+			gameObject4.layer = 5;
+			gameObject4.AddComponent<RectTransform>();
+			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			gameObject4.AddComponent<Image>();
+			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
+			Button button4 = gameObject4.AddComponent<Button>();
 			Texture2D ico_col = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_color.png"));
 			Sprite spr_col = Sprite.Create(ico_col, new Rect(0f, 0f, (float)ico_col.width, (float)ico_col.height), new Vector2(0f, 0f), 100f);
-			gameObject3.GetComponent<Image>().sprite = spr_col;
+			gameObject4.GetComponent<Image>().sprite = spr_col;
 			button4.transition = Selectable.Transition.ColorTint;
-			button4.targetGraphic = gameObject3.GetComponent<Image>();
+			button4.targetGraphic = gameObject4.GetComponent<Image>();
 			button4.interactable = true;
 			button4.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("color");
 			});
+			this.EditorButtonsRoot = new GameObject();
+			this.EditorButtonsRoot.transform.parent = canvas.transform;
+			gameObject3.transform.parent = this.EditorButtonsRoot.transform;
+			gameObject4.transform.parent = this.EditorButtonsRoot.transform;
+			gameObject7.transform.parent = this.EditorButtonsRoot.transform;
+			gameObject6.transform.parent = this.EditorButtonsRoot.transform;
+			GameObject PanelOBJ = new GameObject();
+			PanelOBJ.transform.parent = gameObject.transform;
+			PanelOBJ.name = "EntitiesListContainer";
+			Image Panel = PanelOBJ.AddComponent<Image>();
+			Panel.color = new Color(Panel.color.r, Panel.color.b, Panel.color.b, 0.3921569f);
+			RectTransform component = PanelOBJ.GetComponent<RectTransform>();
+			component.anchorMin = new Vector2(0.5f, 0.5f);
+			component.anchorMax = new Vector2(0.5f, 0.5f);
+			component.pivot = new Vector2(0.5f, 0.5f);
+			component.sizeDelta = new Vector2(628.2f, 440.51f);
+			component.anchoredPosition = new Vector2(0f, 0f);
+			GameObject gameObject8 = new GameObject();
+			gameObject8.name = "PlatformLiftButton";
+			gameObject8.transform.parent = PanelOBJ.transform;
+			RectTransform rectTransform2 = gameObject8.AddComponent<RectTransform>();
+			rectTransform2.anchorMin = new Vector2(0.5f, 0.5f);
+			rectTransform2.anchorMax = new Vector2(0.5f, 0.5f);
+			rectTransform2.pivot = new Vector2(0.5f, 0.5f);
+			rectTransform2.sizeDelta = new Vector2(254.86f, 30f);
+			rectTransform2.anchoredPosition = new Vector2(0f, 158f);
+			Button plButton = gameObject8.AddComponent<Button>();
+			Image plButtonGraphics = plButton.gameObject.AddComponent<Image>();
+			plButton.targetGraphic = plButtonGraphics;
+			GameObject gameObject9 = new GameObject();
+			gameObject9.name = "PlatformLiftButtonText";
+			gameObject9.transform.parent = plButton.transform;
+			RectTransform plButtonRect = gameObject9.AddComponent<RectTransform>();
+			plButtonRect.anchorMin = new Vector2(0f, 0f);
+			plButtonRect.anchorMax = new Vector2(1f, 1f);
+			plButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			plButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			Text text2 = gameObject9.AddComponent<Text>();
+			text2.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			text2.text = "Platform Lift";
+			text2.alignment = TextAnchor.MiddleCenter;
+			plButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			text2.color = new Color(0f, 0f, 0f);
+			text2.fontSize = 64;
+			text2.verticalOverflow = VerticalWrapMode.Overflow;
+			text2.horizontalOverflow = HorizontalWrapMode.Overflow;
+			this.EntitySpawnRoot = PanelOBJ;
+			GameObject PanelOBJ2 = new GameObject();
+			PanelOBJ2.transform.parent = gameObject.transform;
+			PanelOBJ2.name = "WorldSettingsContainer";
+			Image Panel2 = PanelOBJ2.AddComponent<Image>();
+			Panel2.color = new Color(Panel2.color.r, Panel2.color.b, Panel2.color.b, 0.7f);
+			RectTransform component2 = PanelOBJ2.GetComponent<RectTransform>();
+			component2.anchorMin = new Vector2(0.5f, 0.5f);
+			component2.anchorMax = new Vector2(0.5f, 0.5f);
+			component2.pivot = new Vector2(0.5f, 0.5f);
+			component2.sizeDelta = new Vector2(576.2f, 447.6f);
+			component2.anchoredPosition = new Vector2(0f, 0f);
+			GameObject gameObject10 = new GameObject();
+			gameObject10.transform.parent = PanelOBJ2.transform;
+			gameObject10.name = "AllowPostProcessText";
+			RectTransform pptextrect = gameObject10.AddComponent<RectTransform>();
+			pptextrect.anchorMin = new Vector2(0.5f, 0.5f);
+			pptextrect.anchorMax = new Vector2(0.5f, 0.5f);
+			pptextrect.pivot = new Vector2(0.5f, 0.5f);
+			pptextrect.anchoredPosition = new Vector2(-216f, 187f);
+			pptextrect.sizeDelta = new Vector2(160f, 30f);
+			Text text3 = gameObject10.AddComponent<Text>();
+			text3.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			text3.text = "Allow Post Processing:";
+			text3.alignment = TextAnchor.UpperLeft;
+			pptextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
+			text3.color = new Color(0f, 0f, 0f);
+			text3.fontSize = 64;
+			text3.verticalOverflow = VerticalWrapMode.Overflow;
+			text3.horizontalOverflow = HorizontalWrapMode.Overflow;
+			GameObject PostProcessingCheckmark = new GameObject();
+			PostProcessingCheckmark.name = "PostProcessCheckmark";
+			PostProcessingCheckmark.transform.parent = PanelOBJ2.transform;
+			RectTransform rectTransform3 = PostProcessingCheckmark.AddComponent<RectTransform>();
+			rectTransform3.pivot = new Vector2(0.5f, 0.5f);
+			rectTransform3.anchorMin = new Vector2(0.5f, 0.5f);
+			rectTransform3.anchorMax = new Vector2(0.5f, 0.5f);
+			rectTransform3.sizeDelta = new Vector2(20.41f, 20f);
+			rectTransform3.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
+			rectTransform3.anchoredPosition = new Vector2(97.5f, 175.6f);
+			Toggle toggle = PostProcessingCheckmark.AddComponent<Toggle>();
+			allowPostProcessToggle = toggle;
+			toggle.isOn = true;
+			GameObject checkmarkbg = new GameObject();
+			checkmarkbg.name = "CheckmarkBackground";
+			checkmarkbg.transform.parent = PostProcessingCheckmark.transform;
+			RectTransform rectTransform4 = checkmarkbg.AddComponent<RectTransform>();
+			rectTransform4.pivot = new Vector2(0.5f, 0.5f);
+			rectTransform4.anchorMin = new Vector2(0f, 1f);
+			rectTransform4.anchorMax = new Vector2(0f, 1f);
+			rectTransform4.sizeDelta = new Vector2(20f, 20f);
+			rectTransform4.anchoredPosition = new Vector2(10f, -10f);
+			rectTransform4.localScale = new Vector3(1f, 1f, 1f);
+			Image checkmarkbgGraphics = checkmarkbg.AddComponent<Image>();
+			toggle.targetGraphic = checkmarkbgGraphics;
+			RectTransform rectTransform5 = new GameObject
+			{
+				name = "Checkmark",
+				transform = 
+				{
+					parent = checkmarkbg.transform
+				}
+			}.AddComponent<RectTransform>();
+			rectTransform5.pivot = new Vector2(0.5f, 0.5f);
+			rectTransform5.anchorMin = new Vector2(0.5f, 0.5f);
+			rectTransform5.anchorMax = new Vector2(0.5f, 0.5f);
+			rectTransform5.sizeDelta = new Vector2(20f, 20f);
+			rectTransform5.anchoredPosition = new Vector2(0f, 0f);
+			Image checkrectimage = rectTransform5.gameObject.AddComponent<Image>();
+			Texture2D ico_check = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/checkmark.png"));
+			Sprite spr_check = Sprite.Create(ico_check, new Rect(0f, 0f, (float)ico_check.width, (float)ico_check.height), new Vector2(0f, 0f), 100f);
+			checkrectimage.sprite = spr_check;
+			toggle.graphic = checkrectimage;
+			this.WorldSettingsRoot = PanelOBJ2;
+			this.WorldSettingsRoot.SetActive(false);
+			GameObject gameObject11 = new GameObject();
+			gameObject11.transform.parent = gameObject.transform;
+			gameObject11.layer = 5;
+			gameObject11.AddComponent<RectTransform>();
+			gameObject11.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			gameObject11.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			gameObject11.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			gameObject11.AddComponent<Image>();
+			gameObject11.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -700f);
+			gameObject11.AddComponent<Button>().onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("world", false);
+			});
 
+			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity);});
 
-			
-			EditorButtonsRoot = new GameObject();
-			EditorButtonsRoot.transform.parent = canvas.transform;
-			gameObject5.transform.parent = EditorButtonsRoot.transform;
-			gameObject3.transform.parent = EditorButtonsRoot.transform;
-			gameObject7.transform.parent = EditorButtonsRoot.transform;
-			gameObject6.transform.parent = EditorButtonsRoot.transform;
-
-
-
-	    GameObject PanelOBJ = new GameObject();
-        PanelOBJ.transform.parent = gameObject.transform;
-        PanelOBJ.name = "EntitiesListContainer";
- 
-
-        Image Panel = PanelOBJ.AddComponent<Image>();
-        Panel.color = new Color(Panel.color.r, Panel.color.b, Panel.color.b, 0.3921569f);
-        RectTransform panelRect = PanelOBJ.GetComponent<RectTransform>();
-        panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-        panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRect.pivot = new Vector2(0.5f, 0.5f);
-        panelRect.sizeDelta = new Vector2(628.2f, 440.51f);
-        panelRect.anchoredPosition = new Vector2(0, 0);
-
-        GameObject PlatformButton = new GameObject();
-        PlatformButton.name = "PlatformLiftButton";
-        PlatformButton.transform.parent = PanelOBJ.transform;
-
-        RectTransform pButtonRect = PlatformButton.AddComponent<RectTransform>();
-        pButtonRect.anchorMin = new Vector2(0.5f, 0.5f);
-        pButtonRect.anchorMax = new Vector2(0.5f, 0.5f);
-        pButtonRect.pivot = new Vector2(0.5f, 0.5f);
-        pButtonRect.sizeDelta = new Vector2(254.86f, 30);
-        pButtonRect.anchoredPosition = new Vector2(0, 158);
-
-        Button plButton = PlatformButton.AddComponent<Button>();
-        Image plButtonGraphics = plButton.gameObject.AddComponent<Image>();
-        plButton.targetGraphic = plButtonGraphics;
-
-        GameObject plButtonT = new GameObject();
-        plButtonT.name = "PlatformLiftButtonText";
-        plButtonT.transform.parent = plButton.transform;
-        RectTransform plButtonRect = plButtonT.AddComponent<RectTransform>();
-
-        plButtonRect.anchorMin = new Vector2(0, 0);
-        plButtonRect.anchorMax = new Vector2(1, 1);
-        plButtonRect.pivot = new Vector2(0.5f, 0.5f);
-        plButtonRect.anchoredPosition = new Vector2(0,0);
-
-        Text plButtonText = plButtonT.AddComponent<Text>();
-        plButtonText.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-        plButtonText.text = "Platform Lift";
-        plButtonText.alignment = TextAnchor.MiddleCenter;
-        plButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-        plButtonText.color = new Color(0, 0, 0);
-        plButtonText.fontSize = 64;
-        plButtonText.verticalOverflow = VerticalWrapMode.Overflow;
-        plButtonText.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-		EntitySpawnRoot = PanelOBJ;
-
-		MFPEditorLogger.Log("Hud load complete");
-
-		EntitySpawnRoot.SetActive(false);
-
-
+			MFPEditorLogger.Log("Hud load complete");
+			this.EntitySpawnRoot.SetActive(false);
 		}
 
 		// Token: 0x0600061A RID: 1562
@@ -487,9 +512,8 @@ namespace Jhrino.MFPLevelEditor
 				coordinates = coordinates.Replace("(", "");
 				coordinates = coordinates.Replace(")", "");
 				coordinates = coordinates.Replace(",", "");
-		
-			if(editType != "color")
-			{
+				if (this.editType != "color")
+				{
 					float num = float.Parse(coordinates.Split(new char[]
 					{
 						' '
@@ -502,34 +526,34 @@ namespace Jhrino.MFPLevelEditor
 					{
 						' '
 					})[2]);
-
-
-				if (type == "rotation")
-				{
-					this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
-				}
-				if (type == "scale")
-				{
-					this.EditingObject.transform.localScale = new Vector3(num, num2, num3);
-				}
-			}
-			else
-			{
-				if (type == "color")
+					if (type == "rotation")
 					{
-
-							byte bit1 = Convert.ToByte(coordinates.Split(' ')[0]);
-							byte bit2 = Convert.ToByte(coordinates.Split(' ')[1]);
-							byte bit3 = Convert.ToByte(coordinates.Split(' ')[2]);
-
-						Color32 color255 = new Color32(bit1, bit2, bit3, 255);
-
-						MFPEditorLogger.Log(color255.ToString());
-						this.EditingObject.GetComponent<MeshRenderer>().material.color = color255;
+						this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
+					}
+					if (type == "scale")
+					{
+						this.EditingObject.transform.localScale = new Vector3(num, num2, num3);
+						return;
 					}
 				}
-
-
+				else if (type == "color")
+				{
+					byte bit = Convert.ToByte(coordinates.Split(new char[]
+					{
+						' '
+					})[0]);
+					byte bit2 = Convert.ToByte(coordinates.Split(new char[]
+					{
+						' '
+					})[1]);
+					byte bit3 = Convert.ToByte(coordinates.Split(new char[]
+					{
+						' '
+					})[2]);
+					Color32 color255 = new Color32(bit, bit2, bit3, byte.MaxValue);
+					MFPEditorLogger.Log(color255.ToString());
+					this.EditingObject.GetComponent<MeshRenderer>().material.color = color255;
+				}
 			}
 		}
 
@@ -616,7 +640,6 @@ namespace Jhrino.MFPLevelEditor
 				}
 				this.CoordinateField.text = gobject.transform.localScale.ToString();
 			}
-
 			if (this.editType == "color")
 			{
 				if (this.EditingObject == this.PlayerSpawn.gameObject || this.EnemySpawnpoints.Contains(this.EditingObject.transform))
@@ -624,15 +647,9 @@ namespace Jhrino.MFPLevelEditor
 					this.ExitEditMode();
 					this.Editing = false;
 				}
-				
-
-				Color32 colorto255 = (Color32)gobject.GetComponent<MeshRenderer>().material.color;
-				string totext255 = colorto255.ToString();
-
+				string totext255 = gobject.GetComponent<MeshRenderer>().material.color.ToString();
 				totext255 = totext255.Replace("RGBA", "");
-
 				MFPEditorLogger.Log(totext255.ToString());
-
 				this.CoordinateField.text = totext255;
 			}
 			this.Editing = true;
@@ -655,11 +672,10 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.ExitEditMode();
 				}
-				EditorButtonsRoot.SetActive(false);
-				EntitySpawnRoot.SetActive(false);
-
+				this.EditorButtonsRoot.SetActive(false);
+				this.ToggleSettingsMenu(null, true);
 				this.root.nrOfEnemiesTotal = 0;
-				levelTimer = 0;
+				LevelEditorHandler.levelTimer = 0f;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = false;
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = false;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
@@ -686,23 +702,18 @@ namespace Jhrino.MFPLevelEditor
 					gameObject.SetActive(true);
 					this.root.nrOfEnemiesTotal++;
 				}
-
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
-
 				this.root.nrOfEnemiesTotal = this.root.nrOfEnemiesTotal / 2;
 				this.root.nrOfEnemiesTotal -= this.root.nrOfEnemiesTotal;
-
-				CalculateLevelHash();
-			
+				this.CalculateLevelHash();
 				this.root.dontAllowCheckpointSave = true;
 				return;
 			}
 			if (this.PlayMod)
 			{
-				EditorButtonsRoot.SetActive(true);
-
-				levelTimer = 0;
+				this.EditorButtonsRoot.SetActive(true);
+				LevelEditorHandler.levelTimer = 0f;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
 				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
@@ -801,15 +812,13 @@ namespace Jhrino.MFPLevelEditor
 					this.BrushLump.RemoveAt(j);
 				}
 			}
-
-
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			SavedLevel.Add("!World");
-			SavedLevel.Add("allowPostProcess = " + allowPostProcess.ToString());
-			SavedLevel.Add("bloomIntensity = " + Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
-			SavedLevel.Add("theme = " + theme);
+			SavedLevel.Add("allowPostProcess = " + this.allowPostProcess.ToString());
+			SavedLevel.Add("bloomIntensity = " + this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
+			SavedLevel.Add("theme = " + this.theme);
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
@@ -838,14 +847,12 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
-
-			CalculateLevelHash();
-
+			this.CalculateLevelHash();
 			MFPEditorLogger.Log("----");
 		}
 
 		// Token: 0x06000624 RID: 1572
-		public void PrototypeLoad()
+public void PrototypeLoad()
 		{
 			if (this.Editing)
 			{
@@ -891,29 +898,26 @@ namespace Jhrino.MFPLevelEditor
             switch (tag)
             {
 				case "!World":
-					if(levelFile[i + 1] == "allowPostProcessing = True")
+					if(levelFile[i + 1].Contains ("True"))
+					{
 							allowPostProcess = true;
-					if(levelFile[i + 1] == "allowPostProcessing = False")
+							MFPEditorLogger.Log("Post processing is enabled");
+					}
+					if(levelFile[i + 1].Contains("False"))
+					{
 							allowPostProcess = false;
-					MFPEditorLogger.Log("start bloom data");
+							MFPEditorLogger.Log("Post processing is disabled");
+
+					}
 					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
-						var custombloom = Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings;
-						custombloom.bloom.intensity = bloomIntensity;
-						Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings = custombloom;
-						MFPEditorLogger.Log("finish bloom data");
+
+						AdjustPostProcessing(allowPostProcess, bloomIntensity);
+
+						allowPostProcessToggle.isOn = allowPostProcess;
 
 					theme = int.Parse(levelFile[i + 3].Replace("theme = ", ""));
 						root.theme = theme;
-						if(allowPostProcess)
-							{
-							Camera.GetComponent<PostProcessingBehaviour>().enabled = true;
-							EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = true;
-							}
-						else
-							{
-							Camera.GetComponent<PostProcessingBehaviour>().enabled = false;
-							EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = false;
-							}
+
 					i += 3;
 					break;
 
@@ -1005,6 +1009,97 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorLogger.Log("------------------------------------------");
 		}
 
+		// Token: 0x06000627 RID: 1575
+		protected string GetMD5HashFromFile(string fileName)
+		{
+			string result;
+			using (MD5 md5 = MD5.Create())
+			{
+				using (FileStream stream = File.OpenRead(fileName))
+				{
+					result = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+				}
+			}
+			return result;
+		}
+
+		// Token: 0x06000628 RID: 1576
+		public void CalculateLevelHash()
+		{
+			string text = LevelEditorHandler.RemoveExcessCharacters(new string((from c in this.GetMD5HashFromFile(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"))
+			where char.IsDigit(c) || c == '.' || c == ','
+			select c).ToArray<char>()), 16);
+			MFPEditorLogger.Log(text);
+			ulong hashnumb = ulong.Parse(text);
+			hashnumb = hashnumb % 150000UL + 200UL;
+			MFPEditorLogger.Log(hashnumb.ToString());
+			LevelEditorHandler.levelHash = (int)hashnumb;
+			MFPEditorLogger.Log(LevelEditorHandler.levelHash.ToString());
+		}
+
+		// Token: 0x06000629 RID: 1577
+		static LevelEditorHandler()
+		{
+		}
+
+		// Token: 0x0600062A RID: 1578
+		public static string RemoveExcessCharacters(string value, int maxLen)
+		{
+			if (value.Length <= maxLen)
+			{
+				return value;
+			}
+			return value.Substring(0, maxLen);
+		}
+
+		// Token: 0x060006DC RID: 1756
+		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity)
+		{
+			if (postProcessEnabled)
+			{
+				this.Camera.GetComponent<PostProcessingBehaviour>().enabled = true;
+				this.EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = true;
+				MFPEditorLogger.Log("Post processing is adjusted to be enabled");
+			}
+			else
+			{
+				this.Camera.GetComponent<PostProcessingBehaviour>().enabled = false;
+				this.EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = false;
+				MFPEditorLogger.Log("Post processing is adjusted to be disabled");
+			}
+			this.allowPostProcess = postProcessEnabled;
+			BloomModel.Settings custombloom = this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings;
+			custombloom.bloom.intensity = bloomIntensity;
+			this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings = custombloom;
+		}
+
+		// Token: 0x06000703 RID: 1795
+		public void ToggleSettingsMenu(string menuType, bool forceOff)
+		{
+			if (forceOff)
+			{
+				this.WorldSettingsRoot.SetActive(false);
+				this.EntitySpawnRoot.SetActive(false);
+				this.adjustingSettings = false;
+			}
+			if (!this.adjustingSettings)
+			{
+				if (menuType == "world")
+				{
+					this.WorldSettingsRoot.SetActive(true);
+					this.EntitySpawnRoot.SetActive(false);
+					this.adjustingSettings = true;
+					return;
+				}
+			}
+			else
+			{
+				this.WorldSettingsRoot.SetActive(false);
+				this.EntitySpawnRoot.SetActive(false);
+				this.adjustingSettings = false;
+			}
+		}
+
 		// Token: 0x04001338 RID: 4920
 		public GameObject Player;
 
@@ -1077,29 +1172,45 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x0400134F RID: 4943
 		public Texture2D DefaultTexture;
 
+		// Token: 0x04001350 RID: 4944
 		public GameObject EditorButtonsRoot;
 
+		// Token: 0x04001351 RID: 4945
 		public GameObject EntitySpawnRoot;
 
-		
+		// Token: 0x04001352 RID: 4946
 		public int theme = 1;
+
+		// Token: 0x04001353 RID: 4947
 		public bool allowPostProcess = true;
 
-
-		public static bool PlayerisDeadAndForceAutoLoad = false;
-
+		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
 
+		// Token: 0x04001355 RID: 4949
+		public static float levelTimer = 0f;
 
-		public static float levelTimer = 0;
-		
+		// Token: 0x04001356 RID: 4950
+		public static bool PlayerisDeadAndForceAutoLoad;
+
+		// Token: 0x040013A2 RID: 5026
+		public GameObject WorldSettingsRoot;
+
+		// Token: 0x04001449 RID: 5193
+		public bool adjustingSettings;
+
+		// Token: 0x040014C3 RID: 5315
+		public float bloomIntensity = 0.9f;
+
+
+		public Toggle allowPostProcessToggle;
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
 		{
-			// Token: 0x04001351 RID: 4945
+			// Token: 0x04001358 RID: 4952
 			Disabled,
-			// Token: 0x04001352 RID: 4946
+			// Token: 0x04001359 RID: 4953
 			Enabled
 		}
 	}
