@@ -60,6 +60,7 @@ namespace Jhrino.MFPLevelEditor
 			if (Input.GetKeyDown(KeyCode.P))
 			{
 				this.PlayMode();
+				PrototypeSave();
 			}
 			if (Input.GetKeyDown(KeyCode.N) && !this.PlayMod)
 			{
@@ -71,7 +72,16 @@ namespace Jhrino.MFPLevelEditor
 			}
 
 			if(this.PlayMod)
+			{
 				levelTimer += Time.timeScale;
+
+				if(Player.GetComponent<PlayerScript>().health < 0.02)
+					{
+						PlayerisDeadAndForceAutoLoad = true;
+					}
+			}
+
+			
 
 			if (!this.PlayMod)
 			{
@@ -138,7 +148,7 @@ namespace Jhrino.MFPLevelEditor
 			gameObject.layer = 8;
 			gameObject.transform.position = new Vector3(0f, -1f, 0f);
 			gameObject.transform.localScale = new Vector3(5f, 1f, 7f);
-			gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
+			gameObject.GetComponent<MeshRenderer>().material.color = new Color32(255,255,255,255);
 			gameObject.AddComponent<TextureTilingController>();
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture.name = "EditorAssets/dev_measuregeneric01b.png";
@@ -184,6 +194,11 @@ namespace Jhrino.MFPLevelEditor
 				list.Add(transform.name);
 			}
 
+			if(PlayerisDeadAndForceAutoLoad)
+				{
+					PrototypeLoad();
+					PlayerisDeadAndForceAutoLoad = false;
+				}
 
 			File.WriteAllLines("F:\\steamapps2\\steamapps\\common\\My Friend Pedro\\jhrino_log.txt", list.ToArray());
 		}
@@ -671,11 +686,16 @@ namespace Jhrino.MFPLevelEditor
 					gameObject.SetActive(true);
 					this.root.nrOfEnemiesTotal++;
 				}
-				this.root.nrOfEnemiesTotal /= 2;
+
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
 
+				this.root.nrOfEnemiesTotal = this.root.nrOfEnemiesTotal / 2;
+				this.root.nrOfEnemiesTotal -= this.root.nrOfEnemiesTotal;
+
 				CalculateLevelHash();
+			
+				this.root.dontAllowCheckpointSave = true;
 				return;
 			}
 			if (this.PlayMod)
@@ -1064,6 +1084,9 @@ namespace Jhrino.MFPLevelEditor
 		
 		public int theme = 1;
 		public bool allowPostProcess = true;
+
+
+		public static bool PlayerisDeadAndForceAutoLoad = false;
 
 		public static int levelHash = 55;
 

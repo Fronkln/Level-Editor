@@ -34,6 +34,7 @@ public class LevelChangerScript : MonoBehaviour
 			return;
 		}
 		this.root.levelEnded = true;
+		LevelEditorHandler.PlayerisDeadAndForceAutoLoad = true;
 	}
 
 	// Token: 0x06000277 RID: 631
@@ -103,7 +104,6 @@ public class LevelChangerScript : MonoBehaviour
 		UnityEngine.Object.Destroy(GameObject.Find("glass_window_frame_large"));
 		UnityEngine.Object.Destroy(GameObject.Find("glass_window_frame_large"));
 		UnityEngine.Object.Destroy(GameObject.Find("Dust Particles"));
-
 		MFPEditorLogger.Log("Culled the weak");
 	}
 
@@ -142,7 +142,6 @@ public class LevelChangerScript : MonoBehaviour
 		gameObject.name = "New Enemy";
 		gameObject.transform.position = this.player.transform.position;
 		gameObject.SetActive(true);
-		
 		MFPEditorLogger.Log("Cull the weak warmup done");
 	}
 
