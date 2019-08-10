@@ -771,6 +771,7 @@ namespace Jhrino.MFPLevelEditor
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			SavedLevel.Add("!World");
 			SavedLevel.Add("allowPostProcess = " + allowPostProcess.ToString());
+			SavedLevel.Add("bloomIntensity = " + Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
 			SavedLevel.Add("theme = " + theme);
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
@@ -814,6 +815,8 @@ namespace Jhrino.MFPLevelEditor
 				this.ExitEditMode();
 			}
 			string[] levelFile = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
+
+
 			foreach (GameObject obj in this.BrushLump)
 			{
 				UnityEngine.Object.Destroy(obj);
@@ -851,11 +854,18 @@ namespace Jhrino.MFPLevelEditor
             switch (tag)
             {
 				case "!World":
-					if(levelFile[i + 1] == "allowPostProcessing = true")
+					if(levelFile[i + 1] == "allowPostProcessing = True")
 							allowPostProcess = true;
-					else
+					if(levelFile[i + 1] == "allowPostProcessing = False")
 							allowPostProcess = false;
-					theme = int.Parse(levelFile[i + 2].Replace("theme = ", ""));
+					MFPEditorLogger.Log("start bloom data");
+					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
+						var custombloom = Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings;
+						custombloom.bloom.intensity = bloomIntensity;
+						Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings = custombloom;
+						MFPEditorLogger.Log("finish bloom data");
+
+					theme = int.Parse(levelFile[i + 3].Replace("theme = ", ""));
 						root.theme = theme;
 						if(allowPostProcess)
 							{
@@ -867,7 +877,7 @@ namespace Jhrino.MFPLevelEditor
 							Camera.GetComponent<PostProcessingBehaviour>().enabled = false;
 							EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = false;
 							}
-					i += 2;
+					i += 3;
 					break;
 
                 case "!Brush": //ITS A BRUSH
