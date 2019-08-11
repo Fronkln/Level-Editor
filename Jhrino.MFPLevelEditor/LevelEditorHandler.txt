@@ -495,11 +495,9 @@ namespace Jhrino.MFPLevelEditor
 			bool isFocused = this.CoordinateField.isFocused;
 			if (this.CoordinateField.isFocused)
 			{
-				if (this.editType != "position")
-				{
 					this.UpdateCoordinates(this.editType, this.CoordinateField.text);
 					return;
-				}
+				
 				this.ExitEditMode();
 			}
 		}
@@ -526,6 +524,13 @@ namespace Jhrino.MFPLevelEditor
 					{
 						' '
 					})[2]);
+					if(type == "position")
+					{
+
+						CoordinateField.text = coordinates;
+
+					}
+
 					if (type == "rotation")
 					{
 						this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
@@ -1076,11 +1081,15 @@ public void PrototypeLoad()
 		// Token: 0x06000703 RID: 1795
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
+			if(this.Editing)
+				ExitEditMode();
+
 			if (forceOff)
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
 				this.adjustingSettings = false;
+				return;
 			}
 			if (!this.adjustingSettings)
 			{
