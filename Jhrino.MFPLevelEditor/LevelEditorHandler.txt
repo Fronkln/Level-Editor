@@ -1196,6 +1196,9 @@ public void PrototypeLoad()
 		// Token: 0x06000703 RID: 1795
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
+			if(this.Editing)
+				ExitEditMode();
+
 			if (forceOff)
 			{
 				this.WorldSettingsRoot.SetActive(false);

@@ -11,6 +11,6 @@ namespace Jhrino.MFPLevelEditor
 		}
 
 		// Token: 0x0400137E RID: 4990
-		public static float version = 0.22f;
+		public static float version = 0.23f;
 	}
 }
