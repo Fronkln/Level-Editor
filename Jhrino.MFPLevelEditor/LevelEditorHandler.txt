@@ -475,7 +475,82 @@ namespace Jhrino.MFPLevelEditor
 				this.ToggleSettingsMenu("world", false);
 			});
 
-			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity);});
+			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading);});
+
+
+			
+			GameObject AllowColorGradingTex = new GameObject();
+			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
+			AllowColorGradingTex.name = "AllowColorGradingText";
+
+			RectTransform cgtextrect = AllowColorGradingTex.AddComponent<RectTransform>();
+			cgtextrect.anchorMin = new Vector2(0.5f, 0.5f);
+			cgtextrect.anchorMax = new Vector2(0.5f, 0.5f);
+			cgtextrect.pivot = new Vector2(0.5f, 0.5f);
+			cgtextrect.anchoredPosition = new Vector2(-235f, 125f);
+			pptextrect.sizeDelta = new Vector2(160f, 30f);
+			Text cgtext = AllowColorGradingTex.AddComponent<Text>();
+			cgtext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			cgtext.text = "Allow Color Grading:";
+			cgtext.alignment = TextAnchor.UpperLeft;
+			cgtextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
+			cgtext.color = new Color(0f, 0f, 0f);
+			cgtext.fontSize = 64;
+			cgtext.verticalOverflow = VerticalWrapMode.Overflow;
+			cgtext.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+			GameObject ColorGradingCheckmark = new GameObject();
+			ColorGradingCheckmark.name = "ColorGradingCheckmark";
+			ColorGradingCheckmark.transform.parent = PanelOBJ2.transform;
+			RectTransform colgradecheckrec = ColorGradingCheckmark.AddComponent<RectTransform>();
+			colgradecheckrec.pivot = new Vector2(0.5f, 0.5f);
+			colgradecheckrec.anchorMin = new Vector2(0.5f, 0.5f);
+			colgradecheckrec.anchorMax = new Vector2(0.5f, 0.5f);
+			colgradecheckrec.sizeDelta = new Vector2(20.41f, 20f);
+			colgradecheckrec.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
+			colgradecheckrec.anchoredPosition = new Vector2(97.5f, 121.1f);
+			Toggle colgradetoggle = ColorGradingCheckmark.AddComponent<Toggle>();
+			allowColorGradingToggle = colgradetoggle;
+			colgradetoggle.isOn = true;
+
+
+			GameObject colgradingcheckmarkbg = new GameObject();
+			colgradingcheckmarkbg.name = "CheckmarkBackground";
+			colgradingcheckmarkbg.transform.parent = ColorGradingCheckmark.transform;
+			RectTransform colgradcheckrect = colgradingcheckmarkbg.AddComponent<RectTransform>();
+			colgradcheckrect.pivot = new Vector2(0.5f, 0.5f);
+			colgradcheckrect.anchorMin = new Vector2(0f, 1f);
+			colgradcheckrect.anchorMax = new Vector2(0f, 1f);
+			colgradcheckrect.sizeDelta = new Vector2(20f, 20f);
+			colgradcheckrect.anchoredPosition = new Vector2(10f, -10f);
+			colgradcheckrect.localScale = new Vector3(1f, 1f, 1f);
+			Image colgradecheckmarkbgGraphics = colgradingcheckmarkbg.AddComponent<Image>();
+			colgradetoggle.targetGraphic = colgradecheckmarkbgGraphics;
+			
+
+			RectTransform colgraderect = new GameObject
+			{
+				name = "Checkmark",
+				transform = 
+				{
+					parent = colgradingcheckmarkbg.transform
+				}
+			}.AddComponent<RectTransform>();
+			colgraderect.pivot = new Vector2(0.5f, 0.5f);
+			colgraderect.anchorMin = new Vector2(0.5f, 0.5f);
+			colgraderect.anchorMax = new Vector2(0.5f, 0.5f);
+			colgraderect.sizeDelta = new Vector2(20f, 20f);
+			colgraderect.anchoredPosition = new Vector2(0f, 0f);
+			Image colgradecheckrectimage = colgraderect.gameObject.AddComponent<Image>();
+
+			colgradecheckrectimage.sprite = spr_check;
+			colgradetoggle.graphic = colgradecheckrectimage;
+
+			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn);});
+
+			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
+
 
 			MFPEditorLogger.Log("Hud load complete");
 			this.EntitySpawnRoot.SetActive(false);
@@ -495,11 +570,25 @@ namespace Jhrino.MFPLevelEditor
 			bool isFocused = this.CoordinateField.isFocused;
 			if (this.CoordinateField.isFocused)
 			{
+				if (this.editType != "position")
+				{
 					this.UpdateCoordinates(this.editType, this.CoordinateField.text);
 					return;
-				
+				}
 				this.ExitEditMode();
 			}
+			else
+				{
+					if(!this.CoordinateField.isFocused)
+					{
+					if(this.editType == "position")
+					{
+						CoordinateField.text = EditingObject.transform.position.ToString(); 
+					}
+					}
+					else
+					ExitEditMode();
+				}
 		}
 
 		// Token: 0x0600061B RID: 1563
@@ -561,6 +650,7 @@ namespace Jhrino.MFPLevelEditor
 				}
 			}
 		}
+
 
 		// Token: 0x0600061C RID: 1564
 		public void ChangeEditType(string type)
@@ -652,8 +742,12 @@ namespace Jhrino.MFPLevelEditor
 					this.ExitEditMode();
 					this.Editing = false;
 				}
-				string totext255 = gobject.GetComponent<MeshRenderer>().material.color.ToString();
+
+				Color32 Color255 = (Color32)gobject.GetComponent<MeshRenderer>().material.color;
+
+				string totext255 = Color255.ToString();
 				totext255 = totext255.Replace("RGBA", "");
+
 				MFPEditorLogger.Log(totext255.ToString());
 				this.CoordinateField.text = totext255;
 			}
@@ -823,6 +917,7 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("!World");
 			SavedLevel.Add("allowPostProcess = " + this.allowPostProcess.ToString());
 			SavedLevel.Add("bloomIntensity = " + this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
+			SavedLevel.Add("allowColorGrading = " + this.allowColorGrading.ToString());
 			SavedLevel.Add("theme = " + this.theme);
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
@@ -916,12 +1011,28 @@ public void PrototypeLoad()
 					}
 					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
 
-						AdjustPostProcessing(allowPostProcess, bloomIntensity);
 
-						allowPostProcessToggle.isOn = allowPostProcess;
+					if(levelFile[i + 3].Contains ("True"))
+					{
+							allowColorGrading = true;
+							MFPEditorLogger.Log("Color grading is enabled");
+					}
+					if(levelFile[i + 3].Contains("False"))
+					{
+							allowColorGrading = false;
+							MFPEditorLogger.Log("Color grading is disabled");
 
-					theme = int.Parse(levelFile[i + 3].Replace("theme = ", ""));
-						root.theme = theme;
+					}
+
+					AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGrading);
+
+					allowPostProcessToggle.isOn = allowPostProcess;
+
+
+					
+
+					theme = int.Parse(levelFile[i + 4].Replace("theme = ", ""));
+					root.theme = theme;
 
 					i += 3;
 					break;
@@ -1058,13 +1169,17 @@ public void PrototypeLoad()
 		}
 
 		// Token: 0x060006DC RID: 1756
-		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity)
+		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity, bool allowColorGrading)
 		{
 			if (postProcessEnabled)
 			{
 				this.Camera.GetComponent<PostProcessingBehaviour>().enabled = true;
 				this.EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = true;
 				MFPEditorLogger.Log("Post processing is adjusted to be enabled");
+
+				Camera.GetComponent<PostProcessingBehaviour>().profile.colorGrading.enabled = allowColorGrading;
+				this.allowColorGrading = allowColorGrading;
+
 			}
 			else
 			{
@@ -1081,15 +1196,11 @@ public void PrototypeLoad()
 		// Token: 0x06000703 RID: 1795
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
-			if(this.Editing)
-				ExitEditMode();
-
 			if (forceOff)
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
 				this.adjustingSettings = false;
-				return;
 			}
 			if (!this.adjustingSettings)
 			{
@@ -1190,8 +1301,8 @@ public void PrototypeLoad()
 		// Token: 0x04001352 RID: 4946
 		public int theme = 1;
 
-		// Token: 0x04001353 RID: 4947
 		public bool allowPostProcess = true;
+		public bool allowColorGrading = true;
 
 		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
@@ -1211,8 +1322,11 @@ public void PrototypeLoad()
 		// Token: 0x040014C3 RID: 5315
 		public float bloomIntensity = 0.9f;
 
+		
+
 
 		public Toggle allowPostProcessToggle;
+		public Toggle allowColorGradingToggle;
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
