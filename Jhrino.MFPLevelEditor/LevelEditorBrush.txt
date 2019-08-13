@@ -1,0 +1,26 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+public class LevelEditorBrush : MonoBehaviour
+{
+
+	public string parentName;
+	public Vector3 localScale;
+	public Vector3 localPosition;
+	public Quaternion localRotation;
+
+
+	public void PostEditorLoad()
+	{
+		GameObject Parent = GameObject.Find(parentName);
+
+		transform.parent = Parent.transform;
+
+		transform.localScale = localScale;
+		transform.position = localPosition;
+		transform.localRotation = localRotation;
+	}
+}
