@@ -4,8 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+namespace Jhrino.MFPLevelEditor
+{
+
 public class LevelEditorBrush : MonoBehaviour
 {
+
+	public bool child = false;
 
 	public string parentName;
 	public Vector3 localScale;
@@ -15,12 +20,18 @@ public class LevelEditorBrush : MonoBehaviour
 
 	public void PostEditorLoad()
 	{
-		GameObject Parent = GameObject.Find(parentName);
+		if(child)
+		{
+			GameObject Parent = GameObject.Find(parentName);
 
-		transform.parent = Parent.transform;
+			transform.parent = Parent.transform;
 
-		transform.localScale = localScale;
-		transform.position = localPosition;
-		transform.localRotation = localRotation;
+			transform.localScale = localScale;
+			transform.position = localPosition;
+			transform.localRotation = localRotation;
+		}
+
 	}
+}
+
 }
