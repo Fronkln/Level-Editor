@@ -94,6 +94,12 @@ namespace Jhrino.MFPLevelEditor
 			this.HUD = GameObject.Find("HUD/Canvas");
 			this.Player = GameObject.Find("Player");
 			this.Camera = GameObject.Find("Main Camera");
+			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
+			BackgroundCamera.transform.parent = null;
+			Destroy(GameObject.Find("HorizonBackground_Theme_1"));
+
+			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
+
 			this.Player.SetActive(false);
 			this.Camera.SetActive(false);
 			this.HUD.GetComponentInChildren<Canvas>().enabled = false;
@@ -475,7 +481,86 @@ namespace Jhrino.MFPLevelEditor
 				this.ToggleSettingsMenu("world", false);
 			});
 
+<<<<<<< Updated upstream
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity);});
+=======
+			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
+
+
+			
+			GameObject AllowColorGradingTex = new GameObject();
+			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
+			AllowColorGradingTex.name = "AllowColorGradingText";
+
+			RectTransform cgtextrect = AllowColorGradingTex.AddComponent<RectTransform>();
+			cgtextrect.anchorMin = new Vector2(0.5f, 0.5f);
+			cgtextrect.anchorMax = new Vector2(0.5f, 0.5f);
+			cgtextrect.pivot = new Vector2(0.5f, 0.5f);
+			cgtextrect.anchoredPosition = new Vector2(-235f, 125f);
+			pptextrect.sizeDelta = new Vector2(160f, 30f);
+			Text cgtext = AllowColorGradingTex.AddComponent<Text>();
+			cgtext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			cgtext.text = "Allow Color Grading:";
+			cgtext.alignment = TextAnchor.UpperLeft;
+			cgtextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
+			cgtext.color = new Color(0f, 0f, 0f);
+			cgtext.fontSize = 64;
+			cgtext.verticalOverflow = VerticalWrapMode.Overflow;
+			cgtext.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+			GameObject ColorGradingCheckmark = new GameObject();
+			ColorGradingCheckmark.name = "ColorGradingCheckmark";
+			ColorGradingCheckmark.transform.parent = PanelOBJ2.transform;
+			RectTransform colgradecheckrec = ColorGradingCheckmark.AddComponent<RectTransform>();
+			colgradecheckrec.pivot = new Vector2(0.5f, 0.5f);
+			colgradecheckrec.anchorMin = new Vector2(0.5f, 0.5f);
+			colgradecheckrec.anchorMax = new Vector2(0.5f, 0.5f);
+			colgradecheckrec.sizeDelta = new Vector2(20.41f, 20f);
+			colgradecheckrec.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
+			colgradecheckrec.anchoredPosition = new Vector2(97.5f, 121.1f);
+			Toggle colgradetoggle = ColorGradingCheckmark.AddComponent<Toggle>();
+			allowColorGradingToggle = colgradetoggle;
+			colgradetoggle.isOn = true;
+
+
+			GameObject colgradingcheckmarkbg = new GameObject();
+			colgradingcheckmarkbg.name = "CheckmarkBackground";
+			colgradingcheckmarkbg.transform.parent = ColorGradingCheckmark.transform;
+			RectTransform colgradcheckrect = colgradingcheckmarkbg.AddComponent<RectTransform>();
+			colgradcheckrect.pivot = new Vector2(0.5f, 0.5f);
+			colgradcheckrect.anchorMin = new Vector2(0f, 1f);
+			colgradcheckrect.anchorMax = new Vector2(0f, 1f);
+			colgradcheckrect.sizeDelta = new Vector2(20f, 20f);
+			colgradcheckrect.anchoredPosition = new Vector2(10f, -10f);
+			colgradcheckrect.localScale = new Vector3(1f, 1f, 1f);
+			Image colgradecheckmarkbgGraphics = colgradingcheckmarkbg.AddComponent<Image>();
+			colgradetoggle.targetGraphic = colgradecheckmarkbgGraphics;
+			
+
+			RectTransform colgraderect = new GameObject
+			{
+				name = "Checkmark",
+				transform = 
+				{
+					parent = colgradingcheckmarkbg.transform
+				}
+			}.AddComponent<RectTransform>();
+			colgraderect.pivot = new Vector2(0.5f, 0.5f);
+			colgraderect.anchorMin = new Vector2(0.5f, 0.5f);
+			colgraderect.anchorMax = new Vector2(0.5f, 0.5f);
+			colgraderect.sizeDelta = new Vector2(20f, 20f);
+			colgraderect.anchoredPosition = new Vector2(0f, 0f);
+			Image colgradecheckrectimage = colgraderect.gameObject.AddComponent<Image>();
+
+			colgradecheckrectimage.sprite = spr_check;
+			colgradetoggle.graphic = colgradecheckrectimage;
+
+			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn, SkyColor, allowFog);});
+
+			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
+
+>>>>>>> Stashed changes
 
 			MFPEditorLogger.Log("Hud load complete");
 			this.EntitySpawnRoot.SetActive(false);
@@ -819,6 +904,8 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("allowPostProcess = " + this.allowPostProcess.ToString());
 			SavedLevel.Add("bloomIntensity = " + this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
 			SavedLevel.Add("theme = " + this.theme);
+			SavedLevel.Add("skyColor = " + SkyColor.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
+			SavedLevel.Add("allowFog = " + allowFog.ToString());
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
@@ -852,7 +939,7 @@ namespace Jhrino.MFPLevelEditor
 		}
 
 		// Token: 0x06000624 RID: 1572
-public void PrototypeLoad()
+	public void PrototypeLoad()
 		{
 			if (this.Editing)
 			{
@@ -898,6 +985,7 @@ public void PrototypeLoad()
             switch (tag)
             {
 				case "!World":
+					//Post processing
 					if(levelFile[i + 1].Contains ("True"))
 					{
 							allowPostProcess = true;
@@ -911,14 +999,51 @@ public void PrototypeLoad()
 					}
 					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
 
+<<<<<<< Updated upstream
 						AdjustPostProcessing(allowPostProcess, bloomIntensity);
 
 						allowPostProcessToggle.isOn = allowPostProcess;
+=======
+					//Color grading
+					if(levelFile[i + 3].Contains ("True"))
+					{
+							allowColorGrading = true;
+							MFPEditorLogger.Log("Color grading is enabled");
+					}
+					if(levelFile[i + 3].Contains("False"))
+					{
+							allowColorGrading = false;
+							MFPEditorLogger.Log("Color grading is disabled");
+
+					}
+
+					//Fog
+					if(levelFile[i + 6].Contains ("True"))
+					{
+							allowFog = true;
+							MFPEditorLogger.Log("Fog is enabled");
+					}
+					if(levelFile[i + 6].Contains("False"))
+					{
+							allowFog = false;
+							MFPEditorLogger.Log("Fog is disabled");
+
+					}
+
+					byte[] loadedsky = Array.ConvertAll(levelFile[i + 5].Replace("skyColor = ", "").Split(new char[] { ' ' }), byte.Parse);
+					SkyColor = new Color32(loadedsky[0], loadedsky[1], loadedsky[2], loadedsky[3]);
+
+					AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGrading, SkyColor, allowFog);
+
+					allowPostProcessToggle.isOn = allowPostProcess;
+					allowColorGradingToggle.isOn = allowColorGrading;
+
+>>>>>>> Stashed changes
 
 					theme = int.Parse(levelFile[i + 3].Replace("theme = ", ""));
 						root.theme = theme;
 
-					i += 3;
+					i +=6;
 					break;
 
                 case "!Brush": //ITS A BRUSH
@@ -1053,7 +1178,11 @@ public void PrototypeLoad()
 		}
 
 		// Token: 0x060006DC RID: 1756
+<<<<<<< Updated upstream
 		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity)
+=======
+		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity, bool allowColorGrading, Color32 SkyColor, bool allowFog)
+>>>>>>> Stashed changes
 		{
 			if (postProcessEnabled)
 			{
@@ -1067,10 +1196,16 @@ public void PrototypeLoad()
 				this.EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = false;
 				MFPEditorLogger.Log("Post processing is adjusted to be disabled");
 			}
+
+			Camera.GetComponent<PostProcessingBehaviour>().profile.fog.enabled = allowFog;	
+
 			this.allowPostProcess = postProcessEnabled;
 			BloomModel.Settings custombloom = this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings;
 			custombloom.bloom.intensity = bloomIntensity;
 			this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings = custombloom;
+
+			BackgroundCamera.GetComponent<Camera>().backgroundColor = SkyColor;
+
 		}
 
 		// Token: 0x06000703 RID: 1795
@@ -1105,7 +1240,7 @@ public void PrototypeLoad()
 
 		// Token: 0x04001339 RID: 4921
 		public GameObject Camera;
-
+		public GameObject BackgroundCamera;
 		// Token: 0x0400133A RID: 4922
 		public GameObject HUD;
 
@@ -1183,6 +1318,11 @@ public void PrototypeLoad()
 
 		// Token: 0x04001353 RID: 4947
 		public bool allowPostProcess = true;
+<<<<<<< Updated upstream
+=======
+		public bool allowColorGrading = true;
+		public bool allowFog = true;
+>>>>>>> Stashed changes
 
 		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
@@ -1202,6 +1342,12 @@ public void PrototypeLoad()
 		// Token: 0x040014C3 RID: 5315
 		public float bloomIntensity = 0.9f;
 
+<<<<<<< Updated upstream
+=======
+		
+		public Color32 SkyColor;
+
+>>>>>>> Stashed changes
 
 		public Toggle allowPostProcessToggle;
 
