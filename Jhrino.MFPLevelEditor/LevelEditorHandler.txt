@@ -58,6 +58,7 @@ namespace Jhrino.MFPLevelEditor
 					gameObject.layer = 8;
 					gameObject.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, this.EditorCamera.transform.position.z + 2.5f);
 					this.BrushLump.Add(gameObject);
+					gameObject.name = "Brush #" + BrushLump.Count().ToString();
 					this.EnterEditMode(gameObject);
 				}
 				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
@@ -481,9 +482,6 @@ namespace Jhrino.MFPLevelEditor
 				this.ToggleSettingsMenu("world", false);
 			});
 
-<<<<<<< Updated upstream
-			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity);});
-=======
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
 
@@ -560,7 +558,6 @@ namespace Jhrino.MFPLevelEditor
 
 			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
 
->>>>>>> Stashed changes
 
 			MFPEditorLogger.Log("Hud load complete");
 			this.EntitySpawnRoot.SetActive(false);
@@ -587,6 +584,18 @@ namespace Jhrino.MFPLevelEditor
 				}
 				this.ExitEditMode();
 			}
+			else
+				{
+					if(!this.CoordinateField.isFocused)
+					{
+					if(this.editType == "position")
+					{
+						CoordinateField.text = EditingObject.transform.position.ToString(); 
+					}
+					}
+					else
+					ExitEditMode();
+				}
 		}
 
 		// Token: 0x0600061B RID: 1563
@@ -611,6 +620,13 @@ namespace Jhrino.MFPLevelEditor
 					{
 						' '
 					})[2]);
+					if(type == "position")
+					{
+
+						CoordinateField.text = coordinates;
+
+					}
+
 					if (type == "rotation")
 					{
 						this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
@@ -641,6 +657,7 @@ namespace Jhrino.MFPLevelEditor
 				}
 			}
 		}
+
 
 		// Token: 0x0600061C RID: 1564
 		public void ChangeEditType(string type)
@@ -732,8 +749,12 @@ namespace Jhrino.MFPLevelEditor
 					this.ExitEditMode();
 					this.Editing = false;
 				}
-				string totext255 = gobject.GetComponent<MeshRenderer>().material.color.ToString();
+
+				Color32 Color255 = (Color32)gobject.GetComponent<MeshRenderer>().material.color;
+
+				string totext255 = Color255.ToString();
 				totext255 = totext255.Replace("RGBA", "");
+
 				MFPEditorLogger.Log(totext255.ToString());
 				this.CoordinateField.text = totext255;
 			}
@@ -903,6 +924,7 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("!World");
 			SavedLevel.Add("allowPostProcess = " + this.allowPostProcess.ToString());
 			SavedLevel.Add("bloomIntensity = " + this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
+			SavedLevel.Add("allowColorGrading = " + this.allowColorGrading.ToString());
 			SavedLevel.Add("theme = " + this.theme);
 			SavedLevel.Add("skyColor = " + SkyColor.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
 			SavedLevel.Add("allowFog = " + allowFog.ToString());
@@ -932,6 +954,11 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
 				SavedLevel.Add(lump.layer.ToString());
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
+				SavedLevel.Add(lump.name);
+				if(lump.transform.parent != null)
+					SavedLevel.Add("True");
+				else
+					SavedLevel.Add("False");
 			}
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			this.CalculateLevelHash();
@@ -999,11 +1026,6 @@ namespace Jhrino.MFPLevelEditor
 					}
 					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
 
-<<<<<<< Updated upstream
-						AdjustPostProcessing(allowPostProcess, bloomIntensity);
-
-						allowPostProcessToggle.isOn = allowPostProcess;
-=======
 					//Color grading
 					if(levelFile[i + 3].Contains ("True"))
 					{
@@ -1038,10 +1060,11 @@ namespace Jhrino.MFPLevelEditor
 					allowPostProcessToggle.isOn = allowPostProcess;
 					allowColorGradingToggle.isOn = allowColorGrading;
 
->>>>>>> Stashed changes
 
-					theme = int.Parse(levelFile[i + 3].Replace("theme = ", ""));
-						root.theme = theme;
+					
+
+					theme = int.Parse(levelFile[i + 4].Replace("theme = ", ""));
+					root.theme = theme;
 
 					i +=6;
 					break;
@@ -1054,6 +1077,8 @@ namespace Jhrino.MFPLevelEditor
                     float[] color = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
                     int property = int.Parse(levelFile[i + 5]);
                     string texturename = levelFile[i + 6];
+					string brushName = levelFile[i + 7];
+					bool isChildren = bool.Parse(levelFile[i + 8]);
 
                     GameObject newBrush = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     newBrush.transform.position = new Vector3(position[0], position[1], position[2]);
@@ -1064,6 +1089,7 @@ namespace Jhrino.MFPLevelEditor
 					newBrush.GetComponent<MeshRenderer>().material.mainTexture.name = texturename;
 					newBrush.AddComponent<TextureTilingController>();
                     newBrush.layer = property;
+					newBrush.name = brushName;
                     this.BrushLump.Add(newBrush);
 
                     i += 6;
@@ -1178,17 +1204,17 @@ namespace Jhrino.MFPLevelEditor
 		}
 
 		// Token: 0x060006DC RID: 1756
-<<<<<<< Updated upstream
-		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity)
-=======
 		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity, bool allowColorGrading, Color32 SkyColor, bool allowFog)
->>>>>>> Stashed changes
 		{
 			if (postProcessEnabled)
 			{
 				this.Camera.GetComponent<PostProcessingBehaviour>().enabled = true;
 				this.EditorCamera.GetComponent<PostProcessingBehaviour>().enabled = true;
 				MFPEditorLogger.Log("Post processing is adjusted to be enabled");
+
+				Camera.GetComponent<PostProcessingBehaviour>().profile.colorGrading.enabled = allowColorGrading;
+				this.allowColorGrading = allowColorGrading;
+
 			}
 			else
 			{
@@ -1211,6 +1237,9 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000703 RID: 1795
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
+			if(this.Editing)
+				ExitEditMode();
+
 			if (forceOff)
 			{
 				this.WorldSettingsRoot.SetActive(false);
@@ -1316,13 +1345,9 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x04001352 RID: 4946
 		public int theme = 1;
 
-		// Token: 0x04001353 RID: 4947
 		public bool allowPostProcess = true;
-<<<<<<< Updated upstream
-=======
 		public bool allowColorGrading = true;
 		public bool allowFog = true;
->>>>>>> Stashed changes
 
 		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
@@ -1342,14 +1367,12 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x040014C3 RID: 5315
 		public float bloomIntensity = 0.9f;
 
-<<<<<<< Updated upstream
-=======
 		
 		public Color32 SkyColor;
 
->>>>>>> Stashed changes
 
 		public Toggle allowPostProcessToggle;
+		public Toggle allowColorGradingToggle;
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
