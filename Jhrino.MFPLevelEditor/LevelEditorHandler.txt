@@ -55,6 +55,7 @@ namespace Jhrino.MFPLevelEditor
 					gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
 					gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
 					gameObject.AddComponent<TextureTilingController>();
+					gameObject.AddComponent<LevelEditorBrush>();
 					gameObject.layer = 8;
 					gameObject.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, this.EditorCamera.transform.position.z + 2.5f);
 					this.BrushLump.Add(gameObject);
