@@ -483,8 +483,7 @@ namespace Jhrino.MFPLevelEditor
 			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
-
-			
+		
 			GameObject AllowColorGradingTex = new GameObject();
 			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
 			AllowColorGradingTex.name = "AllowColorGradingText";
@@ -1025,7 +1024,6 @@ namespace Jhrino.MFPLevelEditor
 					}
 					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
 
-
 					//Color grading
 					if(levelFile[i + 3].Contains ("True"))
 					{
@@ -1038,7 +1036,6 @@ namespace Jhrino.MFPLevelEditor
 							MFPEditorLogger.Log("Color grading is disabled");
 
 					}
-
 					//Fog
 					if(levelFile[i + 6].Contains ("True"))
 					{
@@ -1202,8 +1199,7 @@ namespace Jhrino.MFPLevelEditor
 			return value.Substring(0, maxLen);
 		}
 
-		// Token: 0x060006DC RID: 1756
-    
+		// Token: 0x060006DC RID: 1756 
 		public void AdjustPostProcessing(bool postProcessEnabled, float bloomIntensity, bool allowColorGrading, Color32 SkyColor, bool allowFog)
 		{
 			if (postProcessEnabled)
@@ -1347,7 +1343,9 @@ namespace Jhrino.MFPLevelEditor
 
 		public bool allowPostProcess = true;
 		public bool allowColorGrading = true;
+
 		public bool allowFog = true;
+
 
 		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
@@ -1366,10 +1364,9 @@ namespace Jhrino.MFPLevelEditor
 
 		// Token: 0x040014C3 RID: 5315
 		public float bloomIntensity = 0.9f;
-
-		
-		public Color32 SkyColor;
     
+		public Color32 SkyColor;
+
 		public Toggle allowPostProcessToggle;
 		public Toggle allowColorGradingToggle;
 
