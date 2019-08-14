@@ -30,9 +30,6 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.PrototypeSave();
 			}
-			if(this.Editing && Input.GetKeyDown(KeyCode.X))
-				ExitEditMode();
-
 			if (this.PlayMod)
 			{
 				LevelEditorHandler.levelTimer += Time.timeScale;
@@ -48,14 +45,22 @@ namespace Jhrino.MFPLevelEditor
 					this.EditingMode();
 				}
 				RaycastHit raycastHit;
-				if (Input.GetMouseButtonDown(0) && !this.Editing && !SnapToBuild && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
+				if (Input.GetMouseButtonDown(0) && !this.Editing && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
 				{
 					this.EnterEditMode(raycastHit.transform.gameObject);
 				}
 				if (Input.GetKeyDown(KeyCode.T) && !this.Editing)
 				{
-					SnapToBuild = true;
-
+					GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+					gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
+					gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
+					gameObject.AddComponent<TextureTilingController>();
+					gameObject.AddComponent<LevelEditorBrush>();
+					gameObject.layer = 8;
+					gameObject.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, this.EditorCamera.transform.position.z + 2.5f);
+					this.BrushLump.Add(gameObject);
+					gameObject.name = "Brush #" + BrushLump.Count().ToString();
+					this.EnterEditMode(gameObject);
 				}
 				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
 				{
@@ -69,33 +74,6 @@ namespace Jhrino.MFPLevelEditor
 					this.EnemySpawnpoints.Add(gameObject2.transform);
 					this.EnterEditMode(gameObject2);
 				}
-
-
-
-				if(!PlayMod && SnapToBuild)
-				{
-					RaycastHit hit;
-					Ray ray = EditorCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
-
-					if(Physics.Raycast(ray, out hit))
-					{
-						if(hit.transform.GetComponent<snaphelper>());
-						SnapTarget = hit.transform.gameObject;
-
-						if(Input.GetMouseButton(0))
-						{
-						GameObject newFloor = Instantiate(floor_Wood);
-
-						 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
-						 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
-						 else
-						 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);
-						}
-					}
-				}
-
-
-
 			}
 		}
 
@@ -120,18 +98,7 @@ namespace Jhrino.MFPLevelEditor
 			this.Camera = GameObject.Find("Main Camera");
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
-		//	Destroy(GameObject.Find("HorizonBackground_Theme_1"));
-
-			GameObject LevelLight = new GameObject();	
-			LevelLight.name = "Level Lighting";
-			LevelLight.transform.eulerAngles = new Vector3(50,-30,0);
-
-			Light SceneLight = LevelLight.AddComponent<Light>();
-			SceneLight.type = LightType.Directional;
-			SceneLight.renderMode = LightRenderMode.ForcePixel;
-			SceneLight.shadows = LightShadows.None;
-			SceneLight.color = new Color32(255,244, 214, 255);
-			SceneLight.cullingMask = 1 << 8;
+			Destroy(GameObject.Find("HorizonBackground_Theme_1"));
 
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
@@ -140,7 +107,6 @@ namespace Jhrino.MFPLevelEditor
 			this.HUD.GetComponentInChildren<Canvas>().enabled = false;
 			this.EnemySample = GameObject.Find("New Enemy");
 			this.EnemySample.SetActive(false);
-			/* OLD BULDING 
 			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject.layer = 8;
 			gameObject.transform.position = new Vector3(0f, -1f, 0f);
@@ -151,47 +117,6 @@ namespace Jhrino.MFPLevelEditor
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture.name = "EditorAssets/dev_measuregeneric01b.png";
 			gameObject.name = "Brush #1";
 			this.BrushLump.Add(gameObject);
-			*/
-
-			Material FloorMaterial = new Material(Shader.Find("Standard"));
-
-
-			FloorMaterial.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/floor_wood_indoors.png"));
-			FloorMaterial.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/floor_wood_indoors_normal.png")));
-
-			GameObject gameObject = new GameObject();
-			gameObject.layer = 8;
-			MeshRenderer meshrend = gameObject.AddComponent<MeshRenderer>();
-			MeshCollider meshColl = gameObject.AddComponent<MeshCollider>();
-			MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
-
-			meshFilter.mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/floor_wood.obj"));
-			meshColl.sharedMesh = meshFilter.mesh;
-			meshrend.material = FloorMaterial;
-
-			GameObject snapBuildLeft = new GameObject();
-			snapBuildLeft.transform.parent = gameObject.transform;
-			snapBuildLeft.AddComponent<BoxCollider>();
-			snapBuildLeft.transform.localScale = new Vector3(0.1963f, 0.73813f, 10.98067f);
-			snapBuildLeft.transform.localPosition = new Vector3(-1.09f, -0.1309f, 1.1903f);
-
-			snaphelper snaphelping = snapBuildLeft.AddComponent<snaphelper>();
-			snaphelping.snapaxis = snaphelper.Axis.NegativeX;
-
-			GameObject snapBuildRight = new GameObject();
-			snapBuildRight.transform.parent = gameObject.transform;
-			snapBuildRight.AddComponent<BoxCollider>();
-			snapBuildRight.transform.localScale = new Vector3(0.1963f, 0.73813f, 10.98067f);
-			snapBuildRight.transform.localPosition = new Vector3(1.09f, -0.1309f, 1.1903f);
-
-			snaphelper snaphelpingR = snapBuildRight.AddComponent<snaphelper>();
-			snaphelpingR.snapaxis = snaphelper.Axis.PositiveX;
-
-			floor_Wood = gameObject;
-
-
-			
-
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "EditorCamera";
 			this.EditorCamera = gameObject2.AddComponent<Camera>();
@@ -332,6 +257,7 @@ namespace Jhrino.MFPLevelEditor
 			this.CoordinateField = inputField;
 			inputField.interactable = true;
 			inputField.transition = Selectable.Transition.ColorTint;
+			inputField.targetGraphic = image;
 			inputField.textComponent = this.DebugObject;
 			inputField.contentType = InputField.ContentType.Standard;
 			inputField.lineType = InputField.LineType.SingleLine;
@@ -339,7 +265,6 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretWidth = 1;
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
-			inputField.targetGraphic = image;
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
@@ -1424,8 +1349,6 @@ namespace Jhrino.MFPLevelEditor
 		public bool allowFog = true;
 
 
-		public bool SnapToBuild = false;
-
 		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
 
@@ -1449,11 +1372,6 @@ namespace Jhrino.MFPLevelEditor
 		public Toggle allowPostProcessToggle;
 		public Toggle allowColorGradingToggle;
 
-//-----------------------------IMPROVED BUILDING DEPENDENCIES--------------------------------
-		public GameObject SnapTarget;
-		
-		public GameObject floor_Wood;
-//-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
 		{
