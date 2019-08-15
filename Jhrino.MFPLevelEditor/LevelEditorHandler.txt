@@ -54,7 +54,23 @@ namespace Jhrino.MFPLevelEditor
 				}
 				if (Input.GetKeyDown(KeyCode.T) && !this.Editing)
 				{
+					if(!SnapToBuild)
+					{
 					SnapToBuild = true;
+					foreach(snaphelper snaphelping in GameObject.FindObjectsOfType<snaphelper>())
+						{
+							snaphelping.GetComponent<Collider>().enabled = true;
+						}
+					}
+					else
+					{
+						SnapToBuild = false;
+
+						foreach(snaphelper snaphelping in GameObject.FindObjectsOfType<snaphelper>())
+						{
+							snaphelping.GetComponent<Collider>().enabled = false;
+						}
+					}
 
 				}
 				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
@@ -80,16 +96,38 @@ namespace Jhrino.MFPLevelEditor
 					if(Physics.Raycast(ray, out hit))
 					{
 						if(hit.transform.GetComponent<snaphelper>());
-						SnapTarget = hit.transform.gameObject;
-
-						if(Input.GetMouseButton(0))
 						{
-						GameObject newFloor = Instantiate(floor_Wood);
+						SnapTarget = hit.transform.gameObject;
+						}
 
-						 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
-						 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
-						 else
-						 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);
+					
+
+						if(Input.GetMouseButtonDown(0))
+						{
+						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null)
+						{
+							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
+							{
+							GameObject newFloor = Instantiate(floor_Wood);
+
+							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
+							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
+							 else
+							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);
+							}
+							else
+							{
+								MFPEditorLogger.Log("New wall being spawned");
+
+								GameObject newWall = Instantiate(this.wall_Brick);
+								newWall.SetActive(true);
+							    newWall.transform.position = new Vector3(SnapTarget.transform.position.x, SnapTarget.transform.position.y, SnapTarget.transform.position.z);
+							   newWall.transform.eulerAngles = new Vector3(0, -90, 0);
+								SnapTarget.GetComponent<snaphelper>().SnappedObject = newWall;
+							}
+							
+							SnapTarget = null;
+						}
 						}
 					}
 				}
@@ -165,7 +203,7 @@ namespace Jhrino.MFPLevelEditor
 			MeshCollider meshColl = gameObject.AddComponent<MeshCollider>();
 			MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
 
-			meshFilter.mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/floor_wood.obj"));
+			meshFilter.mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/floor_wood.obj"));
 			meshColl.sharedMesh = meshFilter.mesh;
 			meshrend.material = FloorMaterial;
 
@@ -187,7 +225,73 @@ namespace Jhrino.MFPLevelEditor
 			snaphelper snaphelpingR = snapBuildRight.AddComponent<snaphelper>();
 			snaphelpingR.snapaxis = snaphelper.Axis.PositiveX;
 
+
+			 GameObject SnapBuildMiddle = new GameObject();
+			 SnapBuildMiddle.transform.parent = gameObject.transform;
+			 SnapBuildMiddle.AddComponent<BoxCollider>();
+			 SnapBuildMiddle.transform.position = new Vector3(0, 2.34f, 6.735f);
+			SnapBuildMiddle.GetComponent<BoxCollider>().size = new Vector3(2,5,0.1f);
+			 SnapBuildMiddle.AddComponent<snaphelper>().isWallNode = true;
+
 			floor_Wood = gameObject;
+
+			GameObject wall_Brick = new GameObject();
+			wall_Brick.name = "Brick Wall";
+
+			wall_Brick.layer = 8;
+			MeshRenderer meshrend_brickwall = wall_Brick.AddComponent<MeshRenderer>();
+			MeshCollider meshColl_brickwall = wall_Brick.AddComponent<MeshCollider>();
+			MeshFilter meshFilter_brickwall = wall_Brick.AddComponent<MeshFilter>();
+
+			meshFilter_brickwall.mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/wall_brick.obj"));
+			meshColl_brickwall.sharedMesh = meshFilter_brickwall.mesh;
+			meshrend_brickwall.material = new Material(FloorMaterial);
+
+			meshrend_brickwall.material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/wall_textures_1.png"));
+			meshrend_brickwall.material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/wall_textures_1_normal.png")));
+
+			GameObject brickwall_SnapBuildLeft = new GameObject();
+
+			brickwall_SnapBuildLeft.transform.parent = wall_Brick.transform;
+			brickwall_SnapBuildLeft.AddComponent<BoxCollider>();
+			brickwall_SnapBuildLeft.GetComponent<BoxCollider>().size = new Vector3(0.1f, 5, 2);
+			brickwall_SnapBuildLeft.transform.position = new Vector3(0,0, -2);
+			
+			brickwall_SnapBuildLeft.AddComponent<snaphelper>();
+			brickwall_SnapBuildLeft.GetComponent<snaphelper>().isWallNode = true;
+
+			GameObject brickwall_SnapBuildRight = new GameObject();
+
+			brickwall_SnapBuildRight.transform.parent = wall_Brick.transform;
+			brickwall_SnapBuildRight.AddComponent<BoxCollider>();
+			brickwall_SnapBuildRight.GetComponent<BoxCollider>().size = new Vector3(0.1f, 5, 2);
+			brickwall_SnapBuildRight.transform.position = new Vector3(0,0, 2);
+			
+			brickwall_SnapBuildRight.AddComponent<snaphelper>();
+			brickwall_SnapBuildRight.GetComponent<snaphelper>().isWallNode = true;
+
+
+			
+			GameObject brickwall_SnapBuildMiddle = new GameObject();
+			
+
+			brickwall_SnapBuildMiddle.transform.parent = wall_Brick.transform;
+			brickwall_SnapBuildMiddle.AddComponent<BoxCollider>();
+			brickwall_SnapBuildMiddle.GetComponent<BoxCollider>().size = new Vector3(0.1f, 5, 2);
+			brickwall_SnapBuildMiddle.transform.position = new Vector3(0,5,0);
+			
+			brickwall_SnapBuildMiddle.AddComponent<snaphelper>();
+			brickwall_SnapBuildMiddle.GetComponent<snaphelper>().isWallNode = true;
+
+			brickwall_SnapBuildLeft.name = "BrickWall_SnapBuildLeft";
+			brickwall_SnapBuildMiddle.name = "BrickWall_SnapBuildMiddle";
+			brickwall_SnapBuildRight.name = "BrickWall_SnapBuildRight";
+
+			this.wall_Brick = wall_Brick;
+			this.wall_Brick.SetActive(false);
+
+
+
 
 
 			
@@ -704,10 +808,20 @@ namespace Jhrino.MFPLevelEditor
 
 					if (type == "rotation")
 					{
+
 						this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
 					}
 					if (type == "scale")
 					{
+
+						if(num == 0)
+							num = 0.001f;
+						if(num2 == 0)
+							num2 = 0.001f;
+						if(num3 == 0)
+							num3 = 0.001f;
+
+
 						this.EditingObject.transform.localScale = new Vector3(num, num2, num3);
 						return;
 					}
@@ -806,7 +920,7 @@ namespace Jhrino.MFPLevelEditor
 					this.ExitEditMode();
 					this.Editing = false;
 				}
-				this.CoordinateField.text = gobject.transform.rotation.ToString();
+				this.CoordinateField.text = gobject.transform.eulerAngles.ToString();
 			}
 			if (this.editType == "scale")
 			{
@@ -1453,6 +1567,10 @@ namespace Jhrino.MFPLevelEditor
 		public GameObject SnapTarget;
 		
 		public GameObject floor_Wood;
+		
+
+		public GameObject wall_Brick;
+
 //-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
