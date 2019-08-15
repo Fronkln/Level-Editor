@@ -93,6 +93,9 @@ namespace Jhrino.MFPLevelEditor
 					RaycastHit hit;
 					Ray ray = EditorCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
 
+					if(Editing)
+						ExitEditMode();
+
 					if(Physics.Raycast(ray, out hit))
 					{
 						if(hit.transform.GetComponent<snaphelper>());
@@ -236,6 +239,7 @@ namespace Jhrino.MFPLevelEditor
 			floor_Wood = gameObject;
 
 			GameObject wall_Brick = new GameObject();
+			wall_Brick.transform.eulerAngles = new Vector3(0, -90,0);
 			wall_Brick.name = "Brick Wall";
 
 			wall_Brick.layer = 8;
