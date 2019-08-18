@@ -8,7 +8,7 @@ using UnityScript.Lang;
 [Serializable]
 public class LevelChangerScript : MonoBehaviour
 {
-	// Token: 0x06000274 RID: 628
+	// Token: 0x06000274 RID: 628 RVA: 0x0000350A File Offset: 0x0000170A
 	public LevelChangerScript()
 	{
 		this.levelNumber = 1;
@@ -16,7 +16,7 @@ public class LevelChangerScript : MonoBehaviour
 		this.saveState = true;
 	}
 
-	// Token: 0x06000275 RID: 629
+	// Token: 0x06000275 RID: 629 RVA: 0x00003527 File Offset: 0x00001727
 	public virtual void OnTriggerEnter(Collider col)
 	{
 		if (col.tag == "Player")
@@ -25,7 +25,7 @@ public class LevelChangerScript : MonoBehaviour
 		}
 	}
 
-	// Token: 0x06000276 RID: 630
+	// Token: 0x06000276 RID: 630 RVA: 0x00003541 File Offset: 0x00001741
 	public virtual void doTheThing()
 	{
 		if (this.dontShowEndScreen)
@@ -37,7 +37,7 @@ public class LevelChangerScript : MonoBehaviour
 		LevelEditorHandler.PlayerisDeadAndForceAutoLoad = true;
 	}
 
-	// Token: 0x06000277 RID: 631
+	// Token: 0x06000277 RID: 631 RVA: 0x00036840 File Offset: 0x00034A40
 	public virtual void Start()
 	{
 		this.root = (RootScript)GameObject.Find("Root").GetComponent(typeof(RootScript));
@@ -49,7 +49,7 @@ public class LevelChangerScript : MonoBehaviour
 		}
 	}
 
-	// Token: 0x06000278 RID: 632
+	// Token: 0x06000278 RID: 632 RVA: 0x000368A8 File Offset: 0x00034AA8
 	public virtual void Update()
 	{
 		if (Extensions.get_length(this.inputSwitch) > 0)
@@ -73,12 +73,12 @@ public class LevelChangerScript : MonoBehaviour
 		}
 	}
 
-	// Token: 0x06000279 RID: 633
+	// Token: 0x06000279 RID: 633 RVA: 0x000020A7 File Offset: 0x000002A7
 	public virtual void Main()
 	{
 	}
 
-	// Token: 0x0600027A RID: 634
+	// Token: 0x0600027A RID: 634 RVA: 0x000368FC File Offset: 0x00034AFC
 	public void CullTheWeak()
 	{
 		this.CullTheWeakPreWarmup();
@@ -88,7 +88,7 @@ public class LevelChangerScript : MonoBehaviour
 			{
 				gameObject.SetActive(false);
 			}
-			if (gameObject.layer == 14 || gameObject.layer == 15 || gameObject.layer == 16 || gameObject.layer == 19 || gameObject.layer == 8 || gameObject.layer == 1 || gameObject.layer == 18)
+			if (gameObject.layer == 14 || gameObject.layer == 15 || gameObject.layer == 16 || gameObject.layer == 19 || gameObject.layer == 8 || gameObject.layer == 1 || gameObject.layer == 18 || gameObject.name.Contains("RagdollColl"))
 			{
 				if (gameObject.layer != 16)
 				{
@@ -107,7 +107,7 @@ public class LevelChangerScript : MonoBehaviour
 		MFPEditorLogger.Log("Culled the weak");
 	}
 
-	// Token: 0x0600027B RID: 635
+	// Token: 0x0600027B RID: 635 RVA: 0x00036A38 File Offset: 0x00034C38
 	public void EnterEditor()
 	{
 		new GameObject
@@ -134,7 +134,7 @@ public class LevelChangerScript : MonoBehaviour
 		LevelChangerScript.leveleditorLoaded = true;
 	}
 
-	// Token: 0x0600027C RID: 636
+	// Token: 0x0600027C RID: 636 RVA: 0x00036BE0 File Offset: 0x00034DE0
 	public void CullTheWeakPreWarmup()
 	{
 		GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.FindObjectOfType<SpawnDoorScript>().enemy));
@@ -145,7 +145,7 @@ public class LevelChangerScript : MonoBehaviour
 		MFPEditorLogger.Log("Cull the weak warmup done");
 	}
 
-	// Token: 0x0600027D RID: 637
+	// Token: 0x0600027D RID: 637 RVA: 0x000020A7 File Offset: 0x000002A7
 	static LevelChangerScript()
 	{
 	}
