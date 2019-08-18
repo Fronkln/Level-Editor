@@ -208,7 +208,7 @@ namespace Jhrino.MFPLevelEditor
 
 			FloorMaterial.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/floor_wood_indoors.png"));
 			FloorMaterial.mainTexture.name = "EditorAssets/BaseGame/textures/floor_wood_indoors.png";
-			FloorMaterial.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/floor_wood_indoors_normal.png")));
+			FloorMaterial.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/floor_wood_indoors_" + "normal.png")));
 
 			GameObject gameObject = new GameObject();
 			gameObject.name = "Wood Floor";
@@ -274,7 +274,7 @@ namespace Jhrino.MFPLevelEditor
 
 			meshrend_brickwall.material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/wall_textures_1.png"));
 			meshrend_brickwall.material.mainTexture.name = "EditorAssets/BaseGame/textures/wall_textures_1.png";
-			meshrend_brickwall.material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/wall_textures_1_normal.png")));
+			meshrend_brickwall.material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/wall_textures_1" + "normal" + ".png")));
 
 			MFPEditorLogger.Log("Brick meshes are dealt with");
 
@@ -1401,6 +1401,10 @@ public void PrototypeLoad()
                     newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
                     newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
 					newWall.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geowalltexturename));
+					string normalmap = geowalltexturename;
+					geowalltexturename = geowalltexturename.Replace(".png", "");
+					geowalltexturename = geowalltexturename + " _normal.png";
+					newWall.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
 					newWall.GetComponent<MeshRenderer>().material.mainTexture.name = geowalltexturename;
 					newWall.gameObject.layer = geowallproperty;
 					GeometryWallLump.Add(newWall);
@@ -1426,6 +1430,10 @@ public void PrototypeLoad()
                     newFloor.GetComponent<MeshRenderer>().material.color = new Color(geofloorcolor[0], geofloorcolor[1], geofloorcolor[2]);
 					newFloor.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geofloortexturename));
 					newFloor.GetComponent<MeshRenderer>().material.mainTexture.name = geofloortexturename;
+					string normalmap_floor = geofloortexturename;
+					geofloortexturename = geofloortexturename.Replace(".png", "");
+					geofloortexturename = geofloortexturename + " _normal.png";
+					newFloor.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap_floor)));
 					newFloor.gameObject.layer = geofloorproperty;
 					GeometryFloorLump.Add(newFloor);
 					i+= 6;
