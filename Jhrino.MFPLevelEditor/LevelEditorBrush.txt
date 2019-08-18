@@ -1,0 +1,37 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+namespace Jhrino.MFPLevelEditor
+{
+
+public class LevelEditorBrush : MonoBehaviour
+{
+
+	public bool child = false;
+
+	public string parentName;
+	public Vector3 localScale;
+	public Vector3 localPosition;
+	public Quaternion localRotation;
+
+
+	public void PostEditorLoad()
+	{
+		if(child)
+		{
+			GameObject Parent = GameObject.Find(parentName);
+
+			transform.parent = Parent.transform;
+
+			transform.localScale = localScale;
+			transform.position = localPosition;
+			transform.localRotation = localRotation;
+		}
+
+	}
+}
+
+}

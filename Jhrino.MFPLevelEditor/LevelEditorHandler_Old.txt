@@ -14,8 +14,6 @@ namespace Jhrino.MFPLevelEditor
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
-
-
 		// Token: 0x06000615 RID: 1557
 		private void Update()
 		{
@@ -32,9 +30,6 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.PrototypeSave();
 			}
-			if(this.Editing && Input.GetKeyDown(KeyCode.X))
-				ExitEditMode();
-
 			if (this.PlayMod)
 			{
 				LevelEditorHandler.levelTimer += Time.timeScale;
@@ -50,30 +45,22 @@ namespace Jhrino.MFPLevelEditor
 					this.EditingMode();
 				}
 				RaycastHit raycastHit;
-				if (Input.GetMouseButtonDown(0) && !this.Editing && !SnapToBuild && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
+				if (Input.GetMouseButtonDown(0) && !this.Editing && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
 				{
-					if(raycastHit.transform.gameObject != null)
-					{
-					MFPEditorLogger.Log("Entering edit mode to object " + raycastHit.transform.name);
 					this.EnterEditMode(raycastHit.transform.gameObject);
-					}
 				}
 				if (Input.GetKeyDown(KeyCode.T) && !this.Editing)
 				{
-					if(!SnapToBuild)
-					{
-					SnapToBuild = true;
-						if(Editing)
-							ExitEditMode();
-						ToggleSnapping(true);
-					}
-					else
-					{
-						SnapToBuild = false;
-						ToggleSnapping(false);
-
-					}
-
+					GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+					gameObject.GetComponent<MeshRenderer>().material.mainTexture = this.DefaultTexture;
+					gameObject.GetComponent<MeshRenderer>().material.color = new Color(2f, 2f, 5f);
+					gameObject.AddComponent<TextureTilingController>();
+					gameObject.AddComponent<LevelEditorBrush>();
+					gameObject.layer = 8;
+					gameObject.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, this.EditorCamera.transform.position.z + 2.5f);
+					this.BrushLump.Add(gameObject);
+					gameObject.name = "Brush #" + BrushLump.Count().ToString();
+					this.EnterEditMode(gameObject);
 				}
 				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
 				{
@@ -87,65 +74,6 @@ namespace Jhrino.MFPLevelEditor
 					this.EnemySpawnpoints.Add(gameObject2.transform);
 					this.EnterEditMode(gameObject2);
 				}
-
-
-				if(!PlayMod && SnapToBuild)
-				{
-					RaycastHit hit;
-					Ray ray = EditorCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
-
-					if(Physics.Raycast(ray, out hit))
-					{
-						if(hit.transform.GetComponent<snaphelper>());
-						{
-							SnapTarget = hit.transform.gameObject;
-							
-						
-					}
-
-					
-
-						if(Input.GetMouseButtonDown(0))
-						{
-						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null)
-						{
-
-							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
-							{
-							GameObject newFloor = Instantiate(floor_Wood);
-							newFloor.SetActive(true);
-
-							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
-							 else
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);
-
-							 GeometryFloorLump.Add(newFloor);
-							}
-							else
-							{
-
-
-								GameObject newWall = Instantiate(this.wall_Brick);
-								newWall.transform.name = "Brick Wall #" + GeometryWallLump.Count().ToString();
-								newWall.SetActive(true);
-							    newWall.transform.position = new Vector3(SnapTarget.transform.position.x, SnapTarget.transform.position.y, SnapTarget.transform.position.z);
-								 newWall.transform.eulerAngles = new Vector3(0, -90, 0);
-
-								SnapTarget.GetComponent<snaphelper>().SnappedObject = newWall;
-									GeometryWallLump.Add(newWall);
-									MFPEditorLogger.Log(newWall.name + " added");
-								
-							}
-							
-							SnapTarget = null;
-						}
-						}
-					}
-				}
-
-
-
 			}
 		}
 
@@ -170,18 +98,7 @@ namespace Jhrino.MFPLevelEditor
 			this.Camera = GameObject.Find("Main Camera");
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
-		//	Destroy(GameObject.Find("HorizonBackground_Theme_1"));
-
-			GameObject LevelLight = new GameObject();	
-			LevelLight.name = "Level Lighting";
-			LevelLight.transform.eulerAngles = new Vector3(50,-30,0);
-
-			Light SceneLight = LevelLight.AddComponent<Light>();
-			SceneLight.type = LightType.Directional;
-			SceneLight.renderMode = LightRenderMode.ForcePixel;
-			SceneLight.shadows = LightShadows.None;
-			SceneLight.color = new Color32(255,244, 214, 255);
-			SceneLight.cullingMask = 1 << 8;
+			Destroy(GameObject.Find("HorizonBackground_Theme_1"));
 
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
@@ -190,7 +107,6 @@ namespace Jhrino.MFPLevelEditor
 			this.HUD.GetComponentInChildren<Canvas>().enabled = false;
 			this.EnemySample = GameObject.Find("New Enemy");
 			this.EnemySample.SetActive(false);
-			/* OLD BULDING 
 			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject.layer = 8;
 			gameObject.transform.position = new Vector3(0f, -1f, 0f);
@@ -201,175 +117,6 @@ namespace Jhrino.MFPLevelEditor
 			gameObject.GetComponent<MeshRenderer>().material.mainTexture.name = "EditorAssets/dev_measuregeneric01b.png";
 			gameObject.name = "Brush #1";
 			this.BrushLump.Add(gameObject);
-			*/
-
-			Material FloorMaterial = new Material(Shader.Find("Standard"));
-
-
-			FloorMaterial.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/floor_wood_indoors.png"));
-			FloorMaterial.mainTexture.name = "EditorAssets/BaseGame/textures/floor_wood_indoors.png";
-			FloorMaterial.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/floor_wood_indoors_normal.png")));
-
-			GameObject gameObject = new GameObject();
-			gameObject.name = "Wood Floor";
-			gameObject.layer = 8;
-			MeshRenderer meshrend = gameObject.AddComponent<MeshRenderer>();
-			MeshCollider meshColl = gameObject.AddComponent<MeshCollider>();
-			MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
-
-			meshFilter.mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/floor_wood.obj"));
-			meshColl.sharedMesh = meshFilter.mesh;
-			meshrend.material = FloorMaterial;
-
-			GameObject snapBuildLeft = new GameObject();
-			snapBuildLeft.name = "SnapBuildLeft";
-			snapBuildLeft.transform.parent = gameObject.transform;
-			snapBuildLeft.AddComponent<BoxCollider>();
-			snapBuildLeft.transform.localScale = new Vector3(0.1963f, 0.73813f, 10.98067f);
-			snapBuildLeft.transform.localPosition = new Vector3(-1.09f, -0.1309f, 1.1903f);
-
-			snaphelper snaphelping = snapBuildLeft.AddComponent<snaphelper>();
-			snaphelping.snapaxis = snaphelper.Axis.NegativeX;
-
-			GameObject snapBuildRight = new GameObject();
-			snapBuildRight.name = "SnapBuildRight";
-			snapBuildRight.transform.parent = gameObject.transform;
-			snapBuildRight.AddComponent<BoxCollider>();
-			snapBuildRight.transform.localScale = new Vector3(0.1963f, 0.73813f, 10.98067f);
-			snapBuildRight.transform.localPosition = new Vector3(1.09f, -0.1309f, 1.1903f);
-
-			snaphelper snaphelpingR = snapBuildRight.AddComponent<snaphelper>();
-			snaphelpingR.snapaxis = snaphelper.Axis.PositiveX;
-
-
-			 GameObject SnapBuildMiddle = new GameObject();
-			 SnapBuildMiddle.name = "SnapBuildMiddle";
-			 SnapBuildMiddle.transform.parent = gameObject.transform;
-			 SnapBuildMiddle.AddComponent<BoxCollider>();
-			 SnapBuildMiddle.transform.position = new Vector3(0, 2.34f, 6.735f);
-			SnapBuildMiddle.transform.localScale = new Vector3(2,5,0.1f);
-			 SnapBuildMiddle.AddComponent<snaphelper>().isWallNode = true;
-
-			Destroy(gameObject.GetComponent<snaphelper>());
-
-			GameObject floorwood_asset = Instantiate(gameObject);
-			floorwood_asset.SetActive(false);
-
-			floor_Wood = floorwood_asset;
-
-			GeometryFloorLump.Add(gameObject);
-			MFPEditorLogger.Log("Wood floor spawned");
-
-			GameObject wall_Brick = new GameObject();
-			wall_Brick.name = "Brick Wall";
-
-			wall_Brick.layer = 8;
-			MeshRenderer meshrend_brickwall = wall_Brick.AddComponent<MeshRenderer>();
-			MeshCollider meshColl_brickwall = wall_Brick.AddComponent<MeshCollider>();
-			MeshFilter meshFilter_brickwall = wall_Brick.AddComponent<MeshFilter>();
-
-			meshFilter_brickwall.mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/wall_brick.obj"));
-			meshColl_brickwall.sharedMesh = meshFilter_brickwall.mesh;
-			meshrend_brickwall.material = new Material(FloorMaterial);
-
-			meshrend_brickwall.material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/wall_textures_1.png"));
-			meshrend_brickwall.material.mainTexture.name = "EditorAssets/BaseGame/textures/wall_textures_1.png";
-			meshrend_brickwall.material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/wall_textures_1_normal.png")));
-
-			MFPEditorLogger.Log("Brick meshes are dealt with");
-
-			GameObject brickwall_SnapBuildLeft = new GameObject();
-
-			MeshFilter meshFilter_SnapBuildLeft = brickwall_SnapBuildLeft.AddComponent<MeshFilter>();
-			meshFilter_SnapBuildLeft.mesh = meshFilter_brickwall.mesh;
-			MFPEditorLogger.Log("SnapBuildLeft meshes are done");
-			brickwall_SnapBuildLeft.AddComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(wall_Brick.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Transparent);
-			brickwall_SnapBuildLeft.GetComponent<MeshRenderer>().material.color = new Color(0,1,0, 0.4f);
-			brickwall_SnapBuildLeft.GetComponent<MeshRenderer>().enabled = false;
-			MFPEditorLogger.Log("SnapBuildLeft renderer is done");
-
-			brickwall_SnapBuildLeft.transform.parent = wall_Brick.transform;
-			brickwall_SnapBuildLeft.AddComponent<BoxCollider>();
-			brickwall_SnapBuildLeft.GetComponent<BoxCollider>().size = new Vector3(0.1f, 5, 2);
-			brickwall_SnapBuildLeft.transform.position = new Vector3(0,0, -2);
-			
-			brickwall_SnapBuildLeft.AddComponent<snaphelper>();
-			brickwall_SnapBuildLeft.GetComponent<snaphelper>().isWallNode = true;
-
-			MFPEditorLogger.Log("SnapBuildLeft is done");
-
-			GameObject brickwall_SnapBuildRight = new GameObject();
-
-			MeshFilter meshFilter_SnapBuildRight = brickwall_SnapBuildRight.AddComponent<MeshFilter>();
-			meshFilter_SnapBuildRight.mesh = meshFilter_brickwall.mesh;
-			MFPEditorLogger.Log("SnapBuildRight mesh is done");
-			brickwall_SnapBuildRight.AddComponent<MeshRenderer>().enabled = false;
-			brickwall_SnapBuildRight.GetComponent<MeshRenderer>().material = brickwall_SnapBuildLeft.GetComponent<MeshRenderer>().material;
-			MFPEditorLogger.Log("SnapBuildRight renderer is done");
-
-			brickwall_SnapBuildRight.transform.parent = wall_Brick.transform;
-			brickwall_SnapBuildRight.AddComponent<BoxCollider>();
-			brickwall_SnapBuildRight.GetComponent<BoxCollider>().size = new Vector3(0.1f, 5, 2);
-			brickwall_SnapBuildRight.transform.position = new Vector3(0,0, 2);
-			
-			brickwall_SnapBuildRight.AddComponent<snaphelper>();
-			brickwall_SnapBuildRight.GetComponent<snaphelper>().isWallNode = true;
-			MFPEditorLogger.Log("SnapBuildRight is done");
-
-
-			
-			GameObject brickwall_SnapBuildTop = new GameObject();
-			
-			MeshFilter meshFilter_SnapBuildTop = brickwall_SnapBuildTop.AddComponent<MeshFilter>();
-			meshFilter_SnapBuildTop.mesh = meshFilter_brickwall.mesh;
-			MFPEditorLogger.Log("SnapBuildTop mesh is done");
-			brickwall_SnapBuildTop.AddComponent<MeshRenderer>();
-			brickwall_SnapBuildTop.GetComponent<MeshRenderer>().material = brickwall_SnapBuildLeft.GetComponent<MeshRenderer>().material;
-			brickwall_SnapBuildTop.GetComponent<MeshRenderer>().enabled = false;
-			MFPEditorLogger.Log("SnapBuildTop renderer is done");
-
-			brickwall_SnapBuildTop.transform.parent = wall_Brick.transform;
-			brickwall_SnapBuildTop.AddComponent<BoxCollider>();
-			brickwall_SnapBuildTop.GetComponent<BoxCollider>().size = new Vector3(0.1f, 5, 2);
-			brickwall_SnapBuildTop.transform.position = new Vector3(0,5,0);
-			
-			brickwall_SnapBuildTop.AddComponent<snaphelper>();
-			brickwall_SnapBuildTop.GetComponent<snaphelper>().isWallNode = true;
-
-			MFPEditorLogger.Log("SnapBuildTop is done");
-
-			GameObject brickwall_SnapBuildBottom = new GameObject();
-
-
-			MeshFilter meshFilter_SnapBuildBottom = brickwall_SnapBuildBottom.AddComponent<MeshFilter>();
-			meshFilter_SnapBuildBottom.mesh = meshFilter_brickwall.mesh;
-			brickwall_SnapBuildBottom.AddComponent<MeshRenderer>();
-			brickwall_SnapBuildBottom.GetComponent<MeshRenderer>().material = brickwall_SnapBuildLeft.GetComponent<MeshRenderer>().material;
-			brickwall_SnapBuildBottom.GetComponent<MeshRenderer>().enabled = false;
-
-			brickwall_SnapBuildBottom.transform.parent = wall_Brick.transform;
-			brickwall_SnapBuildBottom.AddComponent<BoxCollider>();
-			brickwall_SnapBuildBottom.transform.position = new Vector3(0,-5,0);
-			
-			brickwall_SnapBuildBottom.AddComponent<snaphelper>();
-			brickwall_SnapBuildBottom.GetComponent<snaphelper>().isWallNode = true;
-
-			brickwall_SnapBuildLeft.name = "BrickWall_SnapBuildLeft";
-			brickwall_SnapBuildTop.name = "BrickWall_SnapBuildTop";
-			brickwall_SnapBuildBottom.name = "BrickWall_SnapBuildBottom";
-			brickwall_SnapBuildRight.name = "BrickWall_SnapBuildRight";
-
-			this.wall_Brick = wall_Brick;
-			this.wall_Brick.SetActive(false);
-
-			
-			
-			MFPEditorLogger.Log("Snappies are done");
-
-
-
-			
-
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "EditorCamera";
 			this.EditorCamera = gameObject2.AddComponent<Camera>();
@@ -510,6 +257,7 @@ namespace Jhrino.MFPLevelEditor
 			this.CoordinateField = inputField;
 			inputField.interactable = true;
 			inputField.transition = Selectable.Transition.ColorTint;
+			inputField.targetGraphic = image;
 			inputField.textComponent = this.DebugObject;
 			inputField.contentType = InputField.ContentType.Standard;
 			inputField.lineType = InputField.LineType.SingleLine;
@@ -517,7 +265,6 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretWidth = 1;
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
-			inputField.targetGraphic = image;
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
@@ -821,11 +568,6 @@ namespace Jhrino.MFPLevelEditor
 		{
 			if (Input.GetKeyDown(KeyCode.L) && this.EditingObject != this.PlayerSpawn.gameObject && this.EditingObject != this.FinishLevelTrigger)
 			{
-				if(EditingObject.name.ToLower().Contains("wall"))
-					{
-					GeometryWallLump.Remove(EditingObject);
-					}
-
 				UnityEngine.Object.Destroy(this.EditingObject);
 				this.Editing = false;
 				this.EditingObject = null;
@@ -887,20 +629,10 @@ namespace Jhrino.MFPLevelEditor
 
 					if (type == "rotation")
 					{
-
 						this.EditingObject.transform.eulerAngles = new Vector3(num, num2, num3);
 					}
 					if (type == "scale")
 					{
-
-						if(num == 0)
-							num = 0.001f;
-						if(num2 == 0)
-							num2 = 0.001f;
-						if(num3 == 0)
-							num3 = 0.001f;
-
-
 						this.EditingObject.transform.localScale = new Vector3(num, num2, num3);
 						return;
 					}
@@ -931,9 +663,6 @@ namespace Jhrino.MFPLevelEditor
 		public void ChangeEditType(string type)
 		{
 			this.ExitEditMode();
-			if(SnapToBuild)
-				SnapToBuild = false;
-				ToggleSnapping(false);
 			this.editType = type;
 		}
 
@@ -941,7 +670,6 @@ namespace Jhrino.MFPLevelEditor
 		public void EnterEditMode(GameObject gobject)
 		{
 			this.EditingObject = gobject;
-
 			this.CoordinateField.gameObject.SetActive(true);
 			if (this.editType != "position")
 			{
@@ -1003,7 +731,7 @@ namespace Jhrino.MFPLevelEditor
 					this.ExitEditMode();
 					this.Editing = false;
 				}
-				this.CoordinateField.text = gobject.transform.eulerAngles.ToString();
+				this.CoordinateField.text = gobject.transform.rotation.ToString();
 			}
 			if (this.editType == "scale")
 			{
@@ -1173,27 +901,14 @@ namespace Jhrino.MFPLevelEditor
 			}
 		}
 
-		public void DoMissingArrayCleanup()
+		// Token: 0x06000623 RID: 1571
+		public void PrototypeSave()
 		{
-				for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
 			{
 				if (this.EnemySpawnpoints[i] == null)
 				{
 					this.EnemySpawnpoints.RemoveAt(i);
-				}
-			}
-			for (int j = this.GeometryWallLump.Count - 1; j > -1; j--)
-			{
-				if (this.GeometryWallLump[j] == null)
-				{
-					this.GeometryWallLump.RemoveAt(j);
-				}
-			}
-			for (int j = this.GeometryFloorLump.Count - 1; j > -1; j--)
-			{
-				if (this.GeometryFloorLump[j] == null)
-				{
-					this.GeometryFloorLump.RemoveAt(j);
 				}
 			}
 			for (int j = this.BrushLump.Count - 1; j > -1; j--)
@@ -1203,14 +918,6 @@ namespace Jhrino.MFPLevelEditor
 					this.BrushLump.RemoveAt(j);
 				}
 			}
-
-		}
-
-		// Token: 0x06000623 RID: 1571
-		public void PrototypeSave()
-		{
-			DoMissingArrayCleanup();
-
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
@@ -1219,7 +926,8 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("bloomIntensity = " + this.Camera.GetComponent<PostProcessingBehaviour>().profile.bloom.settings.bloom.intensity.ToString());
 			SavedLevel.Add("allowColorGrading = " + this.allowColorGrading.ToString());
 			SavedLevel.Add("theme = " + this.theme);
-			SavedLevel.Add("SkyColor = " + BackgroundCamera.GetComponent<Camera>().backgroundColor.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
+			SavedLevel.Add("skyColor = " + SkyColor.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
+			SavedLevel.Add("allowFog = " + allowFog.ToString());
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
@@ -1237,63 +945,33 @@ namespace Jhrino.MFPLevelEditor
 				num++;
 			}
 			MFPEditorLogger.Log("----");
-			foreach (GameObject lump in this.GeometryWallLump)
+			foreach (GameObject lump in this.BrushLump)
 			{
-				SavedLevel.Add("!GeometryWall");
+				SavedLevel.Add("!Brush");
 				SavedLevel.Add(lump.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
-				SavedLevel.Add(lump.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(lump.transform.rotation.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
 				SavedLevel.Add(lump.layer.ToString());
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
+				SavedLevel.Add(lump.name);
+				if(lump.transform.parent != null)
+					SavedLevel.Add("True");
+				else
+					SavedLevel.Add("False");
 			}
-
-			foreach (GameObject lump in this.GeometryFloorLump)
-			{
-				SavedLevel.Add("!GeometryFloor");
-				SavedLevel.Add(lump.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
-				SavedLevel.Add(lump.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
-				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
-				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
-				SavedLevel.Add(lump.layer.ToString());
-				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
-			}
-
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			this.CalculateLevelHash();
 			MFPEditorLogger.Log("----");
 		}
 
-	public void ToggleSnapping(bool toggle)
-	{
-	  if(!toggle)
-		{
-			foreach(snaphelper snaphelping in GameObject.FindObjectsOfType<snaphelper>())
-			{
-				snaphelping.GetComponent<Collider>().enabled = false;
-			}
-		}
-	  else
-		{
-			foreach(snaphelper snaphelping in GameObject.FindObjectsOfType<snaphelper>())
-			{
-				snaphelping.GetComponent<Collider>().enabled = true;
-			}
-		}
-	}
-
 		// Token: 0x06000624 RID: 1572
-public void PrototypeLoad()
+	public void PrototypeLoad()
 		{
 			if (this.Editing)
 			{
 				this.ExitEditMode();
 			}
-			if(SnapToBuild)
-			{
-				ToggleSnapping(false);
-			}
-
 			string[] levelFile = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
 
 
@@ -1301,29 +979,29 @@ public void PrototypeLoad()
 			{
 				UnityEngine.Object.Destroy(obj);
 			}
-			foreach (GameObject obj in this.GeometryWallLump)
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
 			{
-				UnityEngine.Object.Destroy(obj);
+				if (this.EnemySpawnpoints[i] == null)
+				{
+					this.EnemySpawnpoints.RemoveAt(i);
+				}
 			}
-
-			foreach (GameObject obj in this.GeometryFloorLump)
+			for (int j = this.BrushLump.Count - 1; j > -1; j--)
 			{
-				UnityEngine.Object.Destroy(obj);
+				if (this.BrushLump[j] == null)
+				{
+					this.BrushLump.RemoveAt(j);
+				}
 			}
 			foreach (Transform transform in this.EnemySpawnpoints)
 			{
 				UnityEngine.Object.Destroy(transform.gameObject);
 			}
-
-			DoMissingArrayCleanup();
-
 			MFPEditorLogger.Log("Loading File");
 			MFPEditorLogger.Log("------------");
 			string[] array = new string[]
 			{
 				"!Brush",
-				"!GeometryWall",
-				"!GeometryFloor",
 				"!PlayerSpawn",
 				"!EnemySpawn",
 				"!LevelEnd"
@@ -1334,6 +1012,7 @@ public void PrototypeLoad()
             switch (tag)
             {
 				case "!World":
+					//Post processing
 					if(levelFile[i + 1].Contains ("True"))
 					{
 							allowPostProcess = true;
@@ -1347,7 +1026,7 @@ public void PrototypeLoad()
 					}
 					float bloomIntensity = float.Parse(levelFile[i + 2].Replace("bloomIntensity = ", ""));
 
-
+					//Color grading
 					if(levelFile[i + 3].Contains ("True"))
 					{
 							allowColorGrading = true;
@@ -1359,77 +1038,33 @@ public void PrototypeLoad()
 							MFPEditorLogger.Log("Color grading is disabled");
 
 					}
+					//Fog
+					if(levelFile[i + 6].Contains ("True"))
+					{
+							allowFog = true;
+							MFPEditorLogger.Log("Fog is enabled");
+					}
+					if(levelFile[i + 6].Contains("False"))
+					{
+							allowFog = false;
+							MFPEditorLogger.Log("Fog is disabled");
+
+					}
+
+					byte[] loadedsky = Array.ConvertAll(levelFile[i + 5].Replace("skyColor = ", "").Split(new char[] { ' ' }), byte.Parse);
+					SkyColor = new Color32(loadedsky[0], loadedsky[1], loadedsky[2], loadedsky[3]);
 
 					AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGrading, SkyColor, allowFog);
 
 					allowPostProcessToggle.isOn = allowPostProcess;
 					allowColorGradingToggle.isOn = allowColorGrading;
 
-
 					
 
 					theme = int.Parse(levelFile[i + 4].Replace("theme = ", ""));
 					root.theme = theme;
 
-					float[] Skycolor = Array.ConvertAll(levelFile[i + 5].Replace("SkyColor = ", "").Split(new char[] { ' ' }), float.Parse);
-
-
-					BackgroundCamera.GetComponent<Camera>().backgroundColor = new Color(Skycolor[0], Skycolor[1], Skycolor[2]);
-
-				    SkyColor = BackgroundCamera.GetComponent<Camera>().backgroundColor;
-
-					i += 5;
-					break;
-
-				case "!GeometryWall":
-
-					MFPEditorLogger.Log("Data is about to get into memory");
-					
-			        float[] geowallposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
-                    float[] geowallrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
-                    float[] geowallscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
-                    float[] geowallcolor = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-                    int geowallproperty = int.Parse(levelFile[i + 5]);
-                    string geowalltexturename = levelFile[i + 6];
-
-					MFPEditorLogger.Log("Data in memory for brush");
-
-                    GameObject newWall = Instantiate(wall_Brick);
-					newWall.SetActive(true);
-                    newWall.transform.position = new Vector3(geowallposition[0], geowallposition[1], geowallposition[2]);
-                    newWall.transform.eulerAngles = new Vector3(geowallrotation[0], geowallrotation[1], geowallrotation[2]);
-                    newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
-                    newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
-					newWall.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geowalltexturename));
-					newWall.GetComponent<MeshRenderer>().material.mainTexture.name = geowalltexturename;
-					newWall.gameObject.layer = geowallproperty;
-					GeometryWallLump.Add(newWall);
-					i+= 6;
-					break;
-				
-				case "!GeometryFloor":
-
-				    float[] geofloorposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
-                    float[] geofloorrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
-                    float[] geofloorscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
-                    float[] geofloorcolor = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-                    int geofloorproperty = int.Parse(levelFile[i + 5]);
-                    string geofloortexturename = levelFile[i + 6];
-
-					MFPEditorLogger.Log("Data in memory for brush");
-
-                    GameObject newFloor = Instantiate(floor_Wood);
-					newFloor.SetActive(true);
-                    newFloor.transform.position = new Vector3(geofloorposition[0], geofloorposition[1], geofloorposition[2]);
-                    newFloor.transform.eulerAngles = new Vector3(geofloorrotation[0], geofloorrotation[1], geofloorrotation[2]);
-                    newFloor.transform.localScale = new Vector3(geofloorscale[0], geofloorscale[1], geofloorscale[2]);
-                    newFloor.GetComponent<MeshRenderer>().material.color = new Color(geofloorcolor[0], geofloorcolor[1], geofloorcolor[2]);
-					newFloor.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geofloortexturename));
-					newFloor.GetComponent<MeshRenderer>().material.mainTexture.name = geofloortexturename;
-					newFloor.gameObject.layer = geofloorproperty;
-					GeometryFloorLump.Add(newFloor);
-					i+= 6;
-					
+					i +=6;
 					break;
 
                 case "!Brush": //ITS A BRUSH
@@ -1440,6 +1075,8 @@ public void PrototypeLoad()
                     float[] color = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
                     int property = int.Parse(levelFile[i + 5]);
                     string texturename = levelFile[i + 6];
+					string brushName = levelFile[i + 7];
+					bool isChildren = bool.Parse(levelFile[i + 8]);
 
                     GameObject newBrush = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     newBrush.transform.position = new Vector3(position[0], position[1], position[2]);
@@ -1450,6 +1087,7 @@ public void PrototypeLoad()
 					newBrush.GetComponent<MeshRenderer>().material.mainTexture.name = texturename;
 					newBrush.AddComponent<TextureTilingController>();
                     newBrush.layer = property;
+					newBrush.name = brushName;
                     this.BrushLump.Add(newBrush);
 
                     i += 6;
@@ -1492,7 +1130,6 @@ public void PrototypeLoad()
         }
 			CalculateLevelHash();
 			MFPEditorLogger.Log("Loading over");
-			ToggleSnapping(false);
 		}
 
 		// Token: 0x06000625 RID: 1573
@@ -1596,8 +1233,6 @@ public void PrototypeLoad()
 		}
 
 		// Token: 0x06000703 RID: 1795
-
-
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
 			if(this.Editing)
@@ -1693,6 +1328,8 @@ public void PrototypeLoad()
 		// Token: 0x0400134D RID: 4941
 		public bool spawnpoints_saved;
 
+		// Token: 0x0400134E RID: 4942
+		public List<GameObject> BrushLump = new List<GameObject>();
 
 		// Token: 0x0400134F RID: 4943
 		public Texture2D DefaultTexture;
@@ -1711,8 +1348,6 @@ public void PrototypeLoad()
 
 		public bool allowFog = true;
 
-
-		public bool SnapToBuild = false;
 
 		// Token: 0x04001354 RID: 4948
 		public static int levelHash = 55;
@@ -1736,21 +1371,7 @@ public void PrototypeLoad()
 
 		public Toggle allowPostProcessToggle;
 		public Toggle allowColorGradingToggle;
-//--------------------------------------------------LEGACY---------------------------------//
-		public List<GameObject> BrushLump = new List<GameObject>();
 
-//-----------------------------IMPROVED BUILDING DEPENDENCIES------------------------------//
-		public GameObject SnapTarget;
-			
-		public List<GameObject> GeometryWallLump = new List<GameObject>();
-		public List <GameObject> GeometryFloorLump = new List<GameObject>();
-	
-		public GameObject floor_Wood;
-		
-
-		public GameObject wall_Brick;
-
-//-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
 		{
