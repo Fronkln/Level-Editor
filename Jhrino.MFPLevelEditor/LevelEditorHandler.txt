@@ -181,7 +181,7 @@ namespace Jhrino.MFPLevelEditor
 			SceneLight.renderMode = LightRenderMode.ForcePixel;
 			SceneLight.shadows = LightShadows.None;
 			SceneLight.color = new Color32(255,244, 214, 255);
-			SceneLight.cullingMask = 1 << 8;
+			SceneLight.cullingMask = 1 << 8 | 1 << 14;
 
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
@@ -834,6 +834,8 @@ namespace Jhrino.MFPLevelEditor
 			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn, SkyColor, allowFog);});
       
 			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
+			
+			entitiesbutton.transform.parent = this.EditorButtonsRoot.transform;
 
 			EntitySpawnRoot.SetActive(false);
 
@@ -1062,13 +1064,9 @@ namespace Jhrino.MFPLevelEditor
 		public void PlayMode()
 		{
 			this.Player.transform.position = this.PlayerSpawn.transform.position;
-			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
-			{
-				if (this.EnemySpawnpoints[i] == null)
-				{
-					this.EnemySpawnpoints.RemoveAt(i);
-				}
-			}
+			this.Player.GetComponent<Rigidbody>().velocity = new Vector3(0,0,0);
+			DoMissingArrayCleanup();
+
 			if (!this.PlayMod)
 			{
 				if (this.Editing)
@@ -1102,17 +1100,40 @@ namespace Jhrino.MFPLevelEditor
 					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
 					this.Enemies.Add(gameObject);
 					gameObject.transform.position = transform.position;
-					gameObject.SetActive(true);
 					this.root.nrOfEnemiesTotal++;
 				}
+
+				foreach(GameObject Canister in GasCanisters)
+				{
+					GameObject newCanister = Instantiate(GasCanister);
+					newCanister.SetActive(true);
+
+					newCanister.layer = 14;
+					newCanister.AddComponent<Rigidbody>();
+					newCanister.GetComponent<Rigidbody>().mass = 10;
+					newCanister.GetComponent<Rigidbody>().drag = 0.1f;
+					newCanister.GetComponent<Rigidbody>().angularDrag = 0.05f;
+
+					newCanister.AddComponent<ObjectKickScript>().objType = 3;
+					newCanister.AddComponent<GasCanisterScript>().explosionSize = 2;
+					newCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+					newCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+					newCanister.AddComponent<AudioSource>();
+					newCanister.AddComponent<PhysicsSoundsScript>();
+					newCanister.AddComponent<AutoAimTargetScript>();
+					newCanister.AddComponent<OptimizerScript>();
+
+					LevelGasCanisters.Add(newCanister);
+
+					Canister.SetActive(false);
+				}
+
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
 				this.root.nrOfEnemiesTotal = this.root.nrOfEnemiesTotal / 2;
 				this.root.nrOfEnemiesTotal -= this.root.nrOfEnemiesTotal;
 				this.CalculateLevelHash();
 				this.root.dontAllowCheckpointSave = true;
-				KickableTest();
-				EntitySpawnRoot.SetActive(true);
 				return;
 			}
 			if (this.PlayMod)
@@ -1141,10 +1162,25 @@ namespace Jhrino.MFPLevelEditor
 					transform2.gameObject.GetComponent<MeshRenderer>().enabled = true;
 					transform2.gameObject.GetComponent<CapsuleCollider>().enabled = true;
 				}
+
+				foreach(GameObject Canister in GasCanisters)
+					{
+
+					Canister.SetActive(true);
+
+					}
+
+				foreach(GameObject LVCanister in LevelGasCanisters)
+					{
+						Destroy(LVCanister);
+					}
+
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = true;
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = true;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = false;
 				this.Enemies.Clear();
+
+				DoMissingArrayCleanup();
 			}
 		}
 
@@ -1176,6 +1212,9 @@ namespace Jhrino.MFPLevelEditor
 			texname = texname.Replace(MFPEditorUtils.LoadFileFromDataFolder(""), "");
 			MFPEditorLogger.Log("Texture name is: " + texname);
 			this.DefaultTexture.name = texname;
+
+			DefaultStandardShader = new Material(Shader.Find("Standard"));
+			
 		}
 
 		// Token: 0x06000621 RID: 1569
@@ -1223,6 +1262,24 @@ namespace Jhrino.MFPLevelEditor
 					this.GeometryFloorLump.RemoveAt(j);
 				}
 			}
+
+			for (int j = GasCanisters.Count - 1; j > -1; j--)
+			{
+				if (this.GasCanisters[j] == null)
+				{
+					this.GasCanisters.RemoveAt(j);
+				}
+			}
+
+			
+			for (int j = LevelGasCanisters.Count - 1; j > -1; j--)
+			{
+				if (this.LevelGasCanisters[j] == null)
+				{
+					this.LevelGasCanisters.RemoveAt(j);
+				}
+			}
+
 			for (int j = this.BrushLump.Count - 1; j > -1; j--)
 			{
 				if (this.BrushLump[j] == null)
@@ -1563,20 +1620,26 @@ public void PrototypeLoad()
 				switch(entity)
 				{
 					default:
-					MFPEditorLogger.Log("Invalid entity " + entity + '"');
+						MFPEditorLogger.Log("Invalid entity " + entity + '"');
 					break;
+					//TODO: Add saving and loading for gas canisters
 					case "gascanister":
-					GameObject newGasCanister = new GameObject();
-					newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
-					newGasCanister.AddComponent<MeshRenderer>();
-					newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
-					newGasCanister.AddComponent<BoxCollider>();
+						GameObject newGasCanister = new GameObject();
+						newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
+						newGasCanister.AddComponent<MeshRenderer>();
+						newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+						newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+						newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+						newGasCanister.AddComponent<BoxCollider>();
+					
 
-					if(GasCanister == null)
-					{
-						GasCanister = Instantiate(newGasCanister);
+						if(GasCanister == null)
+						{
+							GasCanister = Instantiate(newGasCanister);
 						GasCanister.SetActive(false);
-					}
+						}
+
+						GasCanisters.Add(newGasCanister);
 					
 					break;
 				}
@@ -1659,32 +1722,20 @@ public void PrototypeLoad()
 
 		// Token: 0x06000703 RID: 1795
 
-		public void KickableTest()
-		{
-			GameObject KickTesting = GameObject.CreatePrimitive(PrimitiveType.Cube);
-			KickTesting.layer = 14;
-			KickTesting.AddComponent<Rigidbody>();
-			KickTesting.AddComponent<ObjectKickScript>().objType = 3;
-			KickTesting.AddComponent<GasCanisterScript>().explosionSize = 2;
-			KickTesting.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
-			KickTesting.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
-			KickTesting.AddComponent<AudioSource>();
-			KickTesting.AddComponent<PhysicsSoundsScript>();
-			KickTesting.AddComponent<AutoAimTargetScript>();
-			KickTesting.AddComponent<OptimizerScript>();
-			KickTesting.transform.position = Player.transform.position;
-		}
 
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
 			if(this.Editing)
 				ExitEditMode();
+			if(SnapToBuild)
+				ToggleSnapping(false);
 
 			if (forceOff)
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
 				this.adjustingSettings = false;
+				return;
 			}
 			if (!this.adjustingSettings)
 			{
@@ -1826,7 +1877,10 @@ public void PrototypeLoad()
 		public GameObject SnapTarget;
 			
 		public List<GameObject> GeometryWallLump = new List<GameObject>();
-		public List <GameObject> GeometryFloorLump = new List<GameObject>();
+		public List<GameObject> GeometryFloorLump = new List<GameObject>();
+
+		public List<GameObject> GasCanisters = new List<GameObject>();
+		public List<GameObject> LevelGasCanisters = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
@@ -1836,6 +1890,9 @@ public void PrototypeLoad()
 
 		//------------------- PREVIEW OBJECTS-------------------//
 		public GameObject GasCanister;
+
+		//PRELOADED CONTENT
+		public Material DefaultStandardShader;
 
 //-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
