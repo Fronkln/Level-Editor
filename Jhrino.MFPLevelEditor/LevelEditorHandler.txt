@@ -957,11 +957,26 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x0600061C RID: 1564
 		public void ChangeEditType(string type)
 		{
-			this.ExitEditMode();
+
 			if(SnapToBuild)
+			{
 				SnapToBuild = false;
 				ToggleSnapping(false);
+			}
+
+			if(adjustingSettings)
+				ToggleSettingsMenu(null, true);
+
 			this.editType = type;
+
+			
+			if(Editing)
+			{
+				ExitEditMode();
+				if(PreviousObject != null);
+				EnterEditMode(PreviousObject);
+			}
+
 		}
 
 		// Token: 0x0600061D RID: 1565
@@ -1199,6 +1214,7 @@ namespace Jhrino.MFPLevelEditor
 				this.EditingObject.GetComponent<MeshRenderer>().material.color = color;
 			}
 			this.ToggleEditingObjectColliders(this.EditingObject, true);
+			PreviousObject = EditingObject;
 			this.EditingObject = null;
 			this.Editing = false;
 		}
@@ -1779,8 +1795,9 @@ public void PrototypeLoad()
 		// Token: 0x0400133D RID: 4925
 		public Text DebugObject;
 
-		// Token: 0x0400133E RID: 4926
+
 		public GameObject EditingObject;
+		public GameObject PreviousObject;
 
 		// Token: 0x0400133F RID: 4927
 		public InputField CoordinateField;
