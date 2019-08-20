@@ -620,7 +620,7 @@ namespace Jhrino.MFPLevelEditor
 			component.sizeDelta = new Vector2(628.2f, 440.51f);
 			component.anchoredPosition = new Vector2(0f, 0f);
 			GameObject gameObject8 = new GameObject();
-			gameObject8.name = "PlatformLiftButton";
+			gameObject8.name = "GasCanisterButton";
 			gameObject8.transform.parent = PanelOBJ.transform;
 			RectTransform rectTransform2 = gameObject8.AddComponent<RectTransform>();
 			rectTransform2.anchorMin = new Vector2(0.5f, 0.5f);
@@ -628,22 +628,28 @@ namespace Jhrino.MFPLevelEditor
 			rectTransform2.pivot = new Vector2(0.5f, 0.5f);
 			rectTransform2.sizeDelta = new Vector2(254.86f, 30f);
 			rectTransform2.anchoredPosition = new Vector2(0f, 158f);
-			Button plButton = gameObject8.AddComponent<Button>();
-			Image plButtonGraphics = plButton.gameObject.AddComponent<Image>();
-			plButton.targetGraphic = plButtonGraphics;
+			Button gascanButton = gameObject8.AddComponent<Button>();
+			Image gascanButtonGraphics = gascanButton.gameObject.AddComponent<Image>();
+			gascanButton.targetGraphic = gascanButtonGraphics;
+
+			gascanButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("gascanister");
+			});
+
 			GameObject gameObject9 = new GameObject();
-			gameObject9.name = "PlatformLiftButtonText";
-			gameObject9.transform.parent = plButton.transform;
-			RectTransform plButtonRect = gameObject9.AddComponent<RectTransform>();
-			plButtonRect.anchorMin = new Vector2(0f, 0f);
-			plButtonRect.anchorMax = new Vector2(1f, 1f);
-			plButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			plButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			gameObject9.name = "GasCanisterButtonText";
+			gameObject9.transform.parent = gascanButton.transform;
+			RectTransform gascanButtonRect = gameObject9.AddComponent<RectTransform>();
+			gascanButtonRect.anchorMin = new Vector2(0f, 0f);
+			gascanButtonRect.anchorMax = new Vector2(1f, 1f);
+			gascanButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			gascanButtonRect.anchoredPosition = new Vector2(0f, 0f);
 			Text text2 = gameObject9.AddComponent<Text>();
 			text2.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text2.text = "Platform Lift";
+			text2.text = "Gas Canister";
 			text2.alignment = TextAnchor.MiddleCenter;
-			plButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			gascanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
 			text2.color = new Color(0f, 0f, 0f);
 			text2.fontSize = 64;
 			text2.verticalOverflow = VerticalWrapMode.Overflow;
@@ -738,6 +744,24 @@ namespace Jhrino.MFPLevelEditor
 			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
+
+	
+			GameObject entitiesbutton = new GameObject();
+			entitiesbutton.transform.parent = gameObject.transform;
+			entitiesbutton.layer = 5;
+			entitiesbutton.AddComponent<RectTransform>();
+			entitiesbutton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			entitiesbutton.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			entitiesbutton.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			entitiesbutton.AddComponent<Image>();
+			entitiesbutton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -850f);
+			entitiesbutton.AddComponent<Button>().onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("entities", false);
+			});
+
+			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
+
 		
 			GameObject AllowColorGradingTex = new GameObject();
 			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
@@ -811,9 +835,10 @@ namespace Jhrino.MFPLevelEditor
       
 			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
 
+			EntitySpawnRoot.SetActive(false);
+
 
 			MFPEditorLogger.Log("Hud load complete");
-			this.EntitySpawnRoot.SetActive(false);
 		}
 
 		// Token: 0x0600061A RID: 1562
@@ -1086,6 +1111,8 @@ namespace Jhrino.MFPLevelEditor
 				this.root.nrOfEnemiesTotal -= this.root.nrOfEnemiesTotal;
 				this.CalculateLevelHash();
 				this.root.dontAllowCheckpointSave = true;
+				KickableTest();
+				EntitySpawnRoot.SetActive(true);
 				return;
 			}
 			if (this.PlayMod)
@@ -1529,6 +1556,33 @@ public void PrototypeLoad()
 			MFPEditorLogger.Log("------------------------------------------");
 		}
 
+
+		public void SpawnEntity(string entity)
+			{
+				
+				switch(entity)
+				{
+					default:
+					MFPEditorLogger.Log("Invalid entity " + entity + '"');
+					break;
+					case "gascanister":
+					GameObject newGasCanister = new GameObject();
+					newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
+					newGasCanister.AddComponent<MeshRenderer>();
+					newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+					newGasCanister.AddComponent<BoxCollider>();
+
+					if(GasCanister == null)
+					{
+						GasCanister = Instantiate(newGasCanister);
+						GasCanister.SetActive(false);
+					}
+					
+					break;
+				}
+
+			}
+
 		// Token: 0x06000627 RID: 1575
 		protected string GetMD5HashFromFile(string fileName)
 		{
@@ -1605,6 +1659,21 @@ public void PrototypeLoad()
 
 		// Token: 0x06000703 RID: 1795
 
+		public void KickableTest()
+		{
+			GameObject KickTesting = GameObject.CreatePrimitive(PrimitiveType.Cube);
+			KickTesting.layer = 14;
+			KickTesting.AddComponent<Rigidbody>();
+			KickTesting.AddComponent<ObjectKickScript>().objType = 3;
+			KickTesting.AddComponent<GasCanisterScript>().explosionSize = 2;
+			KickTesting.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+			KickTesting.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+			KickTesting.AddComponent<AudioSource>();
+			KickTesting.AddComponent<PhysicsSoundsScript>();
+			KickTesting.AddComponent<AutoAimTargetScript>();
+			KickTesting.AddComponent<OptimizerScript>();
+			KickTesting.transform.position = Player.transform.position;
+		}
 
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
@@ -1623,9 +1692,15 @@ public void PrototypeLoad()
 				{
 					this.WorldSettingsRoot.SetActive(true);
 					this.EntitySpawnRoot.SetActive(false);
-					this.adjustingSettings = true;
-					return;
 				}
+				if(menuType == "entities")
+				{
+					this.WorldSettingsRoot.SetActive(false);
+					this.EntitySpawnRoot.SetActive(true);
+				}
+
+				this.adjustingSettings = true;
+				return;
 			}
 			else
 			{
@@ -1757,6 +1832,10 @@ public void PrototypeLoad()
 		
 
 		public GameObject wall_Brick;
+
+
+		//------------------- PREVIEW OBJECTS-------------------//
+		public GameObject GasCanister;
 
 //-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
