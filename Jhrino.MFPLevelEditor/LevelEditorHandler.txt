@@ -660,7 +660,7 @@ namespace Jhrino.MFPLevelEditor
 
 			gascanButton.onClick.AddListener(delegate()
 			{
-				this.SpawnEntity("gascanister");
+				this.SpawnEntity("gascanister", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
 			GameObject gameObject9 = new GameObject();
@@ -1385,6 +1385,15 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
+			foreach( GameObject gasCanister in GasCanisters)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = gasCanister");
+				SavedLevel.Add(gasCanister.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(gasCanister.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(gasCanister.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			this.CalculateLevelHash();
 			MFPEditorLogger.Log("----");
@@ -1408,6 +1417,33 @@ namespace Jhrino.MFPLevelEditor
 		}
 	}
 
+
+public void DoObjectCleanup()
+{
+	foreach (GameObject obj in this.BrushLump)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+	foreach (GameObject obj in this.GeometryWallLump)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject obj in this.GeometryFloorLump)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+	foreach (Transform transform in this.EnemySpawnpoints)
+	{
+		UnityEngine.Object.Destroy(transform.gameObject);
+	}
+
+	foreach (GameObject obj in GasCanisters)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+}
+	
 		// Token: 0x06000624 RID: 1572
 public void PrototypeLoad()
 		{
@@ -1422,25 +1458,7 @@ public void PrototypeLoad()
 
 			string[] levelFile = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
 
-
-			foreach (GameObject obj in this.BrushLump)
-			{
-				UnityEngine.Object.Destroy(obj);
-			}
-			foreach (GameObject obj in this.GeometryWallLump)
-			{
-				UnityEngine.Object.Destroy(obj);
-			}
-
-			foreach (GameObject obj in this.GeometryFloorLump)
-			{
-				UnityEngine.Object.Destroy(obj);
-			}
-			foreach (Transform transform in this.EnemySpawnpoints)
-			{
-				UnityEngine.Object.Destroy(transform.gameObject);
-			}
-
+			DoObjectCleanup();
 			DoMissingArrayCleanup();
 
 			MFPEditorLogger.Log("Loading File");
@@ -1622,6 +1640,28 @@ public void PrototypeLoad()
 
                     i += 2;
                     break;
+				case "!Entity":
+						MFPEditorLogger.Log(levelFile[i + 1].Replace("entityType = ", ""));
+					switch(levelFile[i + 1].Replace("entityType = ", ""))
+					{
+						default:
+							MFPEditorLogger.Log("Invalid entity " + levelFile[i + 1].Replace("entityType = ", ""));
+							break;
+						case "gasCanister":
+
+							MFPEditorLogger.Log("About to save canister coordinates to memory");
+
+						    float[] canisterposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
+						    float[] canisterrotation = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
+						    float[] canisterscale = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
+
+							MFPEditorLogger.Log("Saved canister coordinates to memory");
+
+							MFPEditorLogger.Log("About to spawn gas canister");
+							SpawnEntity("gascanister", true, new Vector3(canisterposition[0], canisterposition[1], canisterposition[2]), new Vector3(canisterrotation[0],canisterrotation[1], canisterrotation[2]), new Vector3(canisterscale[0], canisterscale[1], canisterscale[2]));
+							break;
+					}
+				break;
             }
         }
 			CalculateLevelHash();
@@ -1656,7 +1696,7 @@ public void PrototypeLoad()
 		}
 
 
-		public void SpawnEntity(string entity)
+		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
 			{
 				
 				switch(entity)
@@ -1666,22 +1706,44 @@ public void PrototypeLoad()
 					break;
 					//TODO: Add saving and loading for gas canisters
 					case "gascanister":
+					if(GasCanister == null)
+					{
 						GameObject newGasCanister = new GameObject();
 						newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
 						newGasCanister.AddComponent<MeshRenderer>();
 						newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
 						newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+						if(!isSaveObject)
 						newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
-						newGasCanister.AddComponent<BoxCollider>();
-					
-
-						if(GasCanister == null)
+						else
 						{
-							GasCanister = Instantiate(newGasCanister);
-						GasCanister.SetActive(false);
+							newGasCanister.transform.position = savePosition;
+							newGasCanister.transform.eulerAngles = saveRotation;
+							newGasCanister.transform.localScale = saveScale;
 						}
+						newGasCanister.AddComponent<BoxCollider>();
+
+						GasCanister = Instantiate(newGasCanister);
+						GasCanister.SetActive(false);
 
 						GasCanisters.Add(newGasCanister);
+					}
+					else
+					{
+						GameObject preloadedCanister = Instantiate(GasCanister);
+						preloadedCanister.SetActive(true);
+						if(!isSaveObject)
+						preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+						else
+						{
+							preloadedCanister.transform.position = savePosition;
+							preloadedCanister.transform.eulerAngles = saveRotation;
+							preloadedCanister.transform.localScale = saveScale;
+						}
+						GasCanisters.Add(preloadedCanister);
+					}
+
+
 					
 					break;
 				}
