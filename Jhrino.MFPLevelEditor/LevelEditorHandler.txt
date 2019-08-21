@@ -493,6 +493,7 @@ namespace Jhrino.MFPLevelEditor
 			this.DebugObject = text;
 			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
 			new GameObject();
+
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "CoordinateField";
 			gameObject2.AddComponent<RectTransform>();
@@ -503,9 +504,11 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
 			gameObject2.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
 			gameObject2.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 173.8f);
-			Image image = gameObject2.AddComponent<Image>();
-			image.sprite = (Resources.GetBuiltinResource(typeof(Sprite), "InputFieldBackground") as Sprite);
-			image.raycastTarget = true;
+			//Image image = gameObject2.AddComponent<Image>();
+			//image.sprite = (Resources.GetBuiltinResource(typeof(Sprite), "InputFieldBackground") as Sprite);
+
+
+			//image.raycastTarget = true;
 			InputField inputField = gameObject2.AddComponent<InputField>();
 			this.CoordinateField = inputField;
 			inputField.interactable = true;
@@ -517,7 +520,30 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretWidth = 1;
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
-			inputField.targetGraphic = image;
+
+
+			GameObject ExitEditModeButton = new GameObject();
+			ExitEditModeButton.transform.parent = inputField.transform;
+			ExitEditModeButton.AddComponent<RectTransform>();
+			ExitEditModeButton.layer = 5;
+			ExitEditModeButton.AddComponent<RectTransform>();
+			ExitEditModeButton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			ExitEditModeButton.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
+			ExitEditModeButton.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
+			ExitEditModeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 60);
+			ExitEditModeButton.AddComponent<Image>();
+
+			Button exitedit = ExitEditModeButton.AddComponent<Button>();
+			exitedit.transition = Selectable.Transition.ColorTint;
+			exitedit.targetGraphic = ExitEditModeButton.GetComponent<Image>();
+			exitedit.interactable = true;
+			exitedit.onClick.AddListener(delegate()
+			{
+				this.ExitEditMode();
+			});
+
+
+
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
