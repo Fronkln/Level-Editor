@@ -9,12 +9,37 @@ using UnityEngine.Networking;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
 
+
+//TODO:Add frying pan sounds
+
 namespace Jhrino.MFPLevelEditor
 {
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
 
+		public void PostPlayModeCleanup()
+		{
+			foreach(GameObject Canister in GasCanisters)
+			{
+				Canister.SetActive(true);
+			}
+			foreach(GameObject LVCanister in LevelGasCanisters)
+			{
+				Destroy(LVCanister);
+			}
+
+			foreach(GameObject pan in FryingPans)
+			{
+				pan.SetActive(true);
+			}
+			foreach(GameObject pan in LevelFryingPans)
+			{
+				Destroy(pan);
+			}
+
+
+		}
 
 		// Token: 0x06000615 RID: 1557
 		private void Update()
@@ -680,6 +705,49 @@ namespace Jhrino.MFPLevelEditor
 			text2.fontSize = 64;
 			text2.verticalOverflow = VerticalWrapMode.Overflow;
 			text2.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+
+			GameObject fryingPanButton = new GameObject();
+			fryingPanButton.name = "FryingPanButton";
+			fryingPanButton.transform.parent = PanelOBJ.transform;
+			RectTransform rectTransformbutt = fryingPanButton.AddComponent<RectTransform>();
+			rectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
+			rectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
+			rectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
+			rectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
+			rectTransformbutt.anchoredPosition = new Vector2(0f, 115f);
+			Button fpanButton = fryingPanButton.AddComponent<Button>();
+			Image fryingpanButtonGraphics = fpanButton.gameObject.AddComponent<Image>();
+			fpanButton.targetGraphic = fryingpanButtonGraphics;
+
+			fpanButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("fryingpan", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			GameObject fryingPanText = new GameObject();
+			fryingPanText.name = "FryingPanButtonText";
+			fryingPanText.transform.parent = fpanButton.transform;
+			RectTransform fpanButtonRect = fryingPanText.AddComponent<RectTransform>();
+			fpanButtonRect.anchorMin = new Vector2(0f, 0f);
+			fpanButtonRect.anchorMax = new Vector2(1f, 1f);
+			fpanButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			fpanButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			Text pantext = fryingPanText.AddComponent<Text>();
+			pantext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			pantext.text = "Frying Pan";
+			pantext.alignment = TextAnchor.MiddleCenter;
+			fpanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			pantext.color = new Color(0f, 0f, 0f);
+			pantext.fontSize = 64;
+			pantext.verticalOverflow = VerticalWrapMode.Overflow;
+			pantext.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+		
+
+
 			this.EntitySpawnRoot = PanelOBJ;
 			GameObject PanelOBJ2 = new GameObject();
 			PanelOBJ2.transform.parent = gameObject.transform;
@@ -1144,6 +1212,7 @@ namespace Jhrino.MFPLevelEditor
 					this.root.nrOfEnemiesTotal++;
 				}
 
+
 				foreach(GameObject Canister in GasCanisters)
 				{
 					GameObject newCanister = Instantiate(GasCanister);
@@ -1167,6 +1236,30 @@ namespace Jhrino.MFPLevelEditor
 					LevelGasCanisters.Add(newCanister);
 
 					Canister.SetActive(false);
+				}
+
+
+				foreach(GameObject Pan in FryingPans)
+				{
+					GameObject newPan = Instantiate(FryingPan);
+					newPan.SetActive(true);
+
+					newPan.layer = 14;
+					newPan.transform.tag = "BounceBullet";
+					newPan.AddComponent<Rigidbody>();
+					newPan.GetComponent<Rigidbody>().mass = 10;
+					newPan.GetComponent<Rigidbody>().drag = 0.1f;
+					newPan.GetComponent<Rigidbody>().angularDrag = 0.05f;
+
+					newPan.AddComponent<ObjectKickScript>().objType = 1;
+					newPan.AddComponent<AudioSource>();
+					newPan.AddComponent<PhysicsSoundsScript>();
+					newPan.AddComponent<AutoAimTargetScript>();
+					newPan.AddComponent<OptimizerScript>();
+
+					LevelFryingPans.Add(newPan);
+
+					Pan.SetActive(false);
 				}
 
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
@@ -1204,17 +1297,8 @@ namespace Jhrino.MFPLevelEditor
 					transform2.gameObject.GetComponent<CapsuleCollider>().enabled = true;
 				}
 
-				foreach(GameObject Canister in GasCanisters)
-					{
+				PostPlayModeCleanup();
 
-					Canister.SetActive(true);
-
-					}
-
-				foreach(GameObject LVCanister in LevelGasCanisters)
-					{
-						Destroy(LVCanister);
-					}
 
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = true;
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = true;
@@ -1322,6 +1406,24 @@ namespace Jhrino.MFPLevelEditor
 				}
 			}
 
+
+			for (int j = FryingPans.Count - 1; j > -1; j--)
+			{
+				if (this.FryingPans[j] == null)
+				{
+					this.FryingPans.RemoveAt(j);
+				}
+			}
+
+			
+			for (int j = LevelFryingPans.Count - 1; j > -1; j--)
+			{
+				if (this.LevelFryingPans[j] == null)
+				{
+					this.LevelFryingPans.RemoveAt(j);
+				}
+			}
+
 			for (int j = this.BrushLump.Count - 1; j > -1; j--)
 			{
 				if (this.BrushLump[j] == null)
@@ -1394,6 +1496,15 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(gasCanister.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 			}
 
+			foreach( GameObject pan in FryingPans)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = fryingPan");
+				SavedLevel.Add(pan.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(pan.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(pan.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			this.CalculateLevelHash();
 			MFPEditorLogger.Log("----");
@@ -1439,6 +1550,11 @@ public void DoObjectCleanup()
 	}
 
 	foreach (GameObject obj in GasCanisters)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject obj in FryingPans)
 	{
 		UnityEngine.Object.Destroy(obj);
 	}
@@ -1641,26 +1757,17 @@ public void PrototypeLoad()
                     i += 2;
                     break;
 				case "!Entity":
-						MFPEditorLogger.Log(levelFile[i + 1].Replace("entityType = ", ""));
-					switch(levelFile[i + 1].Replace("entityType = ", ""))
-					{
-						default:
-							MFPEditorLogger.Log("Invalid entity " + levelFile[i + 1].Replace("entityType = ", ""));
+						string entityName = levelFile[i + 1].Replace("entityType = ", "");
+						MFPEditorLogger.Log(entityName);
+
+					   float[] entityposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
+					   float[] entityrotation = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
+					   float[] entityscale = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
+
+					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]));
 							break;
-						case "gasCanister":
 
-							MFPEditorLogger.Log("About to save canister coordinates to memory");
-
-						    float[] canisterposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
-						    float[] canisterrotation = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
-						    float[] canisterscale = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-
-							MFPEditorLogger.Log("Saved canister coordinates to memory");
-
-							MFPEditorLogger.Log("About to spawn gas canister");
-							SpawnEntity("gascanister", true, new Vector3(canisterposition[0], canisterposition[1], canisterposition[2]), new Vector3(canisterrotation[0],canisterrotation[1], canisterrotation[2]), new Vector3(canisterscale[0], canisterscale[1], canisterscale[2]));
-							break;
-					}
+					
 				break;
             }
         }
@@ -1706,46 +1813,84 @@ public void PrototypeLoad()
 					break;
 					//TODO: Add saving and loading for gas canisters
 					case "gascanister":
-					if(GasCanister == null)
-					{
-						GameObject newGasCanister = new GameObject();
-						newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
-						newGasCanister.AddComponent<MeshRenderer>();
-						newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
-						newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
-						if(!isSaveObject)
-						newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+						if(GasCanister == null)
+						{
+							GameObject newGasCanister = new GameObject();
+							newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
+							newGasCanister.AddComponent<MeshRenderer>();
+							newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newGasCanister.transform.position = savePosition;
+								newGasCanister.transform.eulerAngles = saveRotation;
+								newGasCanister.transform.localScale = saveScale;
+							}
+							newGasCanister.AddComponent<BoxCollider>();
+
+							GasCanister = Instantiate(newGasCanister);
+							GasCanister.SetActive(false);
+
+							GasCanisters.Add(newGasCanister);
+						}
 						else
 						{
-							newGasCanister.transform.position = savePosition;
-							newGasCanister.transform.eulerAngles = saveRotation;
-							newGasCanister.transform.localScale = saveScale;
+							GameObject preloadedCanister = Instantiate(GasCanister);
+							preloadedCanister.SetActive(true);
+							if(!isSaveObject)
+							preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedCanister.transform.position = savePosition;
+								preloadedCanister.transform.eulerAngles = saveRotation;
+								preloadedCanister.transform.localScale = saveScale;
+							}
+							GasCanisters.Add(preloadedCanister);
 						}
-						newGasCanister.AddComponent<BoxCollider>();
+						break;
+					case "fryingpan":
+						if(FryingPan == null)
+						{
+							GameObject newFryingPan = new GameObject();
+							newFryingPan.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/FryingPan.obj"));
+							newFryingPan.AddComponent<MeshRenderer>();
+							newFryingPan.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newFryingPan.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_mediumshine_1.png"));
+							if(!isSaveObject)
+							newFryingPan.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newFryingPan.transform.position = savePosition;
+								newFryingPan.transform.eulerAngles = saveRotation;
+								newFryingPan.transform.localScale = saveScale;
+							}
+							newFryingPan.transform.localScale = new Vector3(1.518284f,1.518284f,1.518284f);
+							newFryingPan.AddComponent<BoxCollider>();
+							newFryingPan.GetComponent<BoxCollider>().center = new Vector3(0.01f, 0.005344497f, 0.08489452f);
+							newFryingPan.GetComponent<BoxCollider>().size = new Vector3(0.66f, 0.7002591f, 0.169789f);
 
-						GasCanister = Instantiate(newGasCanister);
-						GasCanister.SetActive(false);
+							FryingPan = Instantiate(newFryingPan);
+							FryingPan.SetActive(false);
 
-						GasCanisters.Add(newGasCanister);
-					}
-					else
-					{
-						GameObject preloadedCanister = Instantiate(GasCanister);
-						preloadedCanister.SetActive(true);
-						if(!isSaveObject)
-						preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							FryingPans.Add(newFryingPan);
+						}
 						else
 						{
-							preloadedCanister.transform.position = savePosition;
-							preloadedCanister.transform.eulerAngles = saveRotation;
-							preloadedCanister.transform.localScale = saveScale;
+							GameObject preloadedPan = Instantiate(FryingPan);
+							preloadedPan.SetActive(true);
+							if(!isSaveObject)
+							preloadedPan.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedPan.transform.position = savePosition;
+								preloadedPan.transform.eulerAngles = saveRotation;
+								preloadedPan.transform.localScale = saveScale;
+							}
+							FryingPans.Add(preloadedPan);
 						}
-						GasCanisters.Add(preloadedCanister);
-					}
-
-
-					
-					break;
+						break;
 				}
 
 			}
@@ -1986,6 +2131,9 @@ public void PrototypeLoad()
 
 		public List<GameObject> GasCanisters = new List<GameObject>();
 		public List<GameObject> LevelGasCanisters = new List<GameObject>();
+
+		public List<GameObject> FryingPans = new List<GameObject>();
+		public List<GameObject> LevelFryingPans = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
@@ -1993,8 +2141,9 @@ public void PrototypeLoad()
 		public GameObject wall_Brick;
 
 
-		//------------------- PREVIEW OBJECTS-------------------//
+		//------------------- PRECACHED OBJECTS-------------------//
 		public GameObject GasCanister;
+		public GameObject FryingPan;
 
 		//PRELOADED CONTENT
 		public Material DefaultStandardShader;
