@@ -57,6 +57,7 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.PrototypeSave();
 			}
+			//delete this sometime
 			if(this.Editing && Input.GetKeyDown(KeyCode.X))
 				ExitEditMode();
 
@@ -74,6 +75,24 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.EditingMode();
 				}
+
+				if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.V))
+				{
+					if(CopiedObject != null)
+					{
+						GameObject copiedObject = Instantiate(CopiedObject);
+						if(copiedObject.name.Contains("FryingPan"))
+							FryingPans.Add(copiedObject);
+						if(copiedObject.name.Contains("GasCanister"))
+							GasCanisters.Add(copiedObject);
+						if(copiedObject.name.Contains("Floor"))
+							GeometryFloorLump.Add(copiedObject);
+						if(copiedObject.name.Contains("Wall"))
+							GeometryWallLump.Add(copiedObject);
+						EnterEditMode(copiedObject);
+					}
+				}
+
 				RaycastHit raycastHit;
 				if (Input.GetMouseButtonDown(0) && !this.Editing && !SnapToBuild && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
 				{
@@ -138,6 +157,7 @@ namespace Jhrino.MFPLevelEditor
 							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
 							GameObject newFloor = Instantiate(floor_Wood);
+							newFloor.name = "Wooden Floor";
 							newFloor.SetActive(true);
 
 							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
@@ -384,7 +404,8 @@ namespace Jhrino.MFPLevelEditor
 			brickwall_SnapBuildBottom.name = "BrickWall_SnapBuildBottom";
 			brickwall_SnapBuildRight.name = "BrickWall_SnapBuildRight";
 
-			this.wall_Brick = wall_Brick;
+			this.wall_Brick = Instantiate(wall_Brick);
+			Destroy(wall_Brick);
 			this.wall_Brick.SetActive(false);
 
 			
@@ -940,12 +961,13 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x0600061A RID: 1562
 		public void EditingMode()
 		{
+			if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.C))
+			{
+				CopiedObject = EditingObject;
+			}
+
 			if (Input.GetKeyDown(KeyCode.L) && this.EditingObject != this.PlayerSpawn.gameObject && this.EditingObject != this.FinishLevelTrigger)
 			{
-				if(EditingObject.name.ToLower().Contains("wall"))
-					{
-					GeometryWallLump.Remove(EditingObject);
-					}
 
 				UnityEngine.Object.Destroy(this.EditingObject);
 				this.Editing = false;
@@ -1076,6 +1098,9 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x0600061D RID: 1565
 		public void EnterEditMode(GameObject gobject)
 		{
+			if(Editing)
+				ExitEditMode();
+
 			this.EditingObject = gobject;
 
 			this.CoordinateField.gameObject.SetActive(true);
@@ -1659,15 +1684,20 @@ public void PrototypeLoad()
                     newWall.transform.position = new Vector3(geowallposition[0], geowallposition[1], geowallposition[2]);
                     newWall.transform.eulerAngles = new Vector3(geowallrotation[0], geowallrotation[1], geowallrotation[2]);
                     newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
+					MFPEditorLogger.Log("Brush coordinates are set");
                     newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
 					newWall.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geowalltexturename));
+					MFPEditorLogger.Log("Textures are loaded");
 					string normalmap = geowalltexturename;
-					geowalltexturename = geowalltexturename.Replace(".png", "");
-					geowalltexturename = geowalltexturename + " _normal.png";
+					normalmap = normalmap.Replace(".png", "");
+					normalmap = normalmap + "_normal.png";
 					newWall.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
+					MFPEditorLogger.Log("Normalmaps are loaded");
 					newWall.GetComponent<MeshRenderer>().material.mainTexture.name = geowalltexturename;
 					newWall.gameObject.layer = geowallproperty;
+					MFPEditorLogger.Log("Texture names and layer is set");
 					GeometryWallLump.Add(newWall);
+					MFPEditorLogger.Log("Brush load complete");
 					i+= 6;
 					break;
 				
@@ -1766,9 +1796,6 @@ public void PrototypeLoad()
 
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]));
 							break;
-
-					
-				break;
             }
         }
 			CalculateLevelHash();
@@ -1816,6 +1843,7 @@ public void PrototypeLoad()
 						if(GasCanister == null)
 						{
 							GameObject newGasCanister = new GameObject();
+							newGasCanister.name = "GasCanister";
 							newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
 							newGasCanister.AddComponent<MeshRenderer>();
 							newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
@@ -1854,6 +1882,7 @@ public void PrototypeLoad()
 						if(FryingPan == null)
 						{
 							GameObject newFryingPan = new GameObject();
+							newFryingPan.name = "FryingPan";
 							newFryingPan.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/FryingPan.obj"));
 							newFryingPan.AddComponent<MeshRenderer>();
 							newFryingPan.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
@@ -2031,6 +2060,7 @@ public void PrototypeLoad()
 
 		public GameObject EditingObject;
 		public GameObject PreviousObject;
+		public GameObject CopiedObject;
 
 		// Token: 0x0400133F RID: 4927
 		public InputField CoordinateField;
