@@ -38,6 +38,16 @@ namespace Jhrino.MFPLevelEditor
 				Destroy(pan);
 			}
 
+			foreach(GameObject skateboard in Skateboards)
+			{
+				skateboard.SetActive(true);
+			}
+
+			foreach(GameObject skateboard in LevelSkateboards)
+			{
+				Destroy(skateboard);
+			}
+
 
 		}
 
@@ -216,6 +226,18 @@ namespace Jhrino.MFPLevelEditor
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
 		//	Destroy(GameObject.Find("HorizonBackground_Theme_1"));
+
+			Slippery.dynamicFriction = 0;
+			Slippery.staticFriction = 0;
+			Slippery.bounciness = 0;
+			Slippery.bounceCombine = PhysicMaterialCombine.Average;
+			Slippery.frictionCombine = PhysicMaterialCombine.Minimum;
+
+			SkateboardTop.dynamicFriction = 0.2f;
+			SkateboardTop.staticFriction = 0.2f;
+			SkateboardTop.bounciness = 0.3f;
+			SkateboardTop.bounceCombine = PhysicMaterialCombine.Average;
+			SkateboardTop.frictionCombine = PhysicMaterialCombine.Average;
 
 			GameObject LevelLight = new GameObject();	
 			LevelLight.name = "Level Lighting";
@@ -766,6 +788,44 @@ namespace Jhrino.MFPLevelEditor
 			pantext.horizontalOverflow = HorizontalWrapMode.Overflow;
 
 
+
+			GameObject skateboardButton = new GameObject();
+			skateboardButton.name = "SkateboardButton";
+			skateboardButton.transform.parent = PanelOBJ.transform;
+			RectTransform skaterectTransformbutt = skateboardButton.AddComponent<RectTransform>();
+			skaterectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
+			skaterectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
+			skaterectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
+			skaterectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
+			skaterectTransformbutt.anchoredPosition = new Vector2(0f, 72f);
+			Button skateButton = skateboardButton.AddComponent<Button>();
+			Image skateboardButtonGraphics = skateButton.gameObject.AddComponent<Image>();
+			skateButton.targetGraphic = skateboardButtonGraphics;
+
+			skateButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("skateboard", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			GameObject skateboardText = new GameObject();
+			skateboardText.name = "SkateboardButtonText";
+			skateboardText.transform.parent = skateButton.transform;
+			RectTransform skateboardButtonRect = skateboardText.AddComponent<RectTransform>();
+			skateboardButtonRect.anchorMin = new Vector2(0f, 0f);
+			skateboardButtonRect.anchorMax = new Vector2(1f, 1f);
+			skateboardButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			skateboardButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			Text skatetext = skateboardText.AddComponent<Text>();
+			skatetext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			skatetext.text = "Skateboard";
+			skatetext.alignment = TextAnchor.MiddleCenter;
+			skateboardButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			skatetext.color = new Color(0f, 0f, 0f);
+			skatetext.fontSize = 64;
+			skatetext.verticalOverflow = VerticalWrapMode.Overflow;
+			skatetext.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
 		
 
 
@@ -1233,6 +1293,7 @@ namespace Jhrino.MFPLevelEditor
 					transform.GetComponent<CapsuleCollider>().enabled = false;
 					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
 					this.Enemies.Add(gameObject);
+					gameObject.SetActive(true);
 					gameObject.transform.position = transform.position;
 					this.root.nrOfEnemiesTotal++;
 				}
@@ -1286,6 +1347,35 @@ namespace Jhrino.MFPLevelEditor
 
 					Pan.SetActive(false);
 				}
+
+				foreach(GameObject board in Skateboards)
+				{
+					GameObject newSkateboard = Instantiate(Skateboard);
+					newSkateboard.SetActive(true);
+
+					newSkateboard.AddComponent<Rigidbody>();
+					newSkateboard.GetComponent<Rigidbody>().mass = 10;
+					newSkateboard.GetComponent<Rigidbody>().drag = 0.1f;
+					newSkateboard.GetComponent<Rigidbody>().angularDrag = 0.05f;
+	
+
+					newSkateboard.AddComponent<ObjectKickScript>().objType = 2;
+					newSkateboard.AddComponent<AudioSource>();
+					newSkateboard.AddComponent<PhysicsSoundsScript>();
+					newSkateboard.AddComponent<AutoAimTargetScript>();
+					newSkateboard.AddComponent<OptimizerScript>();
+					newSkateboard.AddComponent<SkateboardScript>();
+
+					foreach(Collider collider in newSkateboard.GetComponentsInChildren<Collider>())
+					{
+						collider.enabled = true;
+					}
+
+					LevelSkateboards.Add(newSkateboard);
+
+					board.SetActive(false);
+				}
+
 
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
@@ -1449,6 +1539,23 @@ namespace Jhrino.MFPLevelEditor
 				}
 			}
 
+			for (int j = Skateboards.Count - 1; j > -1; j--)
+			{
+				if (this.Skateboards[j] == null)
+				{
+					this.Skateboards.RemoveAt(j);
+				}
+			}
+
+			
+			for (int j = LevelSkateboards.Count - 1; j > -1; j--)
+			{
+				if (this.LevelSkateboards[j] == null)
+				{
+					this.LevelSkateboards.RemoveAt(j);
+				}
+			}
+
 			for (int j = this.BrushLump.Count - 1; j > -1; j--)
 			{
 				if (this.BrushLump[j] == null)
@@ -1512,7 +1619,7 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
-			foreach( GameObject gasCanister in GasCanisters)
+			foreach(GameObject gasCanister in GasCanisters)
 			{
 				SavedLevel.Add("!Entity");
 				SavedLevel.Add("entityType = gasCanister");
@@ -1521,13 +1628,22 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(gasCanister.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 			}
 
-			foreach( GameObject pan in FryingPans)
+			foreach(GameObject pan in FryingPans)
 			{
 				SavedLevel.Add("!Entity");
 				SavedLevel.Add("entityType = fryingPan");
 				SavedLevel.Add(pan.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(pan.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(pan.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
+			foreach(GameObject board in Skateboards)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = skateboard");
+				SavedLevel.Add(board.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(board.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(board.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 			}
 
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
@@ -1580,6 +1696,11 @@ public void DoObjectCleanup()
 	}
 
 	foreach (GameObject obj in FryingPans)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject obj in Skateboards)
 	{
 		UnityEngine.Object.Destroy(obj);
 	}
@@ -1920,6 +2041,115 @@ public void PrototypeLoad()
 							FryingPans.Add(preloadedPan);
 						}
 						break;
+				case "skateboard":
+					if(Skateboard == null)
+						{
+							GameObject newSkateboard = new GameObject();
+							newSkateboard.name = "Skateboard";
+							newSkateboard.layer = 25;
+
+							newSkateboard.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/Skateboard.obj"));
+							newSkateboard.AddComponent<MeshRenderer>();
+							newSkateboard.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newSkateboard.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newSkateboard.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newSkateboard.transform.position = savePosition;
+								newSkateboard.transform.eulerAngles = saveRotation;
+								newSkateboard.transform.localScale = saveScale;
+							}
+							newSkateboard.AddComponent<BoxCollider>();
+							newSkateboard.GetComponent<BoxCollider>().size = new Vector3(2.075f, 0.6727042f, 0.1303f);
+							newSkateboard.GetComponent<BoxCollider>().center = new Vector3(-9.641704e-08f, -7.105427e-15f, 0.2079678f);
+							newSkateboard.GetComponent<BoxCollider>().material = SkateboardTop;
+
+
+							GameObject SkateboardSounds = new GameObject();
+							SkateboardSounds.AddComponent<AudioSource>();
+							SkateboardSounds.name = "Sounds";
+							SkateboardSounds.transform.parent = newSkateboard.transform;
+
+							GameObject FrontWheelCollision1 = new GameObject();
+							FrontWheelCollision1.layer = 25;
+							FrontWheelCollision1.name = "SkateFront1";
+							FrontWheelCollision1.transform.parent = newSkateboard.transform;
+							FrontWheelCollision1.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider ftcoll1 = FrontWheelCollision1.AddComponent<CapsuleCollider>();
+							ftcoll1.material = Slippery;
+							ftcoll1.center = new Vector3(0.75f, 0, 0.13f);
+							ftcoll1.radius = 0.13f;
+							ftcoll1.height = 0.4f;
+							ftcoll1.direction = 1;
+
+							GameObject skateshine = new GameObject();
+							skateshine.name = "Skateboard_Shine";
+							skateshine.transform.parent = newSkateboard.transform;
+
+							GameObject FrontWheelCollision2 = new GameObject();
+							FrontWheelCollision2.layer = 25;
+							FrontWheelCollision2.name = "SkateFront2";
+							FrontWheelCollision2.transform.parent = newSkateboard.transform;
+							FrontWheelCollision2.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider ftcoll2 = FrontWheelCollision2.AddComponent<CapsuleCollider>();
+							ftcoll2.material = Slippery;
+							ftcoll2.center = new Vector3(1.04f, 0, 0.14f);
+							ftcoll2.radius = 0.13f;
+							ftcoll2.height = 0.4f;
+							ftcoll2.direction = 1;
+
+
+							GameObject BackWheelCollision1 = new GameObject();
+							BackWheelCollision1.layer = 25;
+							BackWheelCollision1.name = "SkateFront1";
+							BackWheelCollision1.transform.parent = newSkateboard.transform;
+							BackWheelCollision1.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider bkcoll1 = BackWheelCollision1.AddComponent<CapsuleCollider>();
+							bkcoll1.material = Slippery;
+							bkcoll1.center = new Vector3(-0.75f, 0, 0.13f);
+							bkcoll1.radius = 0.13f;
+							bkcoll1.height = 0.4f;
+							bkcoll1.direction = 1;
+
+
+							GameObject BackWheelCollision2 = new GameObject();
+							BackWheelCollision2.layer = 25;
+							BackWheelCollision2.name = "SkateFront2";
+							BackWheelCollision2.transform.parent = newSkateboard.transform;
+							BackWheelCollision2.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider bkcoll2 = BackWheelCollision2.AddComponent<CapsuleCollider>();
+							bkcoll2.material = Slippery;
+							bkcoll2.center = new Vector3(-1.04f, 0, 0.14f);
+							bkcoll2.radius = 0.13f;
+							bkcoll2.height = 0.4f;
+							bkcoll2.direction = 1;
+
+							ftcoll1.enabled = false;
+							ftcoll2.enabled = false;
+							bkcoll1.enabled = false;
+							bkcoll2.enabled = false;
+							
+
+							Skateboard = Instantiate(newSkateboard);
+							Skateboard.SetActive(false);
+							Skateboards.Add(newSkateboard);
+						}
+						else
+						{
+							GameObject preloadedSkateboard = Instantiate(Skateboard);
+							preloadedSkateboard.SetActive(true);
+							if(!isSaveObject)
+							preloadedSkateboard.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedSkateboard.transform.position = savePosition;
+								preloadedSkateboard.transform.eulerAngles = saveRotation;
+								preloadedSkateboard.transform.localScale = saveScale;
+							}
+							Skateboards.Add(preloadedSkateboard);
+						}
+					break;
 				}
 
 			}
@@ -2164,6 +2394,9 @@ public void PrototypeLoad()
 
 		public List<GameObject> FryingPans = new List<GameObject>();
 		public List<GameObject> LevelFryingPans = new List<GameObject>();
+
+		public List<GameObject> Skateboards = new List<GameObject>();
+		public List<GameObject> LevelSkateboards = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
@@ -2174,9 +2407,14 @@ public void PrototypeLoad()
 		//------------------- PRECACHED OBJECTS-------------------//
 		public GameObject GasCanister;
 		public GameObject FryingPan;
+		public GameObject Skateboard;
 
 		//PRELOADED CONTENT
 		public Material DefaultStandardShader;
+
+
+		public PhysicMaterial Slippery = new PhysicMaterial();
+		public PhysicMaterial SkateboardTop = new PhysicMaterial();
 
 //-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
