@@ -9,12 +9,47 @@ using UnityEngine.Networking;
 using UnityEngine.PostProcessing;
 using UnityEngine.UI;
 
+
+//TODO:Add frying pan sounds
+
 namespace Jhrino.MFPLevelEditor
 {
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
 
+		public void PostPlayModeCleanup()
+		{
+			foreach(GameObject Canister in GasCanisters)
+			{
+				Canister.SetActive(true);
+			}
+			foreach(GameObject LVCanister in LevelGasCanisters)
+			{
+				Destroy(LVCanister);
+			}
+
+			foreach(GameObject pan in FryingPans)
+			{
+				pan.SetActive(true);
+			}
+			foreach(GameObject pan in LevelFryingPans)
+			{
+				Destroy(pan);
+			}
+
+			foreach(GameObject skateboard in Skateboards)
+			{
+				skateboard.SetActive(true);
+			}
+
+			foreach(GameObject skateboard in LevelSkateboards)
+			{
+				Destroy(skateboard);
+			}
+
+
+		}
 
 		// Token: 0x06000615 RID: 1557
 		private void Update()
@@ -32,6 +67,7 @@ namespace Jhrino.MFPLevelEditor
 			{
 				this.PrototypeSave();
 			}
+			//delete this sometime
 			if(this.Editing && Input.GetKeyDown(KeyCode.X))
 				ExitEditMode();
 
@@ -49,6 +85,24 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.EditingMode();
 				}
+
+				if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.V))
+				{
+					if(CopiedObject != null)
+					{
+						GameObject copiedObject = Instantiate(CopiedObject);
+						if(copiedObject.name.Contains("FryingPan"))
+							FryingPans.Add(copiedObject);
+						if(copiedObject.name.Contains("GasCanister"))
+							GasCanisters.Add(copiedObject);
+						if(copiedObject.name.Contains("Floor"))
+							GeometryFloorLump.Add(copiedObject);
+						if(copiedObject.name.Contains("Wall"))
+							GeometryWallLump.Add(copiedObject);
+						EnterEditMode(copiedObject);
+					}
+				}
+
 				RaycastHit raycastHit;
 				if (Input.GetMouseButtonDown(0) && !this.Editing && !SnapToBuild && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
 				{
@@ -113,6 +167,7 @@ namespace Jhrino.MFPLevelEditor
 							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
 							GameObject newFloor = Instantiate(floor_Wood);
+							newFloor.name = "Wooden Floor";
 							newFloor.SetActive(true);
 
 							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
@@ -172,6 +227,18 @@ namespace Jhrino.MFPLevelEditor
 			BackgroundCamera.transform.parent = null;
 		//	Destroy(GameObject.Find("HorizonBackground_Theme_1"));
 
+			Slippery.dynamicFriction = 0;
+			Slippery.staticFriction = 0;
+			Slippery.bounciness = 0;
+			Slippery.bounceCombine = PhysicMaterialCombine.Average;
+			Slippery.frictionCombine = PhysicMaterialCombine.Minimum;
+
+			SkateboardTop.dynamicFriction = 0.2f;
+			SkateboardTop.staticFriction = 0.2f;
+			SkateboardTop.bounciness = 0.3f;
+			SkateboardTop.bounceCombine = PhysicMaterialCombine.Average;
+			SkateboardTop.frictionCombine = PhysicMaterialCombine.Average;
+
 			GameObject LevelLight = new GameObject();	
 			LevelLight.name = "Level Lighting";
 			LevelLight.transform.eulerAngles = new Vector3(50,-30,0);
@@ -181,7 +248,7 @@ namespace Jhrino.MFPLevelEditor
 			SceneLight.renderMode = LightRenderMode.ForcePixel;
 			SceneLight.shadows = LightShadows.None;
 			SceneLight.color = new Color32(255,244, 214, 255);
-			SceneLight.cullingMask = 1 << 8;
+			SceneLight.cullingMask = 1 << 8 | 1 << 14;
 
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
@@ -208,7 +275,7 @@ namespace Jhrino.MFPLevelEditor
 
 			FloorMaterial.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/floor_wood_indoors.png"));
 			FloorMaterial.mainTexture.name = "EditorAssets/BaseGame/textures/floor_wood_indoors.png";
-			FloorMaterial.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/floor_wood_indoors_normal.png")));
+			FloorMaterial.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/floor_wood_indoors_" + "normal.png")));
 
 			GameObject gameObject = new GameObject();
 			gameObject.name = "Wood Floor";
@@ -274,7 +341,7 @@ namespace Jhrino.MFPLevelEditor
 
 			meshrend_brickwall.material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/wall_textures_1.png"));
 			meshrend_brickwall.material.mainTexture.name = "EditorAssets/BaseGame/textures/wall_textures_1.png";
-			meshrend_brickwall.material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/wall_textures_1_normal.png")));
+			meshrend_brickwall.material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/Textures/wall_textures_1" + "normal" + ".png")));
 
 			MFPEditorLogger.Log("Brick meshes are dealt with");
 
@@ -359,7 +426,8 @@ namespace Jhrino.MFPLevelEditor
 			brickwall_SnapBuildBottom.name = "BrickWall_SnapBuildBottom";
 			brickwall_SnapBuildRight.name = "BrickWall_SnapBuildRight";
 
-			this.wall_Brick = wall_Brick;
+			this.wall_Brick = Instantiate(wall_Brick);
+			Destroy(wall_Brick);
 			this.wall_Brick.SetActive(false);
 
 			
@@ -493,6 +561,7 @@ namespace Jhrino.MFPLevelEditor
 			this.DebugObject = text;
 			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
 			new GameObject();
+
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "CoordinateField";
 			gameObject2.AddComponent<RectTransform>();
@@ -503,9 +572,11 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
 			gameObject2.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
 			gameObject2.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 173.8f);
-			Image image = gameObject2.AddComponent<Image>();
-			image.sprite = (Resources.GetBuiltinResource(typeof(Sprite), "InputFieldBackground") as Sprite);
-			image.raycastTarget = true;
+			//Image image = gameObject2.AddComponent<Image>();
+			//image.sprite = (Resources.GetBuiltinResource(typeof(Sprite), "InputFieldBackground") as Sprite);
+
+
+			//image.raycastTarget = true;
 			InputField inputField = gameObject2.AddComponent<InputField>();
 			this.CoordinateField = inputField;
 			inputField.interactable = true;
@@ -517,7 +588,30 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretWidth = 1;
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
-			inputField.targetGraphic = image;
+
+
+			GameObject ExitEditModeButton = new GameObject();
+			ExitEditModeButton.transform.parent = inputField.transform;
+			ExitEditModeButton.AddComponent<RectTransform>();
+			ExitEditModeButton.layer = 5;
+			ExitEditModeButton.AddComponent<RectTransform>();
+			ExitEditModeButton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			ExitEditModeButton.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
+			ExitEditModeButton.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
+			ExitEditModeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 60);
+			ExitEditModeButton.AddComponent<Image>();
+
+			Button exitedit = ExitEditModeButton.AddComponent<Button>();
+			exitedit.transition = Selectable.Transition.ColorTint;
+			exitedit.targetGraphic = ExitEditModeButton.GetComponent<Image>();
+			exitedit.interactable = true;
+			exitedit.onClick.AddListener(delegate()
+			{
+				this.ExitEditMode();
+			});
+
+
+
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
@@ -620,7 +714,7 @@ namespace Jhrino.MFPLevelEditor
 			component.sizeDelta = new Vector2(628.2f, 440.51f);
 			component.anchoredPosition = new Vector2(0f, 0f);
 			GameObject gameObject8 = new GameObject();
-			gameObject8.name = "PlatformLiftButton";
+			gameObject8.name = "GasCanisterButton";
 			gameObject8.transform.parent = PanelOBJ.transform;
 			RectTransform rectTransform2 = gameObject8.AddComponent<RectTransform>();
 			rectTransform2.anchorMin = new Vector2(0.5f, 0.5f);
@@ -628,26 +722,113 @@ namespace Jhrino.MFPLevelEditor
 			rectTransform2.pivot = new Vector2(0.5f, 0.5f);
 			rectTransform2.sizeDelta = new Vector2(254.86f, 30f);
 			rectTransform2.anchoredPosition = new Vector2(0f, 158f);
-			Button plButton = gameObject8.AddComponent<Button>();
-			Image plButtonGraphics = plButton.gameObject.AddComponent<Image>();
-			plButton.targetGraphic = plButtonGraphics;
+			Button gascanButton = gameObject8.AddComponent<Button>();
+			Image gascanButtonGraphics = gascanButton.gameObject.AddComponent<Image>();
+			gascanButton.targetGraphic = gascanButtonGraphics;
+
+			gascanButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("gascanister", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
 			GameObject gameObject9 = new GameObject();
-			gameObject9.name = "PlatformLiftButtonText";
-			gameObject9.transform.parent = plButton.transform;
-			RectTransform plButtonRect = gameObject9.AddComponent<RectTransform>();
-			plButtonRect.anchorMin = new Vector2(0f, 0f);
-			plButtonRect.anchorMax = new Vector2(1f, 1f);
-			plButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			plButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			gameObject9.name = "GasCanisterButtonText";
+			gameObject9.transform.parent = gascanButton.transform;
+			RectTransform gascanButtonRect = gameObject9.AddComponent<RectTransform>();
+			gascanButtonRect.anchorMin = new Vector2(0f, 0f);
+			gascanButtonRect.anchorMax = new Vector2(1f, 1f);
+			gascanButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			gascanButtonRect.anchoredPosition = new Vector2(0f, 0f);
 			Text text2 = gameObject9.AddComponent<Text>();
 			text2.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text2.text = "Platform Lift";
+			text2.text = "Gas Canister";
 			text2.alignment = TextAnchor.MiddleCenter;
-			plButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			gascanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
 			text2.color = new Color(0f, 0f, 0f);
 			text2.fontSize = 64;
 			text2.verticalOverflow = VerticalWrapMode.Overflow;
 			text2.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+
+			GameObject fryingPanButton = new GameObject();
+			fryingPanButton.name = "FryingPanButton";
+			fryingPanButton.transform.parent = PanelOBJ.transform;
+			RectTransform rectTransformbutt = fryingPanButton.AddComponent<RectTransform>();
+			rectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
+			rectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
+			rectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
+			rectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
+			rectTransformbutt.anchoredPosition = new Vector2(0f, 115f);
+			Button fpanButton = fryingPanButton.AddComponent<Button>();
+			Image fryingpanButtonGraphics = fpanButton.gameObject.AddComponent<Image>();
+			fpanButton.targetGraphic = fryingpanButtonGraphics;
+
+			fpanButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("fryingpan", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			GameObject fryingPanText = new GameObject();
+			fryingPanText.name = "FryingPanButtonText";
+			fryingPanText.transform.parent = fpanButton.transform;
+			RectTransform fpanButtonRect = fryingPanText.AddComponent<RectTransform>();
+			fpanButtonRect.anchorMin = new Vector2(0f, 0f);
+			fpanButtonRect.anchorMax = new Vector2(1f, 1f);
+			fpanButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			fpanButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			Text pantext = fryingPanText.AddComponent<Text>();
+			pantext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			pantext.text = "Frying Pan";
+			pantext.alignment = TextAnchor.MiddleCenter;
+			fpanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			pantext.color = new Color(0f, 0f, 0f);
+			pantext.fontSize = 64;
+			pantext.verticalOverflow = VerticalWrapMode.Overflow;
+			pantext.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+
+			GameObject skateboardButton = new GameObject();
+			skateboardButton.name = "SkateboardButton";
+			skateboardButton.transform.parent = PanelOBJ.transform;
+			RectTransform skaterectTransformbutt = skateboardButton.AddComponent<RectTransform>();
+			skaterectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
+			skaterectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
+			skaterectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
+			skaterectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
+			skaterectTransformbutt.anchoredPosition = new Vector2(0f, 72f);
+			Button skateButton = skateboardButton.AddComponent<Button>();
+			Image skateboardButtonGraphics = skateButton.gameObject.AddComponent<Image>();
+			skateButton.targetGraphic = skateboardButtonGraphics;
+
+			skateButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("skateboard", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			GameObject skateboardText = new GameObject();
+			skateboardText.name = "SkateboardButtonText";
+			skateboardText.transform.parent = skateButton.transform;
+			RectTransform skateboardButtonRect = skateboardText.AddComponent<RectTransform>();
+			skateboardButtonRect.anchorMin = new Vector2(0f, 0f);
+			skateboardButtonRect.anchorMax = new Vector2(1f, 1f);
+			skateboardButtonRect.pivot = new Vector2(0.5f, 0.5f);
+			skateboardButtonRect.anchoredPosition = new Vector2(0f, 0f);
+			Text skatetext = skateboardText.AddComponent<Text>();
+			skatetext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
+			skatetext.text = "Skateboard";
+			skatetext.alignment = TextAnchor.MiddleCenter;
+			skateboardButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
+			skatetext.color = new Color(0f, 0f, 0f);
+			skatetext.fontSize = 64;
+			skatetext.verticalOverflow = VerticalWrapMode.Overflow;
+			skatetext.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+
+		
+
+
 			this.EntitySpawnRoot = PanelOBJ;
 			GameObject PanelOBJ2 = new GameObject();
 			PanelOBJ2.transform.parent = gameObject.transform;
@@ -738,6 +919,24 @@ namespace Jhrino.MFPLevelEditor
 			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
+
+	
+			GameObject entitiesbutton = new GameObject();
+			entitiesbutton.transform.parent = gameObject.transform;
+			entitiesbutton.layer = 5;
+			entitiesbutton.AddComponent<RectTransform>();
+			entitiesbutton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+			entitiesbutton.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
+			entitiesbutton.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
+			entitiesbutton.AddComponent<Image>();
+			entitiesbutton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -850f);
+			entitiesbutton.AddComponent<Button>().onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("entities", false);
+			});
+
+			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
+
 		
 			GameObject AllowColorGradingTex = new GameObject();
 			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
@@ -810,21 +1009,25 @@ namespace Jhrino.MFPLevelEditor
 			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn, SkyColor, allowFog);});
       
 			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
+			
+			entitiesbutton.transform.parent = this.EditorButtonsRoot.transform;
+
+			EntitySpawnRoot.SetActive(false);
 
 
 			MFPEditorLogger.Log("Hud load complete");
-			this.EntitySpawnRoot.SetActive(false);
 		}
 
 		// Token: 0x0600061A RID: 1562
 		public void EditingMode()
 		{
+			if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.C))
+			{
+				CopiedObject = EditingObject;
+			}
+
 			if (Input.GetKeyDown(KeyCode.L) && this.EditingObject != this.PlayerSpawn.gameObject && this.EditingObject != this.FinishLevelTrigger)
 			{
-				if(EditingObject.name.ToLower().Contains("wall"))
-					{
-					GeometryWallLump.Remove(EditingObject);
-					}
 
 				UnityEngine.Object.Destroy(this.EditingObject);
 				this.Editing = false;
@@ -930,16 +1133,34 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x0600061C RID: 1564
 		public void ChangeEditType(string type)
 		{
-			this.ExitEditMode();
+
 			if(SnapToBuild)
+			{
 				SnapToBuild = false;
 				ToggleSnapping(false);
+			}
+
+			if(adjustingSettings)
+				ToggleSettingsMenu(null, true);
+
 			this.editType = type;
+
+			
+			if(Editing)
+			{
+				ExitEditMode();
+				if(PreviousObject != null);
+				EnterEditMode(PreviousObject);
+			}
+
 		}
 
 		// Token: 0x0600061D RID: 1565
 		public void EnterEditMode(GameObject gobject)
 		{
+			if(Editing)
+				ExitEditMode();
+
 			this.EditingObject = gobject;
 
 			this.CoordinateField.gameObject.SetActive(true);
@@ -1037,13 +1258,9 @@ namespace Jhrino.MFPLevelEditor
 		public void PlayMode()
 		{
 			this.Player.transform.position = this.PlayerSpawn.transform.position;
-			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
-			{
-				if (this.EnemySpawnpoints[i] == null)
-				{
-					this.EnemySpawnpoints.RemoveAt(i);
-				}
-			}
+			this.Player.GetComponent<Rigidbody>().velocity = new Vector3(0,0,0);
+			DoMissingArrayCleanup();
+
 			if (!this.PlayMod)
 			{
 				if (this.Editing)
@@ -1076,10 +1293,90 @@ namespace Jhrino.MFPLevelEditor
 					transform.GetComponent<CapsuleCollider>().enabled = false;
 					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
 					this.Enemies.Add(gameObject);
-					gameObject.transform.position = transform.position;
 					gameObject.SetActive(true);
+					gameObject.transform.position = transform.position;
 					this.root.nrOfEnemiesTotal++;
 				}
+
+
+				foreach(GameObject Canister in GasCanisters)
+				{
+					GameObject newCanister = Instantiate(GasCanister);
+					newCanister.SetActive(true);
+
+					newCanister.layer = 14;
+					newCanister.AddComponent<Rigidbody>();
+					newCanister.GetComponent<Rigidbody>().mass = 10;
+					newCanister.GetComponent<Rigidbody>().drag = 0.1f;
+					newCanister.GetComponent<Rigidbody>().angularDrag = 0.05f;
+
+					newCanister.AddComponent<ObjectKickScript>().objType = 3;
+					newCanister.AddComponent<GasCanisterScript>().explosionSize = 2;
+					newCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+					newCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+					newCanister.AddComponent<AudioSource>();
+					newCanister.AddComponent<PhysicsSoundsScript>();
+					newCanister.AddComponent<AutoAimTargetScript>();
+					newCanister.AddComponent<OptimizerScript>();
+
+					LevelGasCanisters.Add(newCanister);
+
+					Canister.SetActive(false);
+				}
+
+
+				foreach(GameObject Pan in FryingPans)
+				{
+					GameObject newPan = Instantiate(FryingPan);
+					newPan.SetActive(true);
+
+					newPan.layer = 14;
+					newPan.transform.tag = "BounceBullet";
+					newPan.AddComponent<Rigidbody>();
+					newPan.GetComponent<Rigidbody>().mass = 10;
+					newPan.GetComponent<Rigidbody>().drag = 0.1f;
+					newPan.GetComponent<Rigidbody>().angularDrag = 0.05f;
+
+					newPan.AddComponent<ObjectKickScript>().objType = 1;
+					newPan.AddComponent<AudioSource>();
+					newPan.AddComponent<PhysicsSoundsScript>();
+					newPan.AddComponent<AutoAimTargetScript>();
+					newPan.AddComponent<OptimizerScript>();
+
+					LevelFryingPans.Add(newPan);
+
+					Pan.SetActive(false);
+				}
+
+				foreach(GameObject board in Skateboards)
+				{
+					GameObject newSkateboard = Instantiate(Skateboard);
+					newSkateboard.SetActive(true);
+
+					newSkateboard.AddComponent<Rigidbody>();
+					newSkateboard.GetComponent<Rigidbody>().mass = 10;
+					newSkateboard.GetComponent<Rigidbody>().drag = 0.1f;
+					newSkateboard.GetComponent<Rigidbody>().angularDrag = 0.05f;
+	
+
+					newSkateboard.AddComponent<ObjectKickScript>().objType = 2;
+					newSkateboard.AddComponent<AudioSource>();
+					newSkateboard.AddComponent<PhysicsSoundsScript>();
+					newSkateboard.AddComponent<AutoAimTargetScript>();
+					newSkateboard.AddComponent<OptimizerScript>();
+					newSkateboard.AddComponent<SkateboardScript>();
+
+					foreach(Collider collider in newSkateboard.GetComponentsInChildren<Collider>())
+					{
+						collider.enabled = true;
+					}
+
+					LevelSkateboards.Add(newSkateboard);
+
+					board.SetActive(false);
+				}
+
+
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
 				this.root.nrOfEnemiesTotal = this.root.nrOfEnemiesTotal / 2;
@@ -1114,10 +1411,16 @@ namespace Jhrino.MFPLevelEditor
 					transform2.gameObject.GetComponent<MeshRenderer>().enabled = true;
 					transform2.gameObject.GetComponent<CapsuleCollider>().enabled = true;
 				}
+
+				PostPlayModeCleanup();
+
+
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = true;
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = true;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = false;
 				this.Enemies.Clear();
+
+				DoMissingArrayCleanup();
 			}
 		}
 
@@ -1136,6 +1439,7 @@ namespace Jhrino.MFPLevelEditor
 				this.EditingObject.GetComponent<MeshRenderer>().material.color = color;
 			}
 			this.ToggleEditingObjectColliders(this.EditingObject, true);
+			PreviousObject = EditingObject;
 			this.EditingObject = null;
 			this.Editing = false;
 		}
@@ -1149,6 +1453,9 @@ namespace Jhrino.MFPLevelEditor
 			texname = texname.Replace(MFPEditorUtils.LoadFileFromDataFolder(""), "");
 			MFPEditorLogger.Log("Texture name is: " + texname);
 			this.DefaultTexture.name = texname;
+
+			DefaultStandardShader = new Material(Shader.Find("Standard"));
+			
 		}
 
 		// Token: 0x06000621 RID: 1569
@@ -1196,6 +1503,59 @@ namespace Jhrino.MFPLevelEditor
 					this.GeometryFloorLump.RemoveAt(j);
 				}
 			}
+
+			for (int j = GasCanisters.Count - 1; j > -1; j--)
+			{
+				if (this.GasCanisters[j] == null)
+				{
+					this.GasCanisters.RemoveAt(j);
+				}
+			}
+
+			
+			for (int j = LevelGasCanisters.Count - 1; j > -1; j--)
+			{
+				if (this.LevelGasCanisters[j] == null)
+				{
+					this.LevelGasCanisters.RemoveAt(j);
+				}
+			}
+
+
+			for (int j = FryingPans.Count - 1; j > -1; j--)
+			{
+				if (this.FryingPans[j] == null)
+				{
+					this.FryingPans.RemoveAt(j);
+				}
+			}
+
+			
+			for (int j = LevelFryingPans.Count - 1; j > -1; j--)
+			{
+				if (this.LevelFryingPans[j] == null)
+				{
+					this.LevelFryingPans.RemoveAt(j);
+				}
+			}
+
+			for (int j = Skateboards.Count - 1; j > -1; j--)
+			{
+				if (this.Skateboards[j] == null)
+				{
+					this.Skateboards.RemoveAt(j);
+				}
+			}
+
+			
+			for (int j = LevelSkateboards.Count - 1; j > -1; j--)
+			{
+				if (this.LevelSkateboards[j] == null)
+				{
+					this.LevelSkateboards.RemoveAt(j);
+				}
+			}
+
 			for (int j = this.BrushLump.Count - 1; j > -1; j--)
 			{
 				if (this.BrushLump[j] == null)
@@ -1259,6 +1619,33 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
+			foreach(GameObject gasCanister in GasCanisters)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = gasCanister");
+				SavedLevel.Add(gasCanister.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(gasCanister.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(gasCanister.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
+			foreach(GameObject pan in FryingPans)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = fryingPan");
+				SavedLevel.Add(pan.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(pan.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(pan.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
+			foreach(GameObject board in Skateboards)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = skateboard");
+				SavedLevel.Add(board.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(board.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(board.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			this.CalculateLevelHash();
 			MFPEditorLogger.Log("----");
@@ -1282,6 +1669,43 @@ namespace Jhrino.MFPLevelEditor
 		}
 	}
 
+
+public void DoObjectCleanup()
+{
+	foreach (GameObject obj in this.BrushLump)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+	foreach (GameObject obj in this.GeometryWallLump)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject obj in this.GeometryFloorLump)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+	foreach (Transform transform in this.EnemySpawnpoints)
+	{
+		UnityEngine.Object.Destroy(transform.gameObject);
+	}
+
+	foreach (GameObject obj in GasCanisters)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject obj in FryingPans)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject obj in Skateboards)
+	{
+		UnityEngine.Object.Destroy(obj);
+	}
+}
+	
 		// Token: 0x06000624 RID: 1572
 public void PrototypeLoad()
 		{
@@ -1296,25 +1720,7 @@ public void PrototypeLoad()
 
 			string[] levelFile = File.ReadAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"));
 
-
-			foreach (GameObject obj in this.BrushLump)
-			{
-				UnityEngine.Object.Destroy(obj);
-			}
-			foreach (GameObject obj in this.GeometryWallLump)
-			{
-				UnityEngine.Object.Destroy(obj);
-			}
-
-			foreach (GameObject obj in this.GeometryFloorLump)
-			{
-				UnityEngine.Object.Destroy(obj);
-			}
-			foreach (Transform transform in this.EnemySpawnpoints)
-			{
-				UnityEngine.Object.Destroy(transform.gameObject);
-			}
-
+			DoObjectCleanup();
 			DoMissingArrayCleanup();
 
 			MFPEditorLogger.Log("Loading File");
@@ -1399,11 +1805,20 @@ public void PrototypeLoad()
                     newWall.transform.position = new Vector3(geowallposition[0], geowallposition[1], geowallposition[2]);
                     newWall.transform.eulerAngles = new Vector3(geowallrotation[0], geowallrotation[1], geowallrotation[2]);
                     newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
+					MFPEditorLogger.Log("Brush coordinates are set");
                     newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
 					newWall.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geowalltexturename));
+					MFPEditorLogger.Log("Textures are loaded");
+					string normalmap = geowalltexturename;
+					normalmap = normalmap.Replace(".png", "");
+					normalmap = normalmap + "_normal.png";
+					newWall.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
+					MFPEditorLogger.Log("Normalmaps are loaded");
 					newWall.GetComponent<MeshRenderer>().material.mainTexture.name = geowalltexturename;
 					newWall.gameObject.layer = geowallproperty;
+					MFPEditorLogger.Log("Texture names and layer is set");
 					GeometryWallLump.Add(newWall);
+					MFPEditorLogger.Log("Brush load complete");
 					i+= 6;
 					break;
 				
@@ -1426,6 +1841,10 @@ public void PrototypeLoad()
                     newFloor.GetComponent<MeshRenderer>().material.color = new Color(geofloorcolor[0], geofloorcolor[1], geofloorcolor[2]);
 					newFloor.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geofloortexturename));
 					newFloor.GetComponent<MeshRenderer>().material.mainTexture.name = geofloortexturename;
+					string normalmap_floor = geofloortexturename;
+					geofloortexturename = geofloortexturename.Replace(".png", "");
+					geofloortexturename = geofloortexturename + " _normal.png";
+					newFloor.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap_floor)));
 					newFloor.gameObject.layer = geofloorproperty;
 					GeometryFloorLump.Add(newFloor);
 					i+= 6;
@@ -1488,6 +1907,16 @@ public void PrototypeLoad()
 
                     i += 2;
                     break;
+				case "!Entity":
+						string entityName = levelFile[i + 1].Replace("entityType = ", "");
+						MFPEditorLogger.Log(entityName);
+
+					   float[] entityposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
+					   float[] entityrotation = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
+					   float[] entityscale = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
+
+					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]));
+							break;
             }
         }
 			CalculateLevelHash();
@@ -1520,6 +1949,210 @@ public void PrototypeLoad()
 			MFPEditorLogger.Log(DateTime.Now.ToString("MM/dd/yyyy HH:mm"));
 			MFPEditorLogger.Log("------------------------------------------");
 		}
+
+
+		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
+			{
+				
+				switch(entity)
+				{
+					default:
+						MFPEditorLogger.Log("Invalid entity " + entity + '"');
+					break;
+					//TODO: Add saving and loading for gas canisters
+					case "gascanister":
+						if(GasCanister == null)
+						{
+							GameObject newGasCanister = new GameObject();
+							newGasCanister.name = "GasCanister";
+							newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
+							newGasCanister.AddComponent<MeshRenderer>();
+							newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newGasCanister.transform.position = savePosition;
+								newGasCanister.transform.eulerAngles = saveRotation;
+								newGasCanister.transform.localScale = saveScale;
+							}
+							newGasCanister.AddComponent<BoxCollider>();
+
+							GasCanister = Instantiate(newGasCanister);
+							GasCanister.SetActive(false);
+
+							GasCanisters.Add(newGasCanister);
+						}
+						else
+						{
+							GameObject preloadedCanister = Instantiate(GasCanister);
+							preloadedCanister.SetActive(true);
+							if(!isSaveObject)
+							preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedCanister.transform.position = savePosition;
+								preloadedCanister.transform.eulerAngles = saveRotation;
+								preloadedCanister.transform.localScale = saveScale;
+							}
+							GasCanisters.Add(preloadedCanister);
+						}
+						break;
+					case "fryingpan":
+						if(FryingPan == null)
+						{
+							GameObject newFryingPan = new GameObject();
+							newFryingPan.name = "FryingPan";
+							newFryingPan.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/FryingPan.obj"));
+							newFryingPan.AddComponent<MeshRenderer>();
+							newFryingPan.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newFryingPan.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_mediumshine_1.png"));
+							if(!isSaveObject)
+							newFryingPan.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newFryingPan.transform.position = savePosition;
+								newFryingPan.transform.eulerAngles = saveRotation;
+								newFryingPan.transform.localScale = saveScale;
+							}
+							newFryingPan.transform.localScale = new Vector3(1.518284f,1.518284f,1.518284f);
+							newFryingPan.AddComponent<BoxCollider>();
+							newFryingPan.GetComponent<BoxCollider>().center = new Vector3(0.01f, 0.005344497f, 0.08489452f);
+							newFryingPan.GetComponent<BoxCollider>().size = new Vector3(0.66f, 0.7002591f, 0.169789f);
+
+							FryingPan = Instantiate(newFryingPan);
+							FryingPan.SetActive(false);
+
+							FryingPans.Add(newFryingPan);
+						}
+						else
+						{
+							GameObject preloadedPan = Instantiate(FryingPan);
+							preloadedPan.SetActive(true);
+							if(!isSaveObject)
+							preloadedPan.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedPan.transform.position = savePosition;
+								preloadedPan.transform.eulerAngles = saveRotation;
+								preloadedPan.transform.localScale = saveScale;
+							}
+							FryingPans.Add(preloadedPan);
+						}
+						break;
+				case "skateboard":
+					if(Skateboard == null)
+						{
+							GameObject newSkateboard = new GameObject();
+							newSkateboard.name = "Skateboard";
+							newSkateboard.layer = 25;
+
+							newSkateboard.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/Skateboard.obj"));
+							newSkateboard.AddComponent<MeshRenderer>();
+							newSkateboard.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newSkateboard.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newSkateboard.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newSkateboard.transform.position = savePosition;
+								newSkateboard.transform.eulerAngles = saveRotation;
+								newSkateboard.transform.localScale = saveScale;
+							}
+							newSkateboard.AddComponent<BoxCollider>();
+							newSkateboard.GetComponent<BoxCollider>().size = new Vector3(2.075f, 0.6727042f, 0.1303f);
+							newSkateboard.GetComponent<BoxCollider>().center = new Vector3(-9.641704e-08f, -7.105427e-15f, 0.2079678f);
+							newSkateboard.GetComponent<BoxCollider>().material = SkateboardTop;
+
+
+							GameObject SkateboardSounds = new GameObject();
+							SkateboardSounds.AddComponent<AudioSource>();
+							SkateboardSounds.name = "Sounds";
+							SkateboardSounds.transform.parent = newSkateboard.transform;
+
+							GameObject FrontWheelCollision1 = new GameObject();
+							FrontWheelCollision1.layer = 25;
+							FrontWheelCollision1.name = "SkateFront1";
+							FrontWheelCollision1.transform.parent = newSkateboard.transform;
+							FrontWheelCollision1.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider ftcoll1 = FrontWheelCollision1.AddComponent<CapsuleCollider>();
+							ftcoll1.material = Slippery;
+							ftcoll1.center = new Vector3(0.75f, 0, 0.13f);
+							ftcoll1.radius = 0.13f;
+							ftcoll1.height = 0.4f;
+							ftcoll1.direction = 1;
+
+							GameObject skateshine = new GameObject();
+							skateshine.name = "Skateboard_Shine";
+							skateshine.transform.parent = newSkateboard.transform;
+
+							GameObject FrontWheelCollision2 = new GameObject();
+							FrontWheelCollision2.layer = 25;
+							FrontWheelCollision2.name = "SkateFront2";
+							FrontWheelCollision2.transform.parent = newSkateboard.transform;
+							FrontWheelCollision2.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider ftcoll2 = FrontWheelCollision2.AddComponent<CapsuleCollider>();
+							ftcoll2.material = Slippery;
+							ftcoll2.center = new Vector3(1.04f, 0, 0.14f);
+							ftcoll2.radius = 0.13f;
+							ftcoll2.height = 0.4f;
+							ftcoll2.direction = 1;
+
+
+							GameObject BackWheelCollision1 = new GameObject();
+							BackWheelCollision1.layer = 25;
+							BackWheelCollision1.name = "SkateFront1";
+							BackWheelCollision1.transform.parent = newSkateboard.transform;
+							BackWheelCollision1.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider bkcoll1 = BackWheelCollision1.AddComponent<CapsuleCollider>();
+							bkcoll1.material = Slippery;
+							bkcoll1.center = new Vector3(-0.75f, 0, 0.13f);
+							bkcoll1.radius = 0.13f;
+							bkcoll1.height = 0.4f;
+							bkcoll1.direction = 1;
+
+
+							GameObject BackWheelCollision2 = new GameObject();
+							BackWheelCollision2.layer = 25;
+							BackWheelCollision2.name = "SkateFront2";
+							BackWheelCollision2.transform.parent = newSkateboard.transform;
+							BackWheelCollision2.transform.localPosition = new Vector3(0,0,0);
+							CapsuleCollider bkcoll2 = BackWheelCollision2.AddComponent<CapsuleCollider>();
+							bkcoll2.material = Slippery;
+							bkcoll2.center = new Vector3(-1.04f, 0, 0.14f);
+							bkcoll2.radius = 0.13f;
+							bkcoll2.height = 0.4f;
+							bkcoll2.direction = 1;
+
+							ftcoll1.enabled = false;
+							ftcoll2.enabled = false;
+							bkcoll1.enabled = false;
+							bkcoll2.enabled = false;
+							
+
+							Skateboard = Instantiate(newSkateboard);
+							Skateboard.SetActive(false);
+							Skateboards.Add(newSkateboard);
+						}
+						else
+						{
+							GameObject preloadedSkateboard = Instantiate(Skateboard);
+							preloadedSkateboard.SetActive(true);
+							if(!isSaveObject)
+							preloadedSkateboard.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedSkateboard.transform.position = savePosition;
+								preloadedSkateboard.transform.eulerAngles = saveRotation;
+								preloadedSkateboard.transform.localScale = saveScale;
+							}
+							Skateboards.Add(preloadedSkateboard);
+						}
+					break;
+				}
+
+			}
 
 		// Token: 0x06000627 RID: 1575
 		protected string GetMD5HashFromFile(string fileName)
@@ -1602,12 +2235,15 @@ public void PrototypeLoad()
 		{
 			if(this.Editing)
 				ExitEditMode();
+			if(SnapToBuild)
+				ToggleSnapping(false);
 
 			if (forceOff)
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
 				this.adjustingSettings = false;
+				return;
 			}
 			if (!this.adjustingSettings)
 			{
@@ -1615,9 +2251,15 @@ public void PrototypeLoad()
 				{
 					this.WorldSettingsRoot.SetActive(true);
 					this.EntitySpawnRoot.SetActive(false);
-					this.adjustingSettings = true;
-					return;
 				}
+				if(menuType == "entities")
+				{
+					this.WorldSettingsRoot.SetActive(false);
+					this.EntitySpawnRoot.SetActive(true);
+				}
+
+				this.adjustingSettings = true;
+				return;
 			}
 			else
 			{
@@ -1645,8 +2287,10 @@ public void PrototypeLoad()
 		// Token: 0x0400133D RID: 4925
 		public Text DebugObject;
 
-		// Token: 0x0400133E RID: 4926
+
 		public GameObject EditingObject;
+		public GameObject PreviousObject;
+		public GameObject CopiedObject;
 
 		// Token: 0x0400133F RID: 4927
 		public InputField CoordinateField;
@@ -1743,12 +2387,34 @@ public void PrototypeLoad()
 		public GameObject SnapTarget;
 			
 		public List<GameObject> GeometryWallLump = new List<GameObject>();
-		public List <GameObject> GeometryFloorLump = new List<GameObject>();
+		public List<GameObject> GeometryFloorLump = new List<GameObject>();
+
+		public List<GameObject> GasCanisters = new List<GameObject>();
+		public List<GameObject> LevelGasCanisters = new List<GameObject>();
+
+		public List<GameObject> FryingPans = new List<GameObject>();
+		public List<GameObject> LevelFryingPans = new List<GameObject>();
+
+		public List<GameObject> Skateboards = new List<GameObject>();
+		public List<GameObject> LevelSkateboards = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
 
 		public GameObject wall_Brick;
+
+
+		//------------------- PRECACHED OBJECTS-------------------//
+		public GameObject GasCanister;
+		public GameObject FryingPan;
+		public GameObject Skateboard;
+
+		//PRELOADED CONTENT
+		public Material DefaultStandardShader;
+
+
+		public PhysicMaterial Slippery = new PhysicMaterial();
+		public PhysicMaterial SkateboardTop = new PhysicMaterial();
 
 //-------------------------------------------------------------------------------------------
 		// Token: 0x020000E2 RID: 226
