@@ -72,6 +72,76 @@ namespace Jhrino.MFPLevelEditor
 			}
 		}
 		
+		public static Button ReturnCreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
+		{
+			
+			GameObject createdButtonObject = new GameObject();
+			createdButtonObject.transform.parent = parent.transform;
+			createdButtonObject.name = name;
+			createdButtonObject.layer = 5;
+
+			RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
+
+			buttonRect.pivot = pivot;
+
+			buttonRect.anchorMin = ReturnAnchor(uianch);
+			buttonRect.anchorMax = ReturnAnchor(uianch);
+
+			buttonRect.sizeDelta = sizeDelta;
+
+			buttonRect.anchoredPosition = anchoredPosition;
+
+			Image buttonImage = createdButtonObject.AddComponent<Image>();
+
+			if(imageSource != "")
+			{
+				Texture2D buttonTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+				Sprite buttonSprite = Sprite.Create(buttonTexture, new Rect(0f, 0f, buttonTexture.width, buttonTexture.height), new Vector2(0f, 0f), 100f);
+			
+				buttonImage.sprite = buttonSprite;
+			}
+
+			Button newButton = createdButtonObject.AddComponent<Button>();
+			newButton.transition = buttonTransition;
+			newButton.targetGraphic = buttonImage;
+
+			return newButton;
+		}
+
+		public static void CreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
+		{
+			
+			GameObject createdButtonObject = new GameObject();
+			createdButtonObject.transform.parent = parent.transform;
+			createdButtonObject.name = name;
+			createdButtonObject.layer = 5;
+
+			RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
+
+			buttonRect.pivot = pivot;
+
+			buttonRect.anchorMin = ReturnAnchor(uianch);
+			buttonRect.anchorMax = ReturnAnchor(uianch);
+
+			buttonRect.sizeDelta = sizeDelta;
+
+			buttonRect.anchoredPosition = anchoredPosition;
+
+			Image buttonImage = createdButtonObject.AddComponent<Image>();
+
+			if(imageSource != "")
+			{
+				Texture2D buttonTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+				Sprite buttonSprite = Sprite.Create(buttonTexture, new Rect(0f, 0f, buttonTexture.width, buttonTexture.height), new Vector2(0f, 0f), 100f);
+			
+				buttonImage.sprite = buttonSprite;
+			}
+
+			Button newButton = createdButtonObject.AddComponent<Button>();
+			newButton.transition = buttonTransition;
+			newButton.targetGraphic = buttonImage;
+		}
+
 
 		public static Text ReturnCreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize,  Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
 		{
@@ -112,7 +182,7 @@ namespace Jhrino.MFPLevelEditor
 
 		}
 
-		public static void CreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta = new Vector2(100,100), Vector2 pivot, Vector3 localSize,  Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
+		public static void CreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize,  Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
 		{
 
 			GameObject createdTextObject = new GameObject();

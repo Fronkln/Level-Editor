@@ -567,22 +567,8 @@ namespace Jhrino.MFPLevelEditor
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
 
+			Button exitedit = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomMiddle, new Vector2(-20, 60), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), inputField.gameObject, "ExitEditModeButton", "");
 
-			GameObject ExitEditModeButton = new GameObject();
-			ExitEditModeButton.transform.parent = inputField.transform;
-			ExitEditModeButton.AddComponent<RectTransform>();
-			ExitEditModeButton.layer = 5;
-			ExitEditModeButton.AddComponent<RectTransform>();
-			ExitEditModeButton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			ExitEditModeButton.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
-			ExitEditModeButton.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
-			ExitEditModeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 60);
-			ExitEditModeButton.AddComponent<Image>();
-
-			Button exitedit = ExitEditModeButton.AddComponent<Button>();
-			exitedit.transition = Selectable.Transition.ColorTint;
-			exitedit.targetGraphic = ExitEditModeButton.GetComponent<Image>();
-			exitedit.interactable = true;
 			exitedit.onClick.AddListener(delegate()
 			{
 				this.ExitEditMode();
@@ -593,93 +579,44 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
-			GameObject gameObject3 = new GameObject();
-			gameObject3.transform.parent = gameObject.transform;
-			gameObject3.layer = 5;
-			gameObject3.AddComponent<RectTransform>();
-			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic = gameObject3.AddComponent<Image>();
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
-			Button button = gameObject3.AddComponent<Button>();
-			button.transition = Selectable.Transition.ColorTint;
-			button.targetGraphic = targetGraphic;
-			button.interactable = true;
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
-			Texture2D ico_pos = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_position.png"));
-			Sprite spr_pos = Sprite.Create(ico_pos, new Rect(0f, 0f, (float)ico_pos.width, (float)ico_pos.height), new Vector2(0f, 0f), 100f);
-			targetGraphic.sprite = spr_pos;
-			button.onClick.AddListener(delegate()
+
+			Button positionButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -122f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PositionButton", "EditorAssets/icons/ico_position.png");
+
+			positionButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("position");
 			});
-			GameObject gameObject6 = new GameObject();
-			gameObject6.transform.parent = gameObject.transform;
-			gameObject6.layer = 5;
-			gameObject6.AddComponent<RectTransform>();
-			gameObject6.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject6.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject6.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic2 = gameObject6.AddComponent<Image>();
-			gameObject6.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -255.9f);
-			Button button2 = gameObject6.AddComponent<Button>();
-			Texture2D ico_rot = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_rotation.png"));
-			Sprite spr_rot = Sprite.Create(ico_rot, new Rect(0f, 0f, (float)ico_rot.width, (float)ico_rot.height), new Vector2(0f, 0f), 100f);
-			targetGraphic2.sprite = spr_rot;
-			button2.transition = Selectable.Transition.ColorTint;
-			button2.targetGraphic = targetGraphic2;
-			button2.interactable = true;
-			button2.onClick.AddListener(delegate()
+
+
+			Button rotationButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -255.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "RotationButton", "EditorAssets/icons/ico_rotation.png");
+
+			rotationButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("rotation");
 			});
-			GameObject gameObject7 = new GameObject();
-			gameObject7.transform.parent = gameObject.transform;
-			gameObject7.layer = 5;
-			gameObject7.AddComponent<RectTransform>();
-			gameObject7.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject7.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject7.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic3 = gameObject7.AddComponent<Image>();
-			gameObject7.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -400f);
-			Button button3 = gameObject7.AddComponent<Button>();
-			Texture2D ico_sca = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_scale.png"));
-			Sprite spr_sca = Sprite.Create(ico_sca, new Rect(0f, 0f, (float)ico_sca.width, (float)ico_sca.height), new Vector2(0f, 0f), 100f);
-			targetGraphic3.sprite = spr_sca;
-			button3.transition = Selectable.Transition.ColorTint;
-			button3.targetGraphic = targetGraphic3;
-			button3.interactable = true;
-			button3.onClick.AddListener(delegate()
+
+			Button scaleButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -400f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "ScaleButton", "EditorAssets/icons/ico_scale.png");
+
+			scaleButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("scale");
 			});
-			GameObject gameObject4 = new GameObject();
-			gameObject4.transform.parent = gameObject.transform;
-			gameObject4.layer = 5;
-			gameObject4.AddComponent<RectTransform>();
-			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			gameObject4.AddComponent<Image>();
-			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
-			Button button4 = gameObject4.AddComponent<Button>();
-			Texture2D ico_col = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_color.png"));
-			Sprite spr_col = Sprite.Create(ico_col, new Rect(0f, 0f, (float)ico_col.width, (float)ico_col.height), new Vector2(0f, 0f), 100f);
-			gameObject4.GetComponent<Image>().sprite = spr_col;
-			button4.transition = Selectable.Transition.ColorTint;
-			button4.targetGraphic = gameObject4.GetComponent<Image>();
-			button4.interactable = true;
-			button4.onClick.AddListener(delegate()
+
+			Button colorButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -550f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "ColorButton", "EditorAssets/icons/ico_color.png");
+
+			colorButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("color");
 			});
+
 			this.EditorButtonsRoot = new GameObject();
 			this.EditorButtonsRoot.transform.parent = canvas.transform;
-			gameObject3.transform.parent = this.EditorButtonsRoot.transform;
-			gameObject4.transform.parent = this.EditorButtonsRoot.transform;
-			gameObject7.transform.parent = this.EditorButtonsRoot.transform;
-			gameObject6.transform.parent = this.EditorButtonsRoot.transform;
+
+			positionButton.transform.parent = this.EditorButtonsRoot.transform;
+			colorButton.transform.parent = this.EditorButtonsRoot.transform;
+			scaleButton.transform.parent = this.EditorButtonsRoot.transform;
+			rotationButton.transform.parent = this.EditorButtonsRoot.transform;
+
 			GameObject PanelOBJ = new GameObject();
 			PanelOBJ.transform.parent = gameObject.transform;
 			PanelOBJ.name = "EntitiesListContainer";
@@ -691,18 +628,9 @@ namespace Jhrino.MFPLevelEditor
 			component.pivot = new Vector2(0.5f, 0.5f);
 			component.sizeDelta = new Vector2(628.2f, 440.51f);
 			component.anchoredPosition = new Vector2(0f, 0f);
-			GameObject gameObject8 = new GameObject();
-			gameObject8.name = "GasCanisterButton";
-			gameObject8.transform.parent = PanelOBJ.transform;
-			RectTransform rectTransform2 = gameObject8.AddComponent<RectTransform>();
-			rectTransform2.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransform2.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransform2.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform2.sizeDelta = new Vector2(254.86f, 30f);
-			rectTransform2.anchoredPosition = new Vector2(0f, 158f);
-			Button gascanButton = gameObject8.AddComponent<Button>();
-			Image gascanButtonGraphics = gascanButton.gameObject.AddComponent<Image>();
-			gascanButton.targetGraphic = gascanButtonGraphics;
+
+			Button gascanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 158f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "GasCanisterButton", "");
+
 
 			gascanButton.onClick.AddListener(delegate()
 			{
@@ -733,26 +661,14 @@ namespace Jhrino.MFPLevelEditor
 
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, fpanButton.gameObject, "Frying Pan", "FryingPanButtonText", 64);
 
+			Button skateBoardButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 72), new Vector2(254.86f, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "SkateboardButton");
 
-			GameObject skateboardButton = new GameObject();
-			skateboardButton.name = "SkateboardButton";
-			skateboardButton.transform.parent = PanelOBJ.transform;
-			RectTransform skaterectTransformbutt = skateboardButton.AddComponent<RectTransform>();
-			skaterectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
-			skaterectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
-			skaterectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
-			skaterectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
-			skaterectTransformbutt.anchoredPosition = new Vector2(0f, 72f);
-			Button skateButton = skateboardButton.AddComponent<Button>();
-			Image skateboardButtonGraphics = skateButton.gameObject.AddComponent<Image>();
-			skateButton.targetGraphic = skateboardButtonGraphics;
-
-			skateButton.onClick.AddListener(delegate()
+			skateBoardButton.onClick.AddListener(delegate()
 			{
 				this.SpawnEntity("skateboard", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateBoardButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
 
 			this.EntitySpawnRoot = PanelOBJ;
 			GameObject PanelOBJ2 = new GameObject();
@@ -815,33 +731,19 @@ namespace Jhrino.MFPLevelEditor
 			toggle.graphic = checkrectimage;
 			this.WorldSettingsRoot = PanelOBJ2;
 			this.WorldSettingsRoot.SetActive(false);
-			GameObject gameObject11 = new GameObject();
-			gameObject11.transform.parent = gameObject.transform;
-			gameObject11.layer = 5;
-			gameObject11.AddComponent<RectTransform>();
-			gameObject11.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject11.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject11.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			gameObject11.AddComponent<Image>();
-			gameObject11.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -700f);
-			gameObject11.AddComponent<Button>().onClick.AddListener(delegate()
+
+			Button worldSettingsButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -700f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "WorldSettingsButton", "");
+
+			worldSettingsButton.onClick.AddListener(delegate()
 			{
 				this.ToggleSettingsMenu("world", false);
 			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
-	
-			GameObject entitiesbutton = new GameObject();
-			entitiesbutton.transform.parent = gameObject.transform;
-			entitiesbutton.layer = 5;
-			entitiesbutton.AddComponent<RectTransform>();
-			entitiesbutton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			entitiesbutton.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			entitiesbutton.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			entitiesbutton.AddComponent<Image>();
-			entitiesbutton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -850f);
-			entitiesbutton.AddComponent<Button>().onClick.AddListener(delegate()
+			Button entitiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -850f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "EntitiesButton", "");
+
+			entitiesButton.onClick.AddListener(delegate()
 			{
 				this.ToggleSettingsMenu("entities", false);
 			});
@@ -901,9 +803,9 @@ namespace Jhrino.MFPLevelEditor
 
 			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn, SkyColor, allowFog);});
       
-			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
+			worldSettingsButton.transform.parent = this.EditorButtonsRoot.transform;
 			
-			entitiesbutton.transform.parent = this.EditorButtonsRoot.transform;
+			entitiesButton.transform.parent = this.EditorButtonsRoot.transform;
 
 			EntitySpawnRoot.SetActive(false);
 
