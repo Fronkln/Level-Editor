@@ -536,31 +536,9 @@ namespace Jhrino.MFPLevelEditor
 			canvasScaler.scaleFactor = 0.5f;
 			canvasScaler.referencePixelsPerUnit = 100f;
 			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
-			GameObject gameObject5 = new GameObject();
-			gameObject5.transform.parent = gameObject.transform;
-			gameObject5.layer = 5;
-			gameObject5.AddComponent<RectTransform>();
-			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
-			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
-			Text text = gameObject5.AddComponent<Text>();
-			Material material = new Material(Shader.Find("UI/Default"));
-			text.material = material;
-			text.text = "GAME OVER";
-			text.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text.fontStyle = FontStyle.Bold;
-			text.fontSize = 68;
-			text.lineSpacing = 1f;
-			text.supportRichText = false;
-			text.alignment = TextAnchor.MiddleCenter;
-			text.horizontalOverflow = HorizontalWrapMode.Overflow;
-			text.verticalOverflow = VerticalWrapMode.Overflow;
-			text.resizeTextForBestFit = false;
-			text.alignByGeometry = false;
-			text.GetComponent<RectTransform>().sizeDelta = new Vector2(472.9f, 100f);
-			this.DebugObject = text;
-			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
-			new GameObject();
+
+			this.DebugObject = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(-45.6f, 83f),new Vector2(472.9f, 100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(255,255,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "COCK N BALL", "testing", 68);
+
 
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "CoordinateField";
@@ -731,24 +709,8 @@ namespace Jhrino.MFPLevelEditor
 				this.SpawnEntity("gascanister", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			GameObject gameObject9 = new GameObject();
-			gameObject9.name = "GasCanisterButtonText";
-			gameObject9.transform.parent = gascanButton.transform;
-			RectTransform gascanButtonRect = gameObject9.AddComponent<RectTransform>();
-			gascanButtonRect.anchorMin = new Vector2(0f, 0f);
-			gascanButtonRect.anchorMax = new Vector2(1f, 1f);
-			gascanButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			gascanButtonRect.anchoredPosition = new Vector2(0f, 0f);
-			Text text2 = gameObject9.AddComponent<Text>();
-			text2.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text2.text = "Gas Canister";
-			text2.alignment = TextAnchor.MiddleCenter;
-			gascanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-			text2.color = new Color(0f, 0f, 0f);
-			text2.fontSize = 64;
-			text2.verticalOverflow = VerticalWrapMode.Overflow;
-			text2.horizontalOverflow = HorizontalWrapMode.Overflow;
 
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gascanButton.gameObject, "Gas Canister", "GasCanisterButtonText", 64);
 
 
 			GameObject fryingPanButton = new GameObject();
@@ -769,24 +731,7 @@ namespace Jhrino.MFPLevelEditor
 				this.SpawnEntity("fryingpan", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			GameObject fryingPanText = new GameObject();
-			fryingPanText.name = "FryingPanButtonText";
-			fryingPanText.transform.parent = fpanButton.transform;
-			RectTransform fpanButtonRect = fryingPanText.AddComponent<RectTransform>();
-			fpanButtonRect.anchorMin = new Vector2(0f, 0f);
-			fpanButtonRect.anchorMax = new Vector2(1f, 1f);
-			fpanButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			fpanButtonRect.anchoredPosition = new Vector2(0f, 0f);
-			Text pantext = fryingPanText.AddComponent<Text>();
-			pantext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			pantext.text = "Frying Pan";
-			pantext.alignment = TextAnchor.MiddleCenter;
-			fpanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-			pantext.color = new Color(0f, 0f, 0f);
-			pantext.fontSize = 64;
-			pantext.verticalOverflow = VerticalWrapMode.Overflow;
-			pantext.horizontalOverflow = HorizontalWrapMode.Overflow;
-
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, fpanButton.gameObject, "Frying Pan", "FryingPanButtonText", 64);
 
 
 			GameObject skateboardButton = new GameObject();
@@ -807,27 +752,7 @@ namespace Jhrino.MFPLevelEditor
 				this.SpawnEntity("skateboard", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			GameObject skateboardText = new GameObject();
-			skateboardText.name = "SkateboardButtonText";
-			skateboardText.transform.parent = skateButton.transform;
-			RectTransform skateboardButtonRect = skateboardText.AddComponent<RectTransform>();
-			skateboardButtonRect.anchorMin = new Vector2(0f, 0f);
-			skateboardButtonRect.anchorMax = new Vector2(1f, 1f);
-			skateboardButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			skateboardButtonRect.anchoredPosition = new Vector2(0f, 0f);
-			Text skatetext = skateboardText.AddComponent<Text>();
-			skatetext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			skatetext.text = "Skateboard";
-			skatetext.alignment = TextAnchor.MiddleCenter;
-			skateboardButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-			skatetext.color = new Color(0f, 0f, 0f);
-			skatetext.fontSize = 64;
-			skatetext.verticalOverflow = VerticalWrapMode.Overflow;
-			skatetext.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-
-		
-
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
 
 			this.EntitySpawnRoot = PanelOBJ;
 			GameObject PanelOBJ2 = new GameObject();
@@ -841,24 +766,10 @@ namespace Jhrino.MFPLevelEditor
 			component2.pivot = new Vector2(0.5f, 0.5f);
 			component2.sizeDelta = new Vector2(576.2f, 447.6f);
 			component2.anchoredPosition = new Vector2(0f, 0f);
-			GameObject gameObject10 = new GameObject();
-			gameObject10.transform.parent = PanelOBJ2.transform;
-			gameObject10.name = "AllowPostProcessText";
-			RectTransform pptextrect = gameObject10.AddComponent<RectTransform>();
-			pptextrect.anchorMin = new Vector2(0.5f, 0.5f);
-			pptextrect.anchorMax = new Vector2(0.5f, 0.5f);
-			pptextrect.pivot = new Vector2(0.5f, 0.5f);
-			pptextrect.anchoredPosition = new Vector2(-216f, 187f);
-			pptextrect.sizeDelta = new Vector2(160f, 30f);
-			Text text3 = gameObject10.AddComponent<Text>();
-			text3.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text3.text = "Allow Post Processing:";
-			text3.alignment = TextAnchor.UpperLeft;
-			pptextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
-			text3.color = new Color(0f, 0f, 0f);
-			text3.fontSize = 64;
-			text3.verticalOverflow = VerticalWrapMode.Overflow;
-			text3.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-216, 187), new Vector2(160, 30), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Post Processing:", "AllowPostProcessText", 64);
+
+
 			GameObject PostProcessingCheckmark = new GameObject();
 			PostProcessingCheckmark.name = "PostProcessCheckmark";
 			PostProcessingCheckmark.transform.parent = PanelOBJ2.transform;
@@ -937,26 +848,8 @@ namespace Jhrino.MFPLevelEditor
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
-		
-			GameObject AllowColorGradingTex = new GameObject();
-			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
-			AllowColorGradingTex.name = "AllowColorGradingText";
-
-			RectTransform cgtextrect = AllowColorGradingTex.AddComponent<RectTransform>();
-			cgtextrect.anchorMin = new Vector2(0.5f, 0.5f);
-			cgtextrect.anchorMax = new Vector2(0.5f, 0.5f);
-			cgtextrect.pivot = new Vector2(0.5f, 0.5f);
-			cgtextrect.anchoredPosition = new Vector2(-235f, 125f);
-			pptextrect.sizeDelta = new Vector2(160f, 30f);
-			Text cgtext = AllowColorGradingTex.AddComponent<Text>();
-			cgtext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			cgtext.text = "Allow Color Grading:";
-			cgtext.alignment = TextAnchor.UpperLeft;
-			cgtextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
-			cgtext.color = new Color(0f, 0f, 0f);
-			cgtext.fontSize = 64;
-			cgtext.verticalOverflow = VerticalWrapMode.Overflow;
-			cgtext.horizontalOverflow = HorizontalWrapMode.Overflow;
+			
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-235, 125f), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.49257f, 0.49257f, 0.49257f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Color Grading:", "AllowPostProcessText", 64);
 
 
 			GameObject ColorGradingCheckmark = new GameObject();
@@ -1447,6 +1340,7 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000620 RID: 1568
 		public void LoadEditorAssets()
 		{
+			Arial =  Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font; 
 			this.EditorAxeMesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/axe.obj"));
 			this.DefaultTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png"));
 			string texname = MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png");
@@ -2411,7 +2305,7 @@ public void PrototypeLoad()
 
 		//PRELOADED CONTENT
 		public Material DefaultStandardShader;
-
+		public Font Arial;
 
 		public PhysicMaterial Slippery = new PhysicMaterial();
 		public PhysicMaterial SkateboardTop = new PhysicMaterial();
