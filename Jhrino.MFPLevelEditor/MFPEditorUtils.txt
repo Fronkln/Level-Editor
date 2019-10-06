@@ -71,6 +71,74 @@ namespace Jhrino.MFPLevelEditor
 					return new Vector2(1,1);
 			}
 		}
+
+
+		public static GameObject ReturnCreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
+		{
+			GameObject newPanel = new GameObject();
+
+			newPanel.transform.parent = parent.transform;
+			newPanel.name = name;
+			newPanel.layer = 5;
+
+			RectTransform panelRect = newPanel.AddComponent<RectTransform>();
+
+			panelRect.pivot = pivot;
+
+			panelRect.anchorMin = ReturnAnchor(uianch);
+			panelRect.anchorMax = ReturnAnchor(uianch);
+
+			panelRect.sizeDelta = sizeDelta;
+
+			panelRect.anchoredPosition = anchoredPosition;
+
+			Image panelImage = newPanel.AddComponent<Image>();
+
+			if(imageSource != "")
+			{
+				Texture2D panelTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+				Sprite panelSprite = Sprite.Create(panelTexture, new Rect(0f, 0f, panelTexture.width, panelTexture.height), new Vector2(0f, 0f), 100f);
+			
+				panelImage.sprite = panelSprite;
+			}
+
+			panelImage.color = panelColor;
+
+			return newPanel;
+		}
+
+
+		public static void CreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
+		{
+			GameObject newPanel = new GameObject();
+
+			newPanel.transform.parent = parent.transform;
+			newPanel.name = name;
+			newPanel.layer = 5;
+
+			RectTransform panelRect = newPanel.AddComponent<RectTransform>();
+
+			panelRect.pivot = pivot;
+
+			panelRect.anchorMin = ReturnAnchor(uianch);
+			panelRect.anchorMax = ReturnAnchor(uianch);
+
+			panelRect.sizeDelta = sizeDelta;
+
+			panelRect.anchoredPosition = anchoredPosition;
+
+			Image panelImage = newPanel.AddComponent<Image>();
+
+			if(imageSource != "")
+			{
+				Texture2D panelTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+				Sprite panelSprite = Sprite.Create(panelTexture, new Rect(0f, 0f, panelTexture.width, panelTexture.height), new Vector2(0f, 0f), 100f);
+			
+				panelImage.sprite = panelSprite;
+			}
+
+			panelImage.color = panelColor;
+		}
 		
 		public static Button ReturnCreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
 		{

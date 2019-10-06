@@ -617,17 +617,8 @@ namespace Jhrino.MFPLevelEditor
 			scaleButton.transform.parent = this.EditorButtonsRoot.transform;
 			rotationButton.transform.parent = this.EditorButtonsRoot.transform;
 
-			GameObject PanelOBJ = new GameObject();
-			PanelOBJ.transform.parent = gameObject.transform;
-			PanelOBJ.name = "EntitiesListContainer";
-			Image Panel = PanelOBJ.AddComponent<Image>();
-			Panel.color = new Color(Panel.color.r, Panel.color.b, Panel.color.b, 0.3921569f);
-			RectTransform component = PanelOBJ.GetComponent<RectTransform>();
-			component.anchorMin = new Vector2(0.5f, 0.5f);
-			component.anchorMax = new Vector2(0.5f, 0.5f);
-			component.pivot = new Vector2(0.5f, 0.5f);
-			component.sizeDelta = new Vector2(628.2f, 440.51f);
-			component.anchoredPosition = new Vector2(0f, 0f);
+			GameObject PanelOBJ = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(628.2f, 440.51f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,255,255, 100), gameObject, "EntityPanel", "");
+
 
 			Button gascanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 158f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "GasCanisterButton", "");
 
@@ -640,19 +631,7 @@ namespace Jhrino.MFPLevelEditor
 
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gascanButton.gameObject, "Gas Canister", "GasCanisterButtonText", 64);
 
-
-			GameObject fryingPanButton = new GameObject();
-			fryingPanButton.name = "FryingPanButton";
-			fryingPanButton.transform.parent = PanelOBJ.transform;
-			RectTransform rectTransformbutt = fryingPanButton.AddComponent<RectTransform>();
-			rectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
-			rectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
-			rectTransformbutt.anchoredPosition = new Vector2(0f, 115f);
-			Button fpanButton = fryingPanButton.AddComponent<Button>();
-			Image fryingpanButtonGraphics = fpanButton.gameObject.AddComponent<Image>();
-			fpanButton.targetGraphic = fryingpanButtonGraphics;
+			Button fpanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 115f), new Vector2(254.86f, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "FryingPanButton");
 
 			fpanButton.onClick.AddListener(delegate()
 			{
@@ -671,17 +650,8 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateBoardButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
 
 			this.EntitySpawnRoot = PanelOBJ;
-			GameObject PanelOBJ2 = new GameObject();
-			PanelOBJ2.transform.parent = gameObject.transform;
-			PanelOBJ2.name = "WorldSettingsContainer";
-			Image Panel2 = PanelOBJ2.AddComponent<Image>();
-			Panel2.color = new Color(Panel2.color.r, Panel2.color.b, Panel2.color.b, 0.7f);
-			RectTransform component2 = PanelOBJ2.GetComponent<RectTransform>();
-			component2.anchorMin = new Vector2(0.5f, 0.5f);
-			component2.anchorMax = new Vector2(0.5f, 0.5f);
-			component2.pivot = new Vector2(0.5f, 0.5f);
-			component2.sizeDelta = new Vector2(576.2f, 447.6f);
-			component2.anchoredPosition = new Vector2(0f, 0f);
+
+			GameObject PanelOBJ2 = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(576.2f, 447.6f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color(255,255,255, 160), gameObject, "WorldSettingsContainer", "");
 
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-216, 187), new Vector2(160, 30), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Post Processing:", "AllowPostProcessText", 64);
 
