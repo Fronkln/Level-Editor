@@ -1195,6 +1195,9 @@ public class LevelCompleteScreenScript : MonoBehaviour
 		{
 			this.gifSaveButtonPrompt.SetActive(false);
 		}
+
+		nextLevelUIButton.enabled = false;
+		levelCompleteText.GetComponent<Text>().text = "CUSTOM LEVEL COMPLETE";
 	}
 
 	// Token: 0x06000283 RID: 643

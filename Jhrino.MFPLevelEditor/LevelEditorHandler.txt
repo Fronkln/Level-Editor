@@ -12,11 +12,37 @@ using UnityEngine.UI;
 
 //TODO:Add frying pan sounds
 
+
+/*
+
+	NOTLAR
+
+	PROPERTIES SEÇENEK 1: -345, 301.5     FONT 48
+
+
+	HER BİR SEÇENEĞİN ALTINA YENİ BİRİSİNİ KOYMAK İÇİN 75 AZALT
+	BELKİ CHECKBOXLAR İÇİNDE RETURN ÖZELLİĞİ YAP?
+	BELKİ PROPERTİES DENEMEK İÇİN PEDRO'S WORLD KAYBOLAN PLATFORM EKLE?
+	BELKİ LAYER AYARLAMA EKLE?
+
+
+*/
+
 namespace Jhrino.MFPLevelEditor
 {
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
+
+
+		///
+		/// RELEASE YAPARKEN KAPA BUNU
+		//
+		//
+
+		public bool isDebug = false;
+		public Text coordinateDebugger;
+
 
 		public void PostPlayModeCleanup()
 		{
@@ -54,6 +80,17 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000615 RID: 1557
 		private void Update()
 		{
+			//
+			//
+			//
+			if(isDebug)
+			{
+				string mouseCoords = Input.mousePosition.ToString().Replace(".0", "");
+				coordinateDebugger.text = mouseCoords.Split(',')[0] +  ", " + mouseCoords.Split(',')[1] + ")";
+			}
+			//
+
+
 			if (Input.GetKeyDown(KeyCode.P))
 			{
 				this.PlayMode();
@@ -90,7 +127,12 @@ namespace Jhrino.MFPLevelEditor
 				{
 					if(CopiedObject != null)
 					{
+						ExitEditMode();
 						GameObject copiedObject = Instantiate(CopiedObject);
+						foreach(LevelEditorAxis extraAxis in copiedObject.GetComponentsInChildren<LevelEditorAxis>())
+						{
+							Destroy(extraAxis.gameObject);
+						}
 						if(copiedObject.name.Contains("FryingPan"))
 							FryingPans.Add(copiedObject);
 						if(copiedObject.name.Contains("GasCanister"))
@@ -483,7 +525,6 @@ namespace Jhrino.MFPLevelEditor
 				this.PrototypeLoad();
 				LevelEditorHandler.PlayerisDeadAndForceAutoLoad = false;
 			}
-			File.WriteAllLines("F:\\steamapps2\\steamapps\\common\\My Friend Pedro\\jhrino_log.txt", list.ToArray());
 		}
 
 		// Token: 0x06000618 RID: 1560
@@ -518,6 +559,9 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000619 RID: 1561
 		public void SpawnEditorHud()
 		{
+
+
+
 			GameObject gameObject = new GameObject();
 			gameObject.layer = 5;
 			gameObject.name = "Canvus";
@@ -537,6 +581,15 @@ namespace Jhrino.MFPLevelEditor
 			canvasScaler.referencePixelsPerUnit = 100f;
 			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
 
+
+			//
+			//DEBUG
+
+			if(isDebug)
+				coordinateDebugger = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(0,200), new Vector2(160, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color(100,0,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "coordinate", "CoordinateDEbugger", 32);
+
+			//
+
 			this.DebugObject = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(-45.6f, 83f),new Vector2(472.9f, 100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(255,255,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "COCK N BALL", "testing", 68);
 
 
@@ -555,6 +608,8 @@ namespace Jhrino.MFPLevelEditor
 
 
 			//image.raycastTarget = true;
+			
+			
 			InputField inputField = gameObject2.AddComponent<InputField>();
 			this.CoordinateField = inputField;
 			inputField.interactable = true;
@@ -566,6 +621,11 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretWidth = 1;
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
+			
+
+			//InputField inputField = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.topLeft, new Vector2(0,0), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "CoordinateField", "", this.DebugObject);
+
+			//CoordinateField = inputField;
 
 			Button exitedit = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomMiddle, new Vector2(-20, 60), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), inputField.gameObject, "ExitEditModeButton", "");
 
@@ -581,6 +641,13 @@ namespace Jhrino.MFPLevelEditor
 			inputField.gameObject.SetActive(false);
 
 			Button positionButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -122f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PositionButton", "EditorAssets/icons/ico_position.png");
+
+			Button propertiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-100.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PropertiesButton", "");
+
+			propertiesButton.onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("properties", false);
+			});
 
 			positionButton.onClick.AddListener(delegate()
 			{
@@ -619,6 +686,17 @@ namespace Jhrino.MFPLevelEditor
 
 			GameObject PanelOBJ = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(628.2f, 440.51f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,255,255, 100), gameObject, "EntityPanel", "");
 
+
+			// PROPERTIES
+			//
+			 PropertiesPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "PropertiesPanel", "");
+
+			Text testText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Test Option 1:", "TestPrroperties", 48);
+
+			PropertiesPanel.SetActive(false);
+
+			// PROPERTİES BİTİŞ
+			//
 
 			Button gascanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 158f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "GasCanisterButton", "");
 
@@ -778,7 +856,6 @@ namespace Jhrino.MFPLevelEditor
 			entitiesButton.transform.parent = this.EditorButtonsRoot.transform;
 
 			EntitySpawnRoot.SetActive(false);
-
 
 			MFPEditorLogger.Log("Hud load complete");
 		}
@@ -2008,6 +2085,7 @@ public void PrototypeLoad()
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
+				PropertiesPanel.SetActive(false);
 				this.adjustingSettings = false;
 				return;
 			}
@@ -2017,11 +2095,19 @@ public void PrototypeLoad()
 				{
 					this.WorldSettingsRoot.SetActive(true);
 					this.EntitySpawnRoot.SetActive(false);
+					PropertiesPanel.SetActive(false);
 				}
 				if(menuType == "entities")
 				{
 					this.WorldSettingsRoot.SetActive(false);
 					this.EntitySpawnRoot.SetActive(true);
+					PropertiesPanel.SetActive(false);
+				}
+				if(menuType == "properties")
+				{
+					WorldSettingsRoot.SetActive(false);
+					EntitySpawnRoot.SetActive(false);
+					PropertiesPanel.SetActive(true);
 				}
 
 				this.adjustingSettings = true;
@@ -2031,6 +2117,8 @@ public void PrototypeLoad()
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
+				this.PropertiesPanel.SetActive(false);
+
 				this.adjustingSettings = false;
 			}
 		}
@@ -2182,7 +2270,11 @@ public void PrototypeLoad()
 		public PhysicMaterial Slippery = new PhysicMaterial();
 		public PhysicMaterial SkateboardTop = new PhysicMaterial();
 
-//-------------------------------------------------------------------------------------------
+//------------------------------- IMPORTANT PANELS ------------------------------------
+			public GameObject PropertiesPanel;
+//---------------------------------------------------------------------------------------
+
+
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
 		{

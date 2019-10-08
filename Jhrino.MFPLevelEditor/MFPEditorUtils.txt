@@ -73,11 +73,58 @@ namespace Jhrino.MFPLevelEditor
 		}
 
 
+		public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Panel", string imageSource = "", Text textComponent = null, bool hasBackground = false)
+		{
+
+			//INCOMPLETE HALLET BUNU SONRA
+
+			GameObject newInputField = new GameObject();
+			newInputField.name = name;
+			newInputField.layer = 5;
+			newInputField.transform.SetParent(parent.transform);
+
+			RectTransform inputRect = newInputField.AddComponent<RectTransform>();
+
+			InputField inputField = newInputField.AddComponent<InputField>();
+
+			inputRect.pivot = pivot;
+
+			inputRect.anchorMin = ReturnAnchor(uianch);
+			inputRect.anchorMax = ReturnAnchor(uianch);
+
+			inputRect.sizeDelta = sizeDelta;
+
+			inputRect.anchoredPosition = anchoredPosition;
+
+			inputField.interactable = true;
+			inputField.transition = Selectable.Transition.ColorTint;
+			inputField.contentType = InputField.ContentType.Standard;
+			inputField.lineType = InputField.LineType.SingleLine;
+			inputField.caretBlinkRate = 0.85f;
+			inputField.caretWidth = 1;
+			inputField.readOnly = false;
+
+			inputField.gameObject.AddComponent<Image>();
+
+			if(textComponent == null)
+			{
+				CreateNewText(uianch, TextAnchor.MiddleCenter, new Vector2(0,0), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(255,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, newInputField, "", "InputfieldText", 16);
+				
+			}
+
+			if(hasBackground)
+				newInputField.AddComponent<Image>();
+
+			return inputField;
+
+
+		}
+
 		public static GameObject ReturnCreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
 		{
 			GameObject newPanel = new GameObject();
 
-			newPanel.transform.parent = parent.transform;
+			newPanel.transform.SetParent(parent.transform, false);
 			newPanel.name = name;
 			newPanel.layer = 5;
 
@@ -112,7 +159,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 			GameObject newPanel = new GameObject();
 
-			newPanel.transform.parent = parent.transform;
+			newPanel.transform.SetParent(parent.transform, false);
 			newPanel.name = name;
 			newPanel.layer = 5;
 
@@ -144,7 +191,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 			
 			GameObject createdButtonObject = new GameObject();
-			createdButtonObject.transform.parent = parent.transform;
+			createdButtonObject.transform.SetParent(parent.transform, false);
 			createdButtonObject.name = name;
 			createdButtonObject.layer = 5;
 
@@ -180,7 +227,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 			
 			GameObject createdButtonObject = new GameObject();
-			createdButtonObject.transform.parent = parent.transform;
+			createdButtonObject.transform.SetParent(parent.transform, false);
 			createdButtonObject.name = name;
 			createdButtonObject.layer = 5;
 
@@ -215,7 +262,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 
 			GameObject createdTextObject = new GameObject();
-			createdTextObject.transform.parent = parent.transform;
+			createdTextObject.transform.SetParent(parent.transform);
 			createdTextObject.name = name;
 			createdTextObject.layer = 5;
 
@@ -254,7 +301,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 
 			GameObject createdTextObject = new GameObject();
-			createdTextObject.transform.parent = parent.transform;
+			createdTextObject.transform.SetParent(parent.transform,false);
 			createdTextObject.name = name;
 			createdTextObject.layer = 5;
 
