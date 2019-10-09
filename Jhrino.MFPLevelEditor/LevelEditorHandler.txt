@@ -34,6 +34,106 @@ namespace Jhrino.MFPLevelEditor
 	public class LevelEditorHandler : MonoBehaviour
 	{
 
+		public void OnToggleChanged(Toggle toggle, string property, GameObject target)
+		{
+			switch(property)
+			{
+				default:
+					return;
+				case "disappears":
+					if(toggle.isOn)
+					{
+						if(!target.GetComponent<DisappearPlatformScript>());
+						{
+							target.AddComponent<AudioSource>();
+							target.AddComponent<DisappearPlatformScript>().enabled = false;
+
+						}
+					}
+					else
+						if(target.GetComponent<DisappearPlatformScript>())
+						{
+
+							Destroy(target.GetComponent<AudioSource>());
+							Destroy(target.GetComponent<DisappearPlatformScript>());
+						}
+				break;
+
+				case "shoot_through":
+					if(toggle.isOn)
+						{
+							target.layer = 8;
+							MFPEditorLogger.Log("Solid");
+						}
+					else
+						{
+							target.layer = 15;
+							MFPEditorLogger.Log("Shoot-through");
+						}
+				
+				break;
+
+			}
+			
+		}
+
+
+		public void PropertiesSetup(string objtype)
+		{
+
+			if(EditingObject == null)
+				return;
+
+			MFPEditorLogger.Log("we opened with type " + objtype);
+
+			if(currentPropertiesWindow == null)
+				Destroy(currentPropertiesWindow);
+
+			GameObject curPropertiesWindow = new GameObject();
+			curPropertiesWindow.transform.SetParent(PropertiesPanel.transform, false);
+			currentPropertiesWindow = curPropertiesWindow;
+
+			switch(objtype)
+			{
+				case "floor":
+					
+					Text disappearText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, curPropertiesWindow, "Disappears:", "TestPrroperties", 48);
+
+					Toggle disappearCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 301.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), curPropertiesWindow, "OptionTest", "", "");
+
+					if(EditingObject.GetComponent<DisappearPlatformScript>())
+						disappearCheck.isOn = true;
+					else
+						disappearCheck.isOn = false;
+					
+					disappearCheck.onValueChanged.AddListener(delegate
+					{
+						OnToggleChanged(disappearCheck, "disappears", EditingObject);
+					});
+
+
+
+					Text shootThroughText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 226.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, curPropertiesWindow, "Shoot Through:", "ShootThrough", 48);
+
+					Toggle sthroughCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 226.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), curPropertiesWindow, "OptionTest", "", "");
+
+					if(EditingObject.layer == 15)
+						sthroughCheck.isOn = true;
+					else
+						sthroughCheck.isOn = false;
+					
+					sthroughCheck.onValueChanged.AddListener(delegate
+					{
+						OnToggleChanged(sthroughCheck, "shoot_through", EditingObject);
+					});
+
+
+
+					MFPEditorLogger.Log("Properties initilizaiton complete");
+				break;
+			}
+		}
+
 
 		///
 		/// RELEASE YAPARKEN KAPA BUNU
@@ -123,6 +223,7 @@ namespace Jhrino.MFPLevelEditor
 					this.EditingMode();
 				}
 
+				/* şuanlık buglu
 				if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.V))
 				{
 					if(CopiedObject != null)
@@ -144,6 +245,7 @@ namespace Jhrino.MFPLevelEditor
 						EnterEditMode(copiedObject);
 					}
 				}
+				*/
 
 				RaycastHit raycastHit;
 				if (Input.GetMouseButtonDown(0) && !this.Editing && !SnapToBuild && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
@@ -185,7 +287,7 @@ namespace Jhrino.MFPLevelEditor
 				}
 
 
-				if(!PlayMod && SnapToBuild)
+				if(!PlayMod && SnapToBuild && !Editing)
 				{
 					RaycastHit hit;
 					Ray ray = EditorCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
@@ -203,7 +305,7 @@ namespace Jhrino.MFPLevelEditor
 
 						if(Input.GetMouseButtonDown(0))
 						{
-						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null)
+						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null && !Editing)
 						{
 
 							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
@@ -215,8 +317,19 @@ namespace Jhrino.MFPLevelEditor
 							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
 							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
 							 else
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);
+							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
 
+							 foreach(GameObject gobject in GeometryFloorLump)
+							{
+								if(gobject.transform.position == newFloor.transform.position)
+								{
+									Destroy(newFloor);
+									break;
+								}
+
+							}
+
+							 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
 							 GeometryFloorLump.Add(newFloor);
 							}
 							else
@@ -629,9 +742,10 @@ namespace Jhrino.MFPLevelEditor
 
 			Button exitedit = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomMiddle, new Vector2(-20, 60), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), inputField.gameObject, "ExitEditModeButton", "");
 
+
 			exitedit.onClick.AddListener(delegate()
 			{
-				this.ExitEditMode();
+				ExitEditMode();
 			});
 
 
@@ -690,8 +804,6 @@ namespace Jhrino.MFPLevelEditor
 			// PROPERTIES
 			//
 			 PropertiesPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "PropertiesPanel", "");
-
-			Text testText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Test Option 1:", "TestPrroperties", 48);
 
 			PropertiesPanel.SetActive(false);
 
@@ -815,6 +927,8 @@ namespace Jhrino.MFPLevelEditor
 			Toggle colgradetoggle = ColorGradingCheckmark.AddComponent<Toggle>();
 			allowColorGradingToggle = colgradetoggle;
 			colgradetoggle.isOn = true;
+
+
 
 
 			GameObject colgradingcheckmarkbg = new GameObject();
@@ -1140,6 +1254,10 @@ namespace Jhrino.MFPLevelEditor
 					this.root.nrOfEnemiesTotal++;
 				}
 
+				foreach(DisappearPlatformScript platformScript in GameObject.FindObjectsOfType<DisappearPlatformScript>())
+				{
+					platformScript.enabled = true;
+				}
 
 				foreach(GameObject Canister in GasCanisters)
 				{
@@ -2076,7 +2194,7 @@ public void PrototypeLoad()
 
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
-			if(this.Editing)
+			if(this.Editing && menuType != "properties")
 				ExitEditMode();
 			if(SnapToBuild)
 				ToggleSnapping(false);
@@ -2105,9 +2223,18 @@ public void PrototypeLoad()
 				}
 				if(menuType == "properties")
 				{
+					MFPEditorLogger.Log("fired menu change");
+					if(WorldSettingsRoot != null)
 					WorldSettingsRoot.SetActive(false);
+					if(EntitySpawnRoot != null)
 					EntitySpawnRoot.SetActive(false);
+					if(PropertiesPanel != null)
 					PropertiesPanel.SetActive(true);
+
+					if(EditingObject.name.Contains("Floor") || EditingObject.name.Contains("Wall"))
+					PropertiesSetup("floor");
+
+				
 				}
 
 				this.adjustingSettings = true;
@@ -2272,6 +2399,8 @@ public void PrototypeLoad()
 
 //------------------------------- IMPORTANT PANELS ------------------------------------
 			public GameObject PropertiesPanel;
+
+			public GameObject currentPropertiesWindow;
 //---------------------------------------------------------------------------------------
 
 
@@ -2284,4 +2413,4 @@ public void PrototypeLoad()
 			Enabled
 		}
 	}
-}
+}	

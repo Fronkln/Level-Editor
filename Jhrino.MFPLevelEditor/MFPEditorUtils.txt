@@ -42,7 +42,17 @@ namespace Jhrino.MFPLevelEditor
 			bottomRight
 		}
 
+		public static void SetRect(RectTransform rect, UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot)
+		{
+			rect.pivot = pivot;
 
+			rect.anchorMin = ReturnAnchor(uianch);
+			rect.anchorMax = ReturnAnchor(uianch);
+
+			rect.sizeDelta = sizeDelta;
+
+			rect.anchoredPosition = anchoredPosition;
+		}
 
 		public static Vector2 ReturnAnchor(UIAnchor uIAnchor)
 		{
@@ -72,11 +82,59 @@ namespace Jhrino.MFPLevelEditor
 			}
 		}
 
-
-		public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Panel", string imageSource = "", Text textComponent = null, bool hasBackground = false)
+		public static Toggle ReturnCreateNewToggle(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Toggle", string imageSource = "", string toggleTexture = "")
 		{
+			GameObject newToggle = new GameObject();
 
-			//INCOMPLETE HALLET BUNU SONRA
+			newToggle.name = name;
+			newToggle.layer = 5;
+			newToggle.transform.SetParent(parent.transform, false);
+
+			RectTransform toggleRect = newToggle.AddComponent<RectTransform>();
+			SetRect(toggleRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+			Toggle createdToggle = newToggle.AddComponent<Toggle>();
+
+
+			////////////////////////////////////
+
+			GameObject toggleBg = new GameObject();
+			toggleBg.name = "Background";
+			toggleBg.layer = 5;
+			toggleBg.transform.SetParent(newToggle.transform, false);
+
+			RectTransform bgRect = toggleBg.AddComponent<RectTransform>();
+
+	 		SetRect(bgRect, uianch, new Vector2(0,0), sizeDelta, new Vector2(0.5f, 0.5f));
+			Image bgGraphics = toggleBg.AddComponent<Image>();
+
+
+			GameObject checkmark = new GameObject();
+
+			checkmark.name = "Checkmark";
+			checkmark.layer = 5;
+			checkmark.transform.SetParent(toggleBg.transform, false);
+
+			RectTransform checkmarkRect = checkmark.AddComponent<RectTransform>();
+			SetRect(checkmarkRect, uianch,new Vector2(0,0), sizeDelta, new Vector2(0.5f, 0.5f));
+
+			Image checkmarkimg = checkmark.AddComponent<Image>();
+
+			Texture2D ico_check = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/checkmark.png"));
+			Sprite spr_check = Sprite.Create(ico_check, new Rect(0f, 0f, (float)ico_check.width, (float)ico_check.height), new Vector2(0f, 0f), 100f);
+
+			checkmarkimg.sprite = spr_check;
+			createdToggle.targetGraphic = bgGraphics;
+			createdToggle.graphic = checkmarkimg;
+
+
+			return createdToggle;
+
+
+		}
+
+		public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New InputField", string imageSource = "", Text textComponent = null, bool hasBackground = false)
+		{
 
 			GameObject newInputField = new GameObject();
 			newInputField.name = name;
@@ -85,8 +143,11 @@ namespace Jhrino.MFPLevelEditor
 
 			RectTransform inputRect = newInputField.AddComponent<RectTransform>();
 
+			SetRect(inputRect, uianch, anchoredPosition, sizeDelta, pivot);
+
 			InputField inputField = newInputField.AddComponent<InputField>();
 
+			/*
 			inputRect.pivot = pivot;
 
 			inputRect.anchorMin = ReturnAnchor(uianch);
@@ -95,6 +156,7 @@ namespace Jhrino.MFPLevelEditor
 			inputRect.sizeDelta = sizeDelta;
 
 			inputRect.anchoredPosition = anchoredPosition;
+			*/
 
 			inputField.interactable = true;
 			inputField.transition = Selectable.Transition.ColorTint;
@@ -130,6 +192,9 @@ namespace Jhrino.MFPLevelEditor
 
 			RectTransform panelRect = newPanel.AddComponent<RectTransform>();
 
+			SetRect(panelRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+			/*
 			panelRect.pivot = pivot;
 
 			panelRect.anchorMin = ReturnAnchor(uianch);
@@ -138,6 +203,7 @@ namespace Jhrino.MFPLevelEditor
 			panelRect.sizeDelta = sizeDelta;
 
 			panelRect.anchoredPosition = anchoredPosition;
+			*/
 
 			Image panelImage = newPanel.AddComponent<Image>();
 
@@ -165,6 +231,10 @@ namespace Jhrino.MFPLevelEditor
 
 			RectTransform panelRect = newPanel.AddComponent<RectTransform>();
 
+
+			SetRect(panelRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+			/*
 			panelRect.pivot = pivot;
 
 			panelRect.anchorMin = ReturnAnchor(uianch);
@@ -173,7 +243,7 @@ namespace Jhrino.MFPLevelEditor
 			panelRect.sizeDelta = sizeDelta;
 
 			panelRect.anchoredPosition = anchoredPosition;
-
+			*/
 			Image panelImage = newPanel.AddComponent<Image>();
 
 			if(imageSource != "")
@@ -197,6 +267,10 @@ namespace Jhrino.MFPLevelEditor
 
 			RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
 
+			SetRect(buttonRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+			/*
+
 			buttonRect.pivot = pivot;
 
 			buttonRect.anchorMin = ReturnAnchor(uianch);
@@ -205,6 +279,7 @@ namespace Jhrino.MFPLevelEditor
 			buttonRect.sizeDelta = sizeDelta;
 
 			buttonRect.anchoredPosition = anchoredPosition;
+			*/
 
 			Image buttonImage = createdButtonObject.AddComponent<Image>();
 
@@ -233,6 +308,10 @@ namespace Jhrino.MFPLevelEditor
 
 			RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
 
+			
+			SetRect(buttonRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+			/*
 			buttonRect.pivot = pivot;
 
 			buttonRect.anchorMin = ReturnAnchor(uianch);
@@ -241,8 +320,10 @@ namespace Jhrino.MFPLevelEditor
 			buttonRect.sizeDelta = sizeDelta;
 
 			buttonRect.anchoredPosition = anchoredPosition;
+			*/
 
 			Image buttonImage = createdButtonObject.AddComponent<Image>();
+			
 
 			if(imageSource != "")
 			{
@@ -262,15 +343,19 @@ namespace Jhrino.MFPLevelEditor
 		{
 
 			GameObject createdTextObject = new GameObject();
-			createdTextObject.transform.SetParent(parent.transform);
+			createdTextObject.transform.SetParent(parent.transform, false);
 			createdTextObject.name = name;
 			createdTextObject.layer = 5;
 
 			RectTransform textRect = createdTextObject.AddComponent<RectTransform>();
 
+			/*
 			textRect.pivot = pivot;
 			textRect.anchorMin = ReturnAnchor(uianch);
 			textRect.anchorMax = ReturnAnchor(uianch);
+			*/
+
+			SetRect(textRect, uianch, anchoredPosition, sizeDelta, pivot);
 
 			Text newText = createdTextObject.AddComponent<Text>();
 
@@ -285,13 +370,13 @@ namespace Jhrino.MFPLevelEditor
 			newText.color = textColor;
 			newText.fontSize = fontSize;
 			
-			textRect.localScale = localSize;
+			//textRect.localScale = localSize;
 
 			newText.verticalOverflow = wrapV;
 			newText.horizontalOverflow = wrapH;
 
-			textRect.sizeDelta = sizeDelta;
-			textRect.anchoredPosition = anchoredPosition;
+			//textRect.sizeDelta = sizeDelta;
+			//textRect.anchoredPosition = anchoredPosition;
 			
 			return newText;
 
