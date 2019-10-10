@@ -1,0 +1,68 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+namespace Jhrino.MFPLevelEditor
+{
+public static class LightExtensions
+{
+    public static void LayerCullingShow(this Light light, int layerMask)
+    {
+        light.cullingMask |= layerMask;
+    }
+
+    public static void LayerCullingShow(this Light light, string layer)
+    {
+        LayerCullingShow(light, 1 << LayerMask.NameToLayer(layer));
+    }
+
+    public static void LayerCullingHide(this Light light, int layerMask)
+    {
+        light.cullingMask &= ~layerMask;
+    }
+
+    public static void LayerCullingHide(this Light light, string layer)
+    {
+        LayerCullingHide(light, 1 << LayerMask.NameToLayer(layer));
+    }
+
+    public static void LayerCullingToggle(this Light light, int layerMask)
+    {
+        light.cullingMask ^= layerMask;
+    }
+
+    public static void LayerCullingToggle(this Light light, string layer)
+    {
+        LayerCullingToggle(light, 1 << LayerMask.NameToLayer(layer));
+    }
+
+    public static bool LayerCullingIncludes(this Light light, int layerMask)
+    {
+        return (light.cullingMask & layerMask) > 0;
+    }
+
+    public static bool LayerCullingIncludes(this Light light, string layer)
+    {
+        return LayerCullingIncludes(light, 1 << LayerMask.NameToLayer(layer));
+    }
+
+    public static void LayerCullingToggle(this Light light, int layerMask, bool isOn)
+    {
+        bool included = LayerCullingIncludes(light, layerMask);
+        if (isOn && !included)
+        {
+            LayerCullingShow(light, layerMask);
+        }
+        else if (!isOn && included)
+        {
+            LayerCullingHide(light, layerMask);
+        }
+    }
+
+    public static void LayerCullingToggle(this Light light, string layer, bool isOn)
+    {
+        LayerCullingToggle(light, 1 << LayerMask.NameToLayer(layer), isOn);
+    }
+}
+	}

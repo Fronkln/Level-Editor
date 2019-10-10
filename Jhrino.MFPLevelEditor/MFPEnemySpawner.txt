@@ -1,0 +1,41 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	public class MFPEnemySpawner : MonoBehaviour
+	{
+		public GameObject enemyWeapon;
+
+		public LevelEditorHandler.MFPGamemode spawnType;
+
+		public void Start()
+		{
+			UpdateData();
+		}
+
+		public void UpdateData()
+		{
+			spawnType = LevelEditorHandler.Inst.Gamemode;
+		}
+
+
+		public void SpawnEnemy()
+		{
+			transform.GetComponent<MeshRenderer>().enabled = false;
+			transform.GetComponent<CapsuleCollider>().enabled = false;
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(LevelEditorHandler.Inst.EnemySample);
+			if(spawnType == LevelEditorHandler.MFPGamemode.SKYFALL)
+			{
+				gameObject.GetComponent<EnemyScript>().skyfall = true;
+				gameObject.transform.rotation = new Quaternion(-180, gameObject.transform.rotation.y, gameObject.transform.rotation.z, gameObject.transform.rotation.w);
+			}
+			LevelEditorHandler.Inst.Enemies.Add(gameObject);
+			gameObject.SetActive(true);
+			gameObject.transform.position = transform.position;
+			LevelEditorHandler.Inst.root.nrOfEnemiesTotal++;
+		}
+	}
+}

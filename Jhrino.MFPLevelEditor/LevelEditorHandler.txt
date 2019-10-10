@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -20,12 +20,6 @@ using UnityEngine.UI;
 	PROPERTIES SEÇENEK 1: -345, 301.5     FONT 48
 
 
-	HER BİR SEÇENEĞİN ALTINA YENİ BİRİSİNİ KOYMAK İÇİN 75 AZALT
-	BELKİ CHECKBOXLAR İÇİNDE RETURN ÖZELLİĞİ YAP?
-	BELKİ PROPERTİES DENEMEK İÇİN PEDRO'S WORLD KAYBOLAN PLATFORM EKLE?
-	BELKİ LAYER AYARLAMA EKLE?
-
-
 */
 
 namespace Jhrino.MFPLevelEditor
@@ -33,6 +27,33 @@ namespace Jhrino.MFPLevelEditor
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
+
+		//loadda artık bu methodu kullanarak halledeceksin
+
+		public void ConfigureGeometryProperties(GameObject target, int layer, bool disappears, string texturename)
+		{
+			MFPEditorLogger.Log(layer.ToString());
+			MFPEditorLogger.Log(disappears.ToString());
+			MFPEditorLogger.Log(texturename);
+
+			target.layer = layer;
+			if(disappears)
+			{
+				target.AddComponent<AudioSource>();
+				target.AddComponent<DisappearPlatformScript>();
+				target.GetComponent<DisappearPlatformScript>().enabled = false;
+			}
+
+			target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(texturename));
+
+
+			string normalmap = texturename;
+			normalmap = normalmap.Replace(".png", "");
+			normalmap = normalmap + "_normal.png";
+			target.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
+	
+			target.GetComponent<MeshRenderer>().material.mainTexture.name = texturename;
+		}
 
 		public void OnToggleChanged(Toggle toggle, string property, GameObject target)
 		{
@@ -62,13 +83,13 @@ namespace Jhrino.MFPLevelEditor
 				case "shoot_through":
 					if(toggle.isOn)
 						{
-							target.layer = 8;
-							MFPEditorLogger.Log("Solid");
+							target.layer = 15;
+							MFPEditorLogger.Log("Shoot-through");
 						}
 					else
 						{
-							target.layer = 15;
-							MFPEditorLogger.Log("Shoot-through");
+							target.layer = 8;
+							MFPEditorLogger.Log("Solid");
 						}
 				
 				break;
@@ -84,22 +105,22 @@ namespace Jhrino.MFPLevelEditor
 			if(EditingObject == null)
 				return;
 
+
+			foreach(GameObject element in propertyElements)
+			{
+				Destroy(element);
+			}
+
 			MFPEditorLogger.Log("we opened with type " + objtype);
 
-			if(currentPropertiesWindow == null)
-				Destroy(currentPropertiesWindow);
-
-			GameObject curPropertiesWindow = new GameObject();
-			curPropertiesWindow.transform.SetParent(PropertiesPanel.transform, false);
-			currentPropertiesWindow = curPropertiesWindow;
-
+	
 			switch(objtype)
 			{
 				case "floor":
 					
-					Text disappearText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, curPropertiesWindow, "Disappears:", "TestPrroperties", 48);
+					Text disappearText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Disappears:", "TestPrroperties", 48);
 
-					Toggle disappearCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 301.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), curPropertiesWindow, "OptionTest", "", "");
+					Toggle disappearCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 301.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "OptionTest", "", "");
 
 					if(EditingObject.GetComponent<DisappearPlatformScript>())
 						disappearCheck.isOn = true;
@@ -113,9 +134,9 @@ namespace Jhrino.MFPLevelEditor
 
 
 
-					Text shootThroughText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 226.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, curPropertiesWindow, "Shoot Through:", "ShootThrough", 48);
+					Text shootThroughText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 226.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Shoot Through:", "ShootThrough", 48);
 
-					Toggle sthroughCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 226.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), curPropertiesWindow, "OptionTest", "", "");
+					Toggle sthroughCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 226.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "OptionTest", "", "");
 
 					if(EditingObject.layer == 15)
 						sthroughCheck.isOn = true;
@@ -127,6 +148,11 @@ namespace Jhrino.MFPLevelEditor
 						OnToggleChanged(sthroughCheck, "shoot_through", EditingObject);
 					});
 
+
+					propertyElements.Add(disappearText.gameObject);
+					propertyElements.Add(disappearCheck.gameObject);
+					propertyElements.Add(shootThroughText.gameObject);
+					propertyElements.Add(sthroughCheck.gameObject);
 
 
 					MFPEditorLogger.Log("Properties initilizaiton complete");
@@ -172,6 +198,12 @@ namespace Jhrino.MFPLevelEditor
 			foreach(GameObject skateboard in LevelSkateboards)
 			{
 				Destroy(skateboard);
+			}
+
+			foreach(DisappearPlatformScript platformScript in GameObject.FindObjectsOfType<DisappearPlatformScript>())
+			{
+				platformScript.ResetPlatform();
+				platformScript.enabled = false;
 			}
 
 
@@ -403,7 +435,7 @@ namespace Jhrino.MFPLevelEditor
 			SceneLight.renderMode = LightRenderMode.ForcePixel;
 			SceneLight.shadows = LightShadows.None;
 			SceneLight.color = new Color32(255,244, 214, 255);
-			SceneLight.cullingMask = 1 << 8 | 1 << 14;
+			SceneLight.cullingMask = 1 << 8 | 1 << 14 | 1 << 15;
 
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
@@ -756,12 +788,14 @@ namespace Jhrino.MFPLevelEditor
 
 			Button positionButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -122f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PositionButton", "EditorAssets/icons/ico_position.png");
 
-			Button propertiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-100.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PropertiesButton", "");
+			 propertiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-100.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PropertiesButton", "");
 
 			propertiesButton.onClick.AddListener(delegate()
 			{
 				this.ToggleSettingsMenu("properties", false);
 			});
+
+			propertiesButton.gameObject.SetActive(false);
 
 			positionButton.onClick.AddListener(delegate()
 			{
@@ -1208,6 +1242,11 @@ namespace Jhrino.MFPLevelEditor
 				this.CoordinateField.text = totext255;
 			}
 			this.Editing = true;
+
+			propertiesButton.gameObject.SetActive(true);
+
+			if(PropertiesPanel.activeSelf)
+				PropertiesSetup(PropertiesWarmup(EditingObject.name));
 		}
 
 		// Token: 0x0600061E RID: 1566
@@ -1232,6 +1271,7 @@ namespace Jhrino.MFPLevelEditor
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.HUD.GetComponentInChildren<Canvas>().enabled = true;
 				this.Player.SetActive(true);
+				Player.GetComponent<PlayerScript>().skyfall = true;
 				this.Camera.SetActive(true);
 				this.CoordinateField.DeactivateInputField();
 				this.CoordinateField.gameObject.SetActive(false);
@@ -1345,7 +1385,7 @@ namespace Jhrino.MFPLevelEditor
 				this.root.dontAllowCheckpointSave = true;
 				return;
 			}
-			if (this.PlayMod)
+			if (this.PlayMod && !root.levelEnded)
 			{
 				this.EditorButtonsRoot.SetActive(true);
 				LevelEditorHandler.levelTimer = 0f;
@@ -1402,6 +1442,12 @@ namespace Jhrino.MFPLevelEditor
 			PreviousObject = EditingObject;
 			this.EditingObject = null;
 			this.Editing = false;
+
+			propertiesButton.gameObject.SetActive(false);
+			if(PropertiesPanel.activeSelf)
+				ToggleSettingsMenu("properties", false);
+
+
 		}
 
 		// Token: 0x06000620 RID: 1568
@@ -1565,7 +1611,18 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
-				SavedLevel.Add(lump.layer.ToString());
+
+				string properties = "";
+
+				properties += lump.layer;
+				if(lump.GetComponent<DisappearPlatformScript>())
+					properties += ",true";
+				else
+					properties += ",false";
+
+
+				SavedLevel.Add(properties);
+
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
@@ -1576,7 +1633,16 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
-				SavedLevel.Add(lump.layer.ToString());
+
+				string properties = "";
+
+				properties += lump.layer;
+				if(lump.GetComponent<DisappearPlatformScript>())
+					properties += ",true";
+				else
+					properties += ",false";			
+
+				SavedLevel.Add(properties);
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
@@ -1756,7 +1822,9 @@ public void PrototypeLoad()
                     float[] geowallrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
                     float[] geowallscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
                     float[] geowallcolor = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-                    int geowallproperty = int.Parse(levelFile[i + 5]);
+
+					string[] properties = levelFile[i + 5].Split(',');
+
                     string geowalltexturename = levelFile[i + 6];
 
 					MFPEditorLogger.Log("Data in memory for brush");
@@ -1768,18 +1836,11 @@ public void PrototypeLoad()
                     newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
 					MFPEditorLogger.Log("Brush coordinates are set");
                     newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
-					newWall.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geowalltexturename));
-					MFPEditorLogger.Log("Textures are loaded");
-					string normalmap = geowalltexturename;
-					normalmap = normalmap.Replace(".png", "");
-					normalmap = normalmap + "_normal.png";
-					newWall.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
-					MFPEditorLogger.Log("Normalmaps are loaded");
-					newWall.GetComponent<MeshRenderer>().material.mainTexture.name = geowalltexturename;
-					newWall.gameObject.layer = geowallproperty;
-					MFPEditorLogger.Log("Texture names and layer is set");
+					
+					ConfigureGeometryProperties(newWall, int.Parse(properties[0]), properties[1].Equals("true"), levelFile[i + 6]);
+
 					GeometryWallLump.Add(newWall);
-					MFPEditorLogger.Log("Brush load complete");
+
 					i+= 6;
 					break;
 				
@@ -1789,8 +1850,8 @@ public void PrototypeLoad()
                     float[] geofloorrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorcolor = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-                    int geofloorproperty = int.Parse(levelFile[i + 5]);
-                    string geofloortexturename = levelFile[i + 6];
+                  
+					string[] floorproperties = levelFile[ i + 5].Split(',');
 
 					MFPEditorLogger.Log("Data in memory for brush");
 
@@ -1800,13 +1861,8 @@ public void PrototypeLoad()
                     newFloor.transform.eulerAngles = new Vector3(geofloorrotation[0], geofloorrotation[1], geofloorrotation[2]);
                     newFloor.transform.localScale = new Vector3(geofloorscale[0], geofloorscale[1], geofloorscale[2]);
                     newFloor.GetComponent<MeshRenderer>().material.color = new Color(geofloorcolor[0], geofloorcolor[1], geofloorcolor[2]);
-					newFloor.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geofloortexturename));
-					newFloor.GetComponent<MeshRenderer>().material.mainTexture.name = geofloortexturename;
-					string normalmap_floor = geofloortexturename;
-					geofloortexturename = geofloortexturename.Replace(".png", "");
-					geofloortexturename = geofloortexturename + " _normal.png";
-					newFloor.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap_floor)));
-					newFloor.gameObject.layer = geofloorproperty;
+
+					ConfigureGeometryProperties(newFloor, int.Parse(floorproperties[0]), floorproperties[1].Equals("true"), levelFile[i + 6]);
 					GeometryFloorLump.Add(newFloor);
 					i+= 6;
 					
@@ -2192,6 +2248,14 @@ public void PrototypeLoad()
 		// Token: 0x06000703 RID: 1795
 
 
+		public string PropertiesWarmup(string objname)
+		{
+			if(EditingObject.name.Contains("Floor") || EditingObject.name.Contains("Wall"))
+				return "floor";
+			return "no";
+		}
+
+
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
 			if(this.Editing && menuType != "properties")
@@ -2231,8 +2295,7 @@ public void PrototypeLoad()
 					if(PropertiesPanel != null)
 					PropertiesPanel.SetActive(true);
 
-					if(EditingObject.name.Contains("Floor") || EditingObject.name.Contains("Wall"))
-					PropertiesSetup("floor");
+					PropertiesSetup(PropertiesWarmup(EditingObject.name));
 
 				
 				}
@@ -2363,7 +2426,7 @@ public void PrototypeLoad()
 		public Toggle allowColorGradingToggle;
 //--------------------------------------------------LEGACY---------------------------------//
 		public List<GameObject> BrushLump = new List<GameObject>();
-
+	
 //-----------------------------IMPROVED BUILDING DEPENDENCIES------------------------------//
 		public GameObject SnapTarget;
 			
@@ -2399,8 +2462,10 @@ public void PrototypeLoad()
 
 //------------------------------- IMPORTANT PANELS ------------------------------------
 			public GameObject PropertiesPanel;
+			
+			public List<GameObject> propertyElements = new List<GameObject>();
 
-			public GameObject currentPropertiesWindow;
+			public Button propertiesButton;
 //---------------------------------------------------------------------------------------
 
 

@@ -7,6 +7,9 @@ using Jhrino.MFPLevelEditor;
 [Serializable]
 public class DisappearPlatformScript : MonoBehaviour
 {
+
+	public bool setup = false;
+
 	// Token: 0x0600012F RID: 303 RVA: 0x00002983 File Offset: 0x00000B83
 	public DisappearPlatformScript()
 	{
@@ -48,6 +51,17 @@ public class DisappearPlatformScript : MonoBehaviour
 		}
 	}
 
+	public void ResetPlatform()
+	{
+		theRenderer.enabled = true;
+		theCollider.enabled = true;
+
+		doHide = false;
+		transform.position = startPos;
+		transform.rotation = startRot;
+		transform.localScale = startScale;
+	}
+
 	// Token: 0x06000133 RID: 307 RVA: 0x00018010 File Offset: 0x00016210
 	public virtual void Start()
 	{
@@ -58,9 +72,13 @@ public class DisappearPlatformScript : MonoBehaviour
 		MFPEditorLogger.Log("Disappear platform blabla");
 		this.theSound = (AudioSource)this.GetComponent(typeof(AudioSource));
 		MFPEditorLogger.Log("Disappear platform I");
-		this.startPos = this.transform.position;
-		this.startScale = this.transform.localScale;
-		this.startRot = this.transform.rotation;
+		if(!setup)
+		{
+			this.startPos = this.transform.position;
+			this.startScale = this.transform.localScale;
+			this.startRot = this.transform.rotation;
+			setup = true;
+		}
 		MFPEditorLogger.Log("Disappear platform II");
 		this.theCollider = (MeshCollider)this.GetComponent(typeof(MeshCollider));
 		MFPEditorLogger.Log("Disappear platform III");
