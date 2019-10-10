@@ -28,6 +28,14 @@ namespace Jhrino.MFPLevelEditor
 	public class LevelEditorHandler : MonoBehaviour
 	{
 
+		public enum MFPGamemode
+		{
+			NORMAL,
+			SKYFALL,
+			MOTORCYCLE
+		}
+
+
 		//loadda artık bu methodu kullanarak halledeceksin
 
 		public void ConfigureGeometryProperties(GameObject target, int layer, bool disappears, string texturename)
@@ -314,6 +322,7 @@ namespace Jhrino.MFPLevelEditor
 					gameObject2.transform.localScale = new Vector3(gameObject2.transform.localScale.x, 4f, gameObject2.transform.localScale.x);
 					gameObject2.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, -0.1f);
 					gameObject2.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+					gameObject2.AddComponent<MFPEnemySpawner>();
 					this.EnemySpawnpoints.Add(gameObject2.transform);
 					this.EnterEditMode(gameObject2);
 				}
@@ -399,6 +408,9 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000617 RID: 1559
 		private void Start()
 		{
+			if(Inst == null)
+				Inst = this;
+
 			this.LoadEditorAssets();
 			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
 			{
@@ -1271,7 +1283,8 @@ namespace Jhrino.MFPLevelEditor
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.HUD.GetComponentInChildren<Canvas>().enabled = true;
 				this.Player.SetActive(true);
-				Player.GetComponent<PlayerScript>().skyfall = true;
+				
+
 				this.Camera.SetActive(true);
 				this.CoordinateField.DeactivateInputField();
 				this.CoordinateField.gameObject.SetActive(false);
@@ -1282,16 +1295,6 @@ namespace Jhrino.MFPLevelEditor
 				for (int j = 0; j < array.Length; j++)
 				{
 					array[j].enabled = false;
-				}
-				foreach (Transform transform in this.EnemySpawnpoints)
-				{
-					transform.GetComponent<MeshRenderer>().enabled = false;
-					transform.GetComponent<CapsuleCollider>().enabled = false;
-					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
-					this.Enemies.Add(gameObject);
-					gameObject.SetActive(true);
-					gameObject.transform.position = transform.position;
-					this.root.nrOfEnemiesTotal++;
 				}
 
 				foreach(DisappearPlatformScript platformScript in GameObject.FindObjectsOfType<DisappearPlatformScript>())
@@ -1376,6 +1379,8 @@ namespace Jhrino.MFPLevelEditor
 					board.SetActive(false);
 				}
 
+
+				SetupGameMode(Gamemode);
 
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
@@ -1587,6 +1592,7 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("allowColorGrading = " + this.allowColorGrading.ToString());
 			SavedLevel.Add("theme = " + this.theme);
 			SavedLevel.Add("SkyColor = " + BackgroundCamera.GetComponent<Camera>().backgroundColor.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
+			SavedLevel.Add("gamemode = " + Gamemode.ToString());
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
@@ -1811,7 +1817,23 @@ public void PrototypeLoad()
 
 				    SkyColor = BackgroundCamera.GetComponent<Camera>().backgroundColor;
 
-					i += 5;
+					switch(levelFile[i + 6].Replace("gamemode = ", ""))
+					{
+						default:
+								MFPEditorLogger.Log("Invalid gamemode " + levelFile[i+6].Replace("gamemode = ", ""));
+								Gamemode = MFPGamemode.NORMAL;
+								break;
+						case "NORMAL":
+								Gamemode = MFPGamemode.NORMAL;
+								break;
+						case "SKYFALL":
+								Gamemode = MFPGamemode.SKYFALL;
+								break;
+
+					}
+
+
+					i += 6;
 					break;
 
 				case "!GeometryWall":
@@ -1909,6 +1931,7 @@ public void PrototypeLoad()
                     gameObject3.transform.localScale = new Vector3(gameObject3.transform.localScale.x, 4f, gameObject3.transform.localScale.x);
                     gameObject3.transform.position = new Vector3(enemyposition[0], enemyposition[1], enemyposition[2]);
                     gameObject3.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+					gameObject3.AddComponent<MFPEnemySpawner>();
                     this.EnemySpawnpoints.Add(gameObject3.transform);
 
                     i++;
@@ -1967,6 +1990,42 @@ public void PrototypeLoad()
 			MFPEditorLogger.Log("------------------------------------------");
 		}
 
+
+
+		public void SetupGameMode(MFPGamemode GMODE)
+		{
+			switch(GMODE)
+			{
+				case MFPGamemode.NORMAL:
+					Player.GetComponent<PlayerScript>().skyfall = false;
+						foreach (Transform transform in this.EnemySpawnpoints)
+						{
+							transform.GetComponent<MeshRenderer>().enabled = false;
+							transform.GetComponent<CapsuleCollider>().enabled = false;
+							GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
+							this.Enemies.Add(gameObject);
+							gameObject.SetActive(true);
+							gameObject.transform.position = transform.position;
+							this.root.nrOfEnemiesTotal++;
+						}
+					break;
+				case MFPGamemode.SKYFALL:
+					Player.GetComponent<PlayerScript>().skyfall = true;
+					foreach (Transform transform in this.EnemySpawnpoints)
+					{
+						transform.GetComponent<MeshRenderer>().enabled = false;
+						transform.GetComponent<CapsuleCollider>().enabled = false;
+						GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);	
+						gameObject.transform.rotation = new Quaternion(-180, gameObject.transform.rotation.y, gameObject.transform.rotation.z, transform.rotation.w);
+						gameObject.GetComponent<EnemyScript>().skyfall = true;
+						this.Enemies.Add(gameObject);
+						gameObject.SetActive(true);
+						gameObject.transform.position = transform.position;
+						this.root.nrOfEnemiesTotal++;
+					}
+					break;
+			}
+		}
 
 		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
 			{
@@ -2424,6 +2483,13 @@ public void PrototypeLoad()
 
 		public Toggle allowPostProcessToggle;
 		public Toggle allowColorGradingToggle;
+
+
+
+//---------------------------------------GAMEPLAY-----------------------------------------//
+
+		public MFPGamemode Gamemode = MFPGamemode.NORMAL;
+
 //--------------------------------------------------LEGACY---------------------------------//
 		public List<GameObject> BrushLump = new List<GameObject>();
 	

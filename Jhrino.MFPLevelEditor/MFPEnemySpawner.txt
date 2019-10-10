@@ -7,7 +7,7 @@ namespace Jhrino.MFPLevelEditor
 {
 	public class MFPEnemySpawner : MonoBehaviour
 	{
-		public GameObject enemyWeapon;
+		public int enemyWeapon = 1;
 
 		public LevelEditorHandler.MFPGamemode spawnType;
 
@@ -27,9 +27,14 @@ namespace Jhrino.MFPLevelEditor
 			transform.GetComponent<MeshRenderer>().enabled = false;
 			transform.GetComponent<CapsuleCollider>().enabled = false;
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(LevelEditorHandler.Inst.EnemySample);
+			EnemyScript enemyScript = gameObject.GetComponent<EnemyScript>();
+
+			enemyScript.weapon = enemyWeapon;
+			enemyScript.themeOverride = LevelEditorHandler.Inst.theme;
+
 			if(spawnType == LevelEditorHandler.MFPGamemode.SKYFALL)
 			{
-				gameObject.GetComponent<EnemyScript>().skyfall = true;
+				enemyScript.skyfall = true;
 				gameObject.transform.rotation = new Quaternion(-180, gameObject.transform.rotation.y, gameObject.transform.rotation.z, gameObject.transform.rotation.w);
 			}
 			LevelEditorHandler.Inst.Enemies.Add(gameObject);
