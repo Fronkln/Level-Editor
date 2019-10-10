@@ -63,6 +63,27 @@ namespace Jhrino.MFPLevelEditor
 			target.GetComponent<MeshRenderer>().material.mainTexture.name = texturename;
 		}
 
+
+		public void OnInputValueChanged(string inputText, string property)
+		{
+
+		}
+		public void OnInputValueChanged(InputField field, string inputText, string property, int minVal, int maxVal)
+		{
+			field.text = MFPEditorUtils.NormalizeInputFieldIntValue(inputText, minVal, maxVal);
+
+			switch(property)
+			{
+				default:
+					MFPEditorLogger.Log("No case exists for property " + property);
+					break;
+				case "weaponID":
+					EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(field.text);
+					break;
+				
+			}
+		}
+
 		public void OnToggleChanged(Toggle toggle, string property, GameObject target)
 		{
 			switch(property)
@@ -165,6 +186,23 @@ namespace Jhrino.MFPLevelEditor
 
 					MFPEditorLogger.Log("Properties initilizaiton complete");
 				break;
+				
+				case "EnemySpawner":
+					Text WeaponIDDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Weapon ID:", "WeaponIDDesc", 48);
+
+					Text WeaponIDText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon.ToString(), "WeaponID", 48);
+
+					InputField testInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "TestField", "", WeaponIDText, true, InputField.CharacterValidation.Integer);
+
+					testInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(testInput, testInput.text, "weaponID", 1, 9);
+					});
+
+					propertyElements.Add(WeaponIDDesc.gameObject);
+					propertyElements.Add(WeaponIDText.gameObject);
+				break;
+				
 			}
 		}
 
@@ -316,6 +354,7 @@ namespace Jhrino.MFPLevelEditor
 				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
 				{
 					GameObject gameObject2 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+					gameObject2.name = "EnemySpawner";
 					UnityEngine.Object.Destroy(gameObject2.GetComponent<SphereCollider>());
 					gameObject2.AddComponent<CapsuleCollider>();
 					gameObject2.layer = 8;
@@ -1808,7 +1847,7 @@ public void PrototypeLoad()
 					
 
 					theme = int.Parse(levelFile[i + 4].Replace("theme = ", ""));
-					root.theme = theme;
+					MFPEditorLogger.Log("Level Theme: " + theme);
 
 					float[] Skycolor = Array.ConvertAll(levelFile[i + 5].Replace("SkyColor = ", "").Split(new char[] { ' ' }), float.Parse);
 
@@ -1925,6 +1964,7 @@ public void PrototypeLoad()
                     float[] enemyposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
 
                     GameObject gameObject3 = GameObject.CreatePrimitive(0);
+					gameObject3.name = "EnemySpawner";
                     Destroy(gameObject3.GetComponent<SphereCollider>());
                     gameObject3.AddComponent<CapsuleCollider>();
                     gameObject3.layer = 8;
@@ -1998,33 +2038,22 @@ public void PrototypeLoad()
 			{
 				case MFPGamemode.NORMAL:
 					Player.GetComponent<PlayerScript>().skyfall = false;
-						foreach (Transform transform in this.EnemySpawnpoints)
-						{
-							transform.GetComponent<MeshRenderer>().enabled = false;
-							transform.GetComponent<CapsuleCollider>().enabled = false;
-							GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
-							this.Enemies.Add(gameObject);
-							gameObject.SetActive(true);
-							gameObject.transform.position = transform.position;
-							this.root.nrOfEnemiesTotal++;
-						}
 					break;
 				case MFPGamemode.SKYFALL:
 					Player.GetComponent<PlayerScript>().skyfall = true;
-					foreach (Transform transform in this.EnemySpawnpoints)
-					{
-						transform.GetComponent<MeshRenderer>().enabled = false;
-						transform.GetComponent<CapsuleCollider>().enabled = false;
-						GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);	
-						gameObject.transform.rotation = new Quaternion(-180, gameObject.transform.rotation.y, gameObject.transform.rotation.z, transform.rotation.w);
-						gameObject.GetComponent<EnemyScript>().skyfall = true;
-						this.Enemies.Add(gameObject);
-						gameObject.SetActive(true);
-						gameObject.transform.position = transform.position;
-						this.root.nrOfEnemiesTotal++;
-					}
 					break;
 			}
+
+				MFPEditorLogger.Log("Start spawn");
+
+				foreach(Transform spawn in EnemySpawnpoints)
+				{
+					spawn.GetComponent<MFPEnemySpawner>().UpdateData();
+					spawn.GetComponent<MFPEnemySpawner>().SpawnEnemy();
+				}
+
+				MFPEditorLogger.Log("End spawn");
+			
 		}
 
 		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
@@ -2311,6 +2340,9 @@ public void PrototypeLoad()
 		{
 			if(EditingObject.name.Contains("Floor") || EditingObject.name.Contains("Wall"))
 				return "floor";
+			if(EditingObject.name == "EnemySpawner");
+				return EditingObject.name;
+
 			return "no";
 		}
 

@@ -42,6 +42,19 @@ namespace Jhrino.MFPLevelEditor
 			bottomRight
 		}
 
+
+		public static string NormalizeInputFieldIntValue(string value, int min, int max)
+		{
+			int valConverted = int.Parse(value);
+
+			if(valConverted < min)
+				return min.ToString();
+			if(valConverted > max)
+				return max.ToString();
+			
+			return value;
+		}
+
 		public static void SetRect(RectTransform rect, UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot)
 		{
 			rect.pivot = pivot;
@@ -133,7 +146,7 @@ namespace Jhrino.MFPLevelEditor
 
 		}
 
-		public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New InputField", string imageSource = "", Text textComponent = null, bool hasBackground = false)
+		public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New InputField", string imageSource = "", Text textComponent = null, bool hasBackground = false, InputField.CharacterValidation inputType = InputField.CharacterValidation.None)
 		{
 
 			GameObject newInputField = new GameObject();
@@ -165,17 +178,26 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretBlinkRate = 0.85f;
 			inputField.caretWidth = 1;
 			inputField.readOnly = false;
-
+			inputField.characterValidation = inputType;
 			inputField.gameObject.AddComponent<Image>();
 
 			if(textComponent == null)
 			{
-				CreateNewText(uianch, TextAnchor.MiddleCenter, new Vector2(0,0), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(255,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, newInputField, "", "InputfieldText", 16);
+				Text textComp = ReturnCreateNewText(uianch, TextAnchor.MiddleCenter, new Vector2(0,0), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(255,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, newInputField, "", "InputfieldText", 16);
 				
+				inputField.textComponent = textComp;
 			}
+			else
+			{
+				inputField.textComponent = textComponent;
+			}
+				
 
+			newInputField.AddComponent<Image>();
 			if(hasBackground)
-				newInputField.AddComponent<Image>();
+				newInputField.GetComponent<Image>().color = new Color(0,0,0,0);
+
+			inputField.targetGraphic = newInputField.GetComponent<Image>();
 
 			return inputField;
 

@@ -29,8 +29,16 @@ namespace Jhrino.MFPLevelEditor
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(LevelEditorHandler.Inst.EnemySample);
 			EnemyScript enemyScript = gameObject.GetComponent<EnemyScript>();
 
+			gameObject.SetActive(false);
+
+			MFPEditorLogger.Log("Spawning enemy with weapon ID " + enemyWeapon.ToString() + " and type " + enemyScript.enemyType.ToString());
+
 			enemyScript.weapon = enemyWeapon;
+			if(LevelEditorHandler.Inst.theme > 5)
+			enemyScript.themeOverride = 4;
+			else
 			enemyScript.themeOverride = LevelEditorHandler.Inst.theme;
+
 
 			if(spawnType == LevelEditorHandler.MFPGamemode.SKYFALL)
 			{
