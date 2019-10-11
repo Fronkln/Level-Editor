@@ -38,6 +38,20 @@ namespace Jhrino.MFPLevelEditor
 
 		//loadda artık bu methodu kullanarak halledeceksin
 
+		
+		public void LoadModel(GameObject target, string modelname, string textureName = "")
+		{
+	
+		target.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(modelname);
+		target.AddComponent<MeshRenderer>();
+		target.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+		target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder(textureName));
+			
+
+			MFPEditorLogger.Log("Load model complete");
+		}
+
+
 		public void ConfigureGeometryProperties(GameObject target, int layer, bool disappears, string texturename)
 		{
 			MFPEditorLogger.Log(layer.ToString());
@@ -695,11 +709,12 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.transform.parent = gameObject3.transform;
 			this.SpawnEditorHud();
 			LevelEditorHandler.Inst = this;
-			GameObject gameObject4 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			GameObject gameObject4 = new GameObject();
+			LoadModel(gameObject4, MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/player_model_editorgizmo.obj"), "EditorAssets/BaseGame/textures/player_character.png");
 			UnityEngine.Object.Destroy(gameObject4.GetComponent<SphereCollider>());
 			gameObject4.AddComponent<CapsuleCollider>();
-			gameObject4.transform.localScale = new Vector3(gameObject4.transform.localScale.x, 4f, gameObject4.transform.localScale.x);
 			gameObject4.name = "PlayerSpawn";
+		//	gameObject4.transform.rotation = new Quaternion(gameObject4.transform.rotation.x, 0, gameObject4.transform.rotation.z, gameObject4.transform.rotation.w);
 			GameObject gameObject5 = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject5.transform.position = new Vector3(5f, 0f, 0f);
 			gameObject5.transform.localScale = new Vector3(1f, 1f, 4f);
@@ -708,7 +723,6 @@ namespace Jhrino.MFPLevelEditor
 			gameObject5.GetComponent<MeshRenderer>().material.color = Color.green;
 			this.FinishLevelTrigger = gameObject5;
 			this.PlayerSpawn = gameObject4.transform;
-			this.PlayerSpawn.transform.GetComponent<MeshRenderer>().material.color = new Color(1f, 0.5f, 1f);
 			this.PlayerSpawn.transform.position = new Vector3(0f, 1f, 0f);
 			this.PlayMod = false;
 			List<string> list = new List<string>();
@@ -923,6 +937,8 @@ namespace Jhrino.MFPLevelEditor
 			});
 
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateBoardButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
+
+
 
 			this.EntitySpawnRoot = PanelOBJ;
 
@@ -2052,6 +2068,7 @@ public void PrototypeLoad()
 					spawn.GetComponent<MFPEnemySpawner>().SpawnEnemy();
 				}
 
+
 				MFPEditorLogger.Log("End spawn");
 			
 		}
@@ -2254,6 +2271,35 @@ public void PrototypeLoad()
 							}
 							Skateboards.Add(preloadedSkateboard);
 						}
+					break;
+					case "flipTable":
+
+							//buggy right now so cant be spawned yet
+							GameObject newFlipTable = new GameObject();
+							newFlipTable.name = "FlipTable";
+							newFlipTable.layer = 8;
+
+							newFlipTable.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/FlipTable.obj"));
+							newFlipTable.AddComponent<MeshRenderer>();
+							newFlipTable.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newFlipTable.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newFlipTable.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newFlipTable.transform.position = savePosition;
+								newFlipTable.transform.eulerAngles = saveRotation;
+								newFlipTable.transform.localScale = saveScale;
+							}
+							newFlipTable.AddComponent<BoxCollider>();
+							newFlipTable.GetComponent<BoxCollider>().size = new Vector3(2.923683f, 1.986196f, 1.358783f);
+							newFlipTable.GetComponent<BoxCollider>().center = new Vector3(-2.923683f, 1.986196f, 0.5974959f);
+
+							newFlipTable.AddComponent<AudioSource>();
+							newFlipTable.AddComponent<SoundScript>();
+							//newFlipTable.AddComponent<TableFlipScript>();
+
+							levelFlipTables.Add(newFlipTable);
 					break;
 				}
 
@@ -2539,6 +2585,8 @@ public void PrototypeLoad()
 
 		public List<GameObject> Skateboards = new List<GameObject>();
 		public List<GameObject> LevelSkateboards = new List<GameObject>();
+
+		public List<GameObject> levelFlipTables = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
