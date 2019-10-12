@@ -18,6 +18,7 @@ using UnityEngine.UI;
 	NOTLAR
 
 	PROPERTIES SEÇENEK 1: -345, 301.5     FONT 48
+	EXPLOSIONVISUALSCRIPTE Bİ GÖZ AT DOPOSTSETUPDA HATA VERİNCE SINIRSIZ PATLAMA OLUYOR
 
 
 */
@@ -34,6 +35,8 @@ namespace Jhrino.MFPLevelEditor
 			SKYFALL,
 			MOTORCYCLE
 		}
+
+		public bool levelInitialized = false;
 
 
 		//loadda artık bu methodu kullanarak halledeceksin
@@ -306,6 +309,11 @@ namespace Jhrino.MFPLevelEditor
 			}
 			//
 
+			if(Gamemode == MFPGamemode.SKYFALL && PlayMod && levelInitialized)
+			{
+				if(root.nrOfEnemiesTotal == root.nrOfEnemiesKilled)
+					GameObject.FindObjectOfType<LevelChangerScript>().doTheThing();
+			}
 
 			if (Input.GetKeyDown(KeyCode.P))
 			{
@@ -1398,7 +1406,7 @@ namespace Jhrino.MFPLevelEditor
 					newCanister.AddComponent<AutoAimTargetScript>();
 					newCanister.AddComponent<OptimizerScript>();
 
-					newCanister.GetComponent<GasCanisterScript>().explosionSize = 999;
+					newCanister.GetComponent<GasCanisterScript>().explosionSize = Canister.GetComponent<GasCanisterScript>().explosionSize;
 
 					LevelGasCanisters.Add(newCanister);
 
@@ -1461,15 +1469,35 @@ namespace Jhrino.MFPLevelEditor
 				SetupGameMode(Gamemode);
 
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
-				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
+				if(Gamemode != MFPGamemode.SKYFALL)
+				{
+					FinishLevelTrigger.GetComponent<BoxCollider>().enabled = true;
+					this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
+				}
+				else
+					FinishLevelTrigger.GetComponent<BoxCollider>().enabled = false;
+
 				this.root.nrOfEnemiesTotal = this.root.nrOfEnemiesTotal / 2;
 				this.root.nrOfEnemiesTotal -= this.root.nrOfEnemiesTotal;
 				this.CalculateLevelHash();
 				this.root.dontAllowCheckpointSave = true;
+
+				levelInitialized = true;
+
 				return;
 			}
 			if (this.PlayMod && !root.levelEnded)
 			{
+				foreach(Projector blood in GameObject.FindObjectsOfType<Projector>())
+				{
+					Destroy(blood.gameObject);
+				}
+
+				foreach(WeaponPickupScript wep in GameObject.FindObjectsOfType<WeaponPickupScript>())
+				{
+					Destroy(wep.gameObject);
+				}
+
 				this.EditorButtonsRoot.SetActive(true);
 				LevelEditorHandler.levelTimer = 0f;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
@@ -1502,6 +1530,8 @@ namespace Jhrino.MFPLevelEditor
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = true;
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = false;
 				this.Enemies.Clear();
+
+				levelInitialized = false;
 
 				DoMissingArrayCleanup();
 			}
