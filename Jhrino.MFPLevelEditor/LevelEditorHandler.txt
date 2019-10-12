@@ -94,6 +94,9 @@ namespace Jhrino.MFPLevelEditor
 				case "weaponID":
 					EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(field.text);
 					break;
+				case "explosionStrength":
+					EditingObject.GetComponent<GasCanisterScript>().explosionSize = int.Parse(field.text);
+					break;
 				
 			}
 		}
@@ -159,6 +162,10 @@ namespace Jhrino.MFPLevelEditor
 	
 			switch(objtype)
 			{
+				default:
+					MFPEditorLogger.Log("Object type " + objtype + " does not exist!");
+					break;
+
 				case "floor":
 					
 					Text disappearText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Disappears:", "TestPrroperties", 48);
@@ -200,6 +207,22 @@ namespace Jhrino.MFPLevelEditor
 
 					MFPEditorLogger.Log("Properties initilizaiton complete");
 				break;
+
+				case "GasCanister":
+					Text GasCanMagnDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Explosion Strength:", "GasCanMagnDesc", 48);
+
+					Text GasCanMagnText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-45, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, EditingObject.GetComponent<GasCanisterScript>().explosionSize.ToString(), "GasCanMagn", 48);
+
+					InputField gasCanMagnInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "MagnTextF", "", GasCanMagnText, true, InputField.CharacterValidation.Integer);
+
+					gasCanMagnInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(gasCanMagnInput, gasCanMagnInput.text, "explosionStrength", 1, 999);
+					});
+
+					propertyElements.Add(GasCanMagnDesc.gameObject);
+					propertyElements.Add(GasCanMagnText.gameObject);
+				break;
 				
 				case "EnemySpawner":
 					Text WeaponIDDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Weapon ID:", "WeaponIDDesc", 48);
@@ -213,6 +236,7 @@ namespace Jhrino.MFPLevelEditor
 						OnInputValueChanged(testInput, testInput.text, "weaponID", 1, 9);
 					});
 
+					propertyElements.Add(testInput.gameObject);
 					propertyElements.Add(WeaponIDDesc.gameObject);
 					propertyElements.Add(WeaponIDText.gameObject);
 				break;
@@ -1368,14 +1392,13 @@ namespace Jhrino.MFPLevelEditor
 					newCanister.GetComponent<Rigidbody>().drag = 0.1f;
 					newCanister.GetComponent<Rigidbody>().angularDrag = 0.05f;
 
-					newCanister.AddComponent<ObjectKickScript>().objType = 3;
-					newCanister.AddComponent<GasCanisterScript>().explosionSize = 2;
-					newCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
-					newCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+
 					newCanister.AddComponent<AudioSource>();
 					newCanister.AddComponent<PhysicsSoundsScript>();
 					newCanister.AddComponent<AutoAimTargetScript>();
 					newCanister.AddComponent<OptimizerScript>();
+
+					newCanister.GetComponent<GasCanisterScript>().explosionSize = 999;
 
 					LevelGasCanisters.Add(newCanister);
 
@@ -1661,7 +1684,8 @@ namespace Jhrino.MFPLevelEditor
 				string text = this.EnemySpawnpoints[num - 2].transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 				SavedLevel.Add("!EnemySpawn");
 				SavedLevel.Add(text);
-				MFPEditorLogger.Log("added coordinate " + text);
+				SavedLevel.Add(this.EnemySpawnpoints[num-2].GetComponent<MFPEnemySpawner>().enemyWeapon.ToString());
+	
 				num++;
 			}
 			MFPEditorLogger.Log("----");
@@ -1714,6 +1738,7 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(gasCanister.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(gasCanister.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(gasCanister.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(gasCanister.GetComponent<GasCanisterScript>().explosionSize.ToString());
 			}
 
 			foreach(GameObject pan in FryingPans)
@@ -1987,7 +2012,7 @@ public void PrototypeLoad()
                     gameObject3.transform.localScale = new Vector3(gameObject3.transform.localScale.x, 4f, gameObject3.transform.localScale.x);
                     gameObject3.transform.position = new Vector3(enemyposition[0], enemyposition[1], enemyposition[2]);
                     gameObject3.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
-					gameObject3.AddComponent<MFPEnemySpawner>();
+					gameObject3.AddComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(levelFile[i + 2]);
                     this.EnemySpawnpoints.Add(gameObject3.transform);
 
                     i++;
@@ -2010,8 +2035,10 @@ public void PrototypeLoad()
 					   float[] entityposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
 					   float[] entityrotation = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
 					   float[] entityscale = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-
+					if(entityName.ToLower() != "gascanister")
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]));
+					else
+					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]), Array.ConvertAll(levelFile[i + 5].Split(new char[] { ',' }), element => element.ToString()));
 							break;
             }
         }
@@ -2072,6 +2099,68 @@ public void PrototypeLoad()
 				MFPEditorLogger.Log("End spawn");
 			
 		}
+public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale, string[] properties)
+			{
+				
+				switch(entity)
+				{
+					default:
+						MFPEditorLogger.Log("Invalid entity " + entity + '"');
+					break;
+					//TODO: Add saving and loading for gas canisters
+					case "gascanister":
+						if(GasCanister == null)
+						{
+							GameObject newGasCanister = new GameObject();
+							newGasCanister.name = "GasCanister";
+							newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
+							newGasCanister.AddComponent<MeshRenderer>();
+							newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newGasCanister.transform.position = savePosition;
+								newGasCanister.transform.eulerAngles = saveRotation;
+								newGasCanister.transform.localScale = saveScale;
+							}
+							newGasCanister.AddComponent<BoxCollider>();
+
+
+							newGasCanister.AddComponent<ObjectKickScript>().objType = 3;
+							newGasCanister.AddComponent<GasCanisterScript>().explosionSize = int.Parse(properties[0]);
+							newGasCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+							newGasCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+
+							GasCanister = Instantiate(newGasCanister);
+							GasCanister.SetActive(false);
+
+							GasCanisters.Add(newGasCanister);
+						}
+						else
+						{
+							GameObject preloadedCanister = Instantiate(GasCanister);
+							preloadedCanister.name = "GasCanister";
+
+							preloadedCanister.SetActive(true);
+							if(!isSaveObject)
+							preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedCanister.transform.position = savePosition;
+								preloadedCanister.transform.eulerAngles = saveRotation;
+								preloadedCanister.transform.localScale = saveScale;
+							}
+
+						preloadedCanister.GetComponent<GasCanisterScript>().explosionSize = int.Parse(properties[0]);
+
+							GasCanisters.Add(preloadedCanister);
+						}
+						break;
+			}
+			}
+
 
 		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
 			{
@@ -2101,6 +2190,12 @@ public void PrototypeLoad()
 							}
 							newGasCanister.AddComponent<BoxCollider>();
 
+
+							newGasCanister.AddComponent<ObjectKickScript>().objType = 3;
+							newGasCanister.AddComponent<GasCanisterScript>().explosionSize = 2;
+							newGasCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+							newGasCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+
 							GasCanister = Instantiate(newGasCanister);
 							GasCanister.SetActive(false);
 
@@ -2109,6 +2204,8 @@ public void PrototypeLoad()
 						else
 						{
 							GameObject preloadedCanister = Instantiate(GasCanister);
+							preloadedCanister.name = "GasCanister";
+
 							preloadedCanister.SetActive(true);
 							if(!isSaveObject)
 							preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
