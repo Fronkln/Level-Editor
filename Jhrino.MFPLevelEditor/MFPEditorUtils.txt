@@ -27,140 +27,312 @@ namespace Jhrino.MFPLevelEditor
 			return Application.dataPath + "/LevelEditor_Jhrino/" + file;
 		}
 
-		public enum UIAnchor
-		{
-			topLeft,
-			topMiddle,
-			topRight,
+		 public enum UIAnchor
+        {
+            SKIP,
 
-			middleLeft,
-			middle,
-			middleRight,
+            topLeft,
+            topMiddle,
+            topRight,
 
-			bottomLeft,
-			bottomMiddle,
-			bottomRight
-		}
+            middleLeft,
+            middle,
+            middleRight,
 
+            bottomLeft,
+            bottomMiddle,
+            bottomRight,
 
-		public static string NormalizeInputFieldIntValue(string value, int min, int max)
-		{
-			int valConverted = int.Parse(value);
+            stretchLeftRightBottom,
+            stretchLeftRightMiddle,
+            stretchLeftRightTop,
 
-			if(valConverted < min)
-				return min.ToString();
-			if(valConverted > max)
-				return max.ToString();
-			
-			return value;
-		}
-
-		public static void SetRect(RectTransform rect, UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot)
-		{
-			rect.pivot = pivot;
-
-			rect.anchorMin = ReturnAnchor(uianch);
-			rect.anchorMax = ReturnAnchor(uianch);
-
-			rect.sizeDelta = sizeDelta;
-
-			rect.anchoredPosition = anchoredPosition;
-		}
-
-		public static Vector2 ReturnAnchor(UIAnchor uIAnchor)
-		{
-			switch(uIAnchor)
-			{
-				default:
-					return new Vector2(0,0);
-
-				case UIAnchor.bottomLeft:
-					return new Vector2(0,0);
-				case UIAnchor.bottomMiddle:
-					return new Vector2(0.5f, 0);
-				case UIAnchor.bottomRight:
-					return new Vector2(1, 0);
-				case UIAnchor.middleLeft:
-					return new Vector2(0, 0.5f);
-				case UIAnchor.middle:
-					return new Vector2(0.5f, 0.5f);
-				case UIAnchor.middleRight:
-					return new Vector2(1, 0.5f);
-				case UIAnchor.topLeft:
-					return new Vector2(0, 1);
-				case UIAnchor.topMiddle:
-					return new Vector2(0.5f, 1);
-				case UIAnchor.topRight:
-					return new Vector2(1,1);
-			}
-		}
-
-		public static Toggle ReturnCreateNewToggle(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Toggle", string imageSource = "", string toggleTexture = "")
-		{
-			GameObject newToggle = new GameObject();
-
-			newToggle.name = name;
-			newToggle.layer = 5;
-			newToggle.transform.SetParent(parent.transform, false);
-
-			RectTransform toggleRect = newToggle.AddComponent<RectTransform>();
-			SetRect(toggleRect, uianch, anchoredPosition, sizeDelta, pivot);
-
-			Toggle createdToggle = newToggle.AddComponent<Toggle>();
+            stretchFull
+        }
 
 
-			////////////////////////////////////
+        public static string NormalizeInputFieldIntValue(string value, int min, int max)
+        {
+            int valConverted = int.Parse(value);
 
-			GameObject toggleBg = new GameObject();
-			toggleBg.name = "Background";
-			toggleBg.layer = 5;
-			toggleBg.transform.SetParent(newToggle.transform, false);
+            if (valConverted < min)
+                return min.ToString();
+            if (valConverted > max)
+                return max.ToString();
 
-			RectTransform bgRect = toggleBg.AddComponent<RectTransform>();
+            return value;
+        }
 
-	 		SetRect(bgRect, uianch, new Vector2(0,0), sizeDelta, new Vector2(0.5f, 0.5f));
-			Image bgGraphics = toggleBg.AddComponent<Image>();
+        public static void SetRect(RectTransform rect, UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot)
+        {
+            if (rect == null)
+                Debug.LogError("what");
+
+            rect.pivot = pivot;
+
+            if (uianch != UIAnchor.SKIP)
+            {
+                rect.anchorMin = ReturnAnchor(uianch);
+                rect.anchorMax = ReturnAnchor(uianch);
+            }
+
+            rect.sizeDelta = sizeDelta;
+
+            rect.anchoredPosition = anchoredPosition;
+        }
+
+        public static Vector2 ReturnAnchor(UIAnchor uIAnchor)
+        {
+            switch (uIAnchor)
+            {
+                default:
+                    return new Vector2(0, 0);
+
+                case UIAnchor.bottomLeft:
+                    return new Vector2(0, 0);
+                case UIAnchor.bottomMiddle:
+                    return new Vector2(0.5f, 0);
+                case UIAnchor.bottomRight:
+                    return new Vector2(1, 0);
+                case UIAnchor.middleLeft:
+                    return new Vector2(0, 0.5f);
+                case UIAnchor.middle:
+                    return new Vector2(0.5f, 0.5f);
+                case UIAnchor.middleRight:
+                    return new Vector2(1, 0.5f);
+                case UIAnchor.topLeft:
+                    return new Vector2(0, 1);
+                case UIAnchor.topMiddle:
+                    return new Vector2(0.5f, 1);
+                case UIAnchor.topRight:
+                    return new Vector2(1, 1);
+            }
+        }
 
 
-			GameObject checkmark = new GameObject();
+        public static Vector2 ReturnAnchor(UIAnchor uIAnchor, bool anchorMin)
+        {
+            switch (uIAnchor)
+            {
+                default:
+                    return new Vector2(0, 0);
+                case UIAnchor.stretchLeftRightBottom:
+                    if (anchorMin)
+                        return new Vector2(0, 0);
+                    else
+                        return new Vector2(1, 0);
+                case UIAnchor.stretchLeftRightTop:
+                    if (anchorMin)
+                        return new Vector2(0, 1);
+                    else
+                        return new Vector2(1, 1);
+                case UIAnchor.stretchLeftRightMiddle:
+                    if (anchorMin)
+                        return new Vector2(0, 0.5f);
+                    else
+                        return new Vector2(1, 0.5f);
+                case UIAnchor.stretchFull:
+                    if (anchorMin)
+                        return new Vector2(0, 0);
+                    else
+                        return new Vector2(1, 1);
+            }
 
-			checkmark.name = "Checkmark";
-			checkmark.layer = 5;
-			checkmark.transform.SetParent(toggleBg.transform, false);
-
-			RectTransform checkmarkRect = checkmark.AddComponent<RectTransform>();
-			SetRect(checkmarkRect, uianch,new Vector2(0,0), sizeDelta, new Vector2(0.5f, 0.5f));
-
-			Image checkmarkimg = checkmark.AddComponent<Image>();
-
-			Texture2D ico_check = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/checkmark.png"));
-			Sprite spr_check = Sprite.Create(ico_check, new Rect(0f, 0f, (float)ico_check.width, (float)ico_check.height), new Vector2(0f, 0f), 100f);
-
-			checkmarkimg.sprite = spr_check;
-			createdToggle.targetGraphic = bgGraphics;
-			createdToggle.graphic = checkmarkimg;
+        }
 
 
-			return createdToggle;
+
+        public static Scrollbar ReturnCreateNewScrollbar(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, string[] options, GameObject parent = null, string name = "New Dropdown")
+        {
+
+            return null;
+        }
+
+        public static ScrollRect ReturnCreateNewScrollRect(GameObject target, bool horizontal, bool vertical, ScrollRect.MovementType moveType, ScrollRect.ScrollbarVisibility visibility, bool inertia, float decelerationRate, RectTransform content, int spacing, RectTransform viewPort, Scrollbar horizontalScrollbar = null, Scrollbar verticalScrollbar = null)
+        {
+            ScrollRect newScrollRect = target.AddComponent<ScrollRect>();
+            newScrollRect.content = content;
+            newScrollRect.horizontal = horizontal;
+            newScrollRect.vertical = vertical;
+
+            newScrollRect.movementType = moveType;
+            newScrollRect.inertia = inertia;
+            newScrollRect.decelerationRate = decelerationRate;
+
+            newScrollRect.scrollSensitivity = 1;
+
+            newScrollRect.viewport = viewPort;
+
+            newScrollRect.horizontalScrollbar = horizontalScrollbar;
+            newScrollRect.verticalScrollbar = verticalScrollbar;
+
+            if (horizontalScrollbar != null)
+            {
+                newScrollRect.horizontalScrollbarVisibility = visibility;
+                newScrollRect.horizontalScrollbarSpacing = spacing;
+            }
+            if (verticalScrollbar != null)
+            {
+                newScrollRect.verticalScrollbarVisibility = visibility;
+                newScrollRect.verticalScrollbarSpacing = spacing;
+            }
 
 
-		}
+            return newScrollRect;
+        }
 
-		public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New InputField", string imageSource = "", Text textComponent = null, bool hasBackground = false, InputField.CharacterValidation inputType = InputField.CharacterValidation.None)
-		{
+        public static Dropdown ReturnCreateNewDropDown(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, string[] options, GameObject parent = null, string name = "New Dropdown")
+        {
+            GameObject newDropdownOBJ = new GameObject();
+            newDropdownOBJ.layer = 5;
+            newDropdownOBJ.transform.SetParent(parent.transform, false);
 
-			GameObject newInputField = new GameObject();
-			newInputField.name = name;
-			newInputField.layer = 5;
-			newInputField.transform.SetParent(parent.transform);
 
-			RectTransform inputRect = newInputField.AddComponent<RectTransform>();
+            RectTransform dropDownRect = newDropdownOBJ.AddComponent<RectTransform>();
+            SetRect(dropDownRect, uianch, anchoredPosition, sizeDelta, pivot);
 
-			SetRect(inputRect, uianch, anchoredPosition, sizeDelta, pivot);
+            Image dDownImage = newDropdownOBJ.AddComponent<Image>();
 
-			InputField inputField = newInputField.AddComponent<InputField>();
+            Dropdown dropdown = newDropdownOBJ.AddComponent<Dropdown>();
 
-			/*
+            dropdown.targetGraphic = dDownImage;
+
+
+            foreach (string st in options)
+            {
+                dropdown.options.Add(new Dropdown.OptionData() { text = st });
+            }
+
+
+            GameObject templateRoot = new GameObject();
+            templateRoot.name = "Template";
+            templateRoot.transform.SetParent(newDropdownOBJ.transform, false);
+
+            RectTransform templateRootRect = templateRoot.AddComponent<RectTransform>();
+
+            templateRootRect.pivot = pivot;
+
+            templateRootRect.anchorMin = ReturnAnchor(UIAnchor.middle);
+            templateRootRect.anchorMax = ReturnAnchor(UIAnchor.middle);
+
+            templateRootRect.sizeDelta = sizeDelta;
+
+            templateRootRect.anchoredPosition = new Vector2(29.7f, -0.3f);
+
+
+            GameObject Viewport = new GameObject();
+            Viewport.name = "Viewport";
+            Viewport.layer = 5;
+            Viewport.transform.SetParent(templateRoot.transform, false);
+
+            Viewport.AddComponent<Mask>();
+            RectTransform vRect = Viewport.GetComponent<RectTransform>();
+
+            SetRect(vRect, UIAnchor.middle, new Vector2(0, -65), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
+
+            Viewport.AddComponent<Image>();
+
+            GameObject ContentOBJ = new GameObject();
+            ContentOBJ.layer = 5;
+            ContentOBJ.name = "Content";
+            ContentOBJ.transform.SetParent(Viewport.transform, false);
+
+            RectTransform contentRect = ContentOBJ.AddComponent<RectTransform>();
+
+            contentRect.sizeDelta = new Vector2(0, 28);
+            contentRect.anchorMin = ReturnAnchor(UIAnchor.stretchLeftRightTop, true);
+            contentRect.anchorMax = ReturnAnchor(UIAnchor.stretchLeftRightTop, false);
+            contentRect.pivot = new Vector2(0.5f, 0.5f);
+
+
+            Toggle itemOBJ = ReturnCreateNewToggle(UIAnchor.SKIP, new Vector2(2.8f, 30.5f), new Vector2(0, 20), new Vector2(0.5f, 0.5f), new Vector3(1, 1, 1), ContentOBJ, "New Toggle", "", "");
+            Text itemText = ReturnCreateNewText(UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(5, -0.5f), new Vector2(114, 17), new Vector2(0.5f, 0.5f), new Vector3(1, 1, 1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(0, 0, 0, 255), VerticalWrapMode.Truncate, HorizontalWrapMode.Wrap, itemOBJ.gameObject    , "Option A", "Item Label", 14);
+
+
+            GameObject scrollBarOBJ = new GameObject();
+            scrollBarOBJ.name = "Scrollbar";
+            scrollBarOBJ.layer = 5;
+            scrollBarOBJ.transform.SetParent(templateRoot.transform, false);
+
+
+
+            ScrollRect templateRootScrollRect = ReturnCreateNewScrollRect(templateRoot, false, true, ScrollRect.MovementType.Clamped, ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport, true, 0.135f, contentRect, -3, Viewport.GetComponent<RectTransform>());
+
+            dropdown.template = templateRootRect;
+            dropdown.itemText = itemText;
+            dropdown.captionText = ReturnCreateNewText(UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(5, -0.5f), new Vector2(114, 17), new Vector2(0.5f, 0.5f), new Vector3(1, 1, 1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(0, 0, 0, 255), VerticalWrapMode.Truncate, HorizontalWrapMode.Wrap, dropdown.gameObject, "Option A", "Label");
+
+            templateRoot.gameObject.SetActive(false);
+
+            return dropdown;
+        }
+
+        public static Toggle ReturnCreateNewToggle(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Toggle", string imageSource = "", string toggleTexture = "")
+        {
+            GameObject newToggle = new GameObject();
+
+            newToggle.name = name;
+            newToggle.layer = 5;
+            newToggle.transform.SetParent(parent.transform, false);
+
+            RectTransform toggleRect = newToggle.AddComponent<RectTransform>();
+            SetRect(toggleRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+            Toggle createdToggle = newToggle.AddComponent<Toggle>();
+
+
+            ////////////////////////////////////
+
+            GameObject toggleBg = new GameObject();
+            toggleBg.name = "Background";
+            toggleBg.layer = 5;
+            toggleBg.transform.SetParent(newToggle.transform, false);
+
+            RectTransform bgRect = toggleBg.AddComponent<RectTransform>();
+
+            SetRect(bgRect, uianch, new Vector2(0, 0), sizeDelta, new Vector2(0.5f, 0.5f));
+            Image bgGraphics = toggleBg.AddComponent<Image>();
+
+
+            GameObject checkmark = new GameObject();
+
+            checkmark.name = "Checkmark";
+            checkmark.layer = 5;
+            checkmark.transform.SetParent(toggleBg.transform, false);
+
+            RectTransform checkmarkRect = checkmark.AddComponent<RectTransform>();
+            SetRect(checkmarkRect, uianch, new Vector2(0, 0), sizeDelta, new Vector2(0.5f, 0.5f));
+
+            Image checkmarkimg = checkmark.AddComponent<Image>();
+
+            Texture2D ico_check = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/checkmark.png"));
+            Sprite spr_check = Sprite.Create(ico_check, new Rect(0f, 0f, (float)ico_check.width, (float)ico_check.height), new Vector2(0f, 0f), 100f);
+
+            checkmarkimg.sprite = spr_check;
+            createdToggle.targetGraphic = bgGraphics;
+            createdToggle.graphic = checkmarkimg;
+
+
+            return createdToggle;
+
+
+        }
+
+        public static InputField ReturnCreateNewInputField(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New InputField", string imageSource = "", Text textComponent = null, bool hasBackground = false, InputField.CharacterValidation inputType = InputField.CharacterValidation.None)
+        {
+
+            GameObject newInputField = new GameObject();
+            newInputField.name = name;
+            newInputField.layer = 5;
+            newInputField.transform.SetParent(parent.transform);
+
+            RectTransform inputRect = newInputField.AddComponent<RectTransform>();
+
+            SetRect(inputRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+            InputField inputField = newInputField.AddComponent<InputField>();
+
+            /*
 			inputRect.pivot = pivot;
 
 			inputRect.anchorMin = ReturnAnchor(uianch);
@@ -171,52 +343,52 @@ namespace Jhrino.MFPLevelEditor
 			inputRect.anchoredPosition = anchoredPosition;
 			*/
 
-			inputField.interactable = true;
-			inputField.transition = Selectable.Transition.ColorTint;
-			inputField.contentType = InputField.ContentType.Standard;
-			inputField.lineType = InputField.LineType.SingleLine;
-			inputField.caretBlinkRate = 0.85f;
-			inputField.caretWidth = 1;
-			inputField.readOnly = false;
-			inputField.characterValidation = inputType;
-			inputField.gameObject.AddComponent<Image>();
+            inputField.interactable = true;
+            inputField.transition = Selectable.Transition.ColorTint;
+            inputField.contentType = InputField.ContentType.Standard;
+            inputField.lineType = InputField.LineType.SingleLine;
+            inputField.caretBlinkRate = 0.85f;
+            inputField.caretWidth = 1;
+            inputField.readOnly = false;
+            inputField.characterValidation = inputType;
+            inputField.gameObject.AddComponent<Image>();
 
-			if(textComponent == null)
-			{
-				Text textComp = ReturnCreateNewText(uianch, TextAnchor.MiddleCenter, new Vector2(0,0), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(255,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, newInputField, "", "InputfieldText", 16);
-				
-				inputField.textComponent = textComp;
-			}
-			else
-			{
-				inputField.textComponent = textComponent;
-			}
-				
+            if (textComponent == null)
+            {
+                Text textComp = ReturnCreateNewText(uianch, TextAnchor.MiddleCenter, new Vector2(0, 0), new Vector2(160, 30), new Vector2(0.5f, 0.5f), new Vector3(1, 1, 1), (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font), new Color32(255, 0, 0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, newInputField, "", "InputfieldText", 16);
 
-			newInputField.AddComponent<Image>();
-			if(hasBackground)
-				newInputField.GetComponent<Image>().color = new Color(0,0,0,0);
-
-			inputField.targetGraphic = newInputField.GetComponent<Image>();
-
-			return inputField;
+                inputField.textComponent = textComp;
+            }
+            else
+            {
+                inputField.textComponent = textComponent;
+            }
 
 
-		}
+            newInputField.AddComponent<Image>();
+            if (hasBackground)
+                newInputField.GetComponent<Image>().color = new Color(0, 0, 0, 0);
 
-		public static GameObject ReturnCreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
-		{
-			GameObject newPanel = new GameObject();
+            inputField.targetGraphic = newInputField.GetComponent<Image>();
 
-			newPanel.transform.SetParent(parent.transform, false);
-			newPanel.name = name;
-			newPanel.layer = 5;
+            return inputField;
 
-			RectTransform panelRect = newPanel.AddComponent<RectTransform>();
 
-			SetRect(panelRect, uianch, anchoredPosition, sizeDelta, pivot);
+        }
 
-			/*
+        public static GameObject ReturnCreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
+        {
+            GameObject newPanel = new GameObject();
+
+            newPanel.transform.SetParent(parent.transform, false);
+            newPanel.name = name;
+            newPanel.layer = 5;
+
+            RectTransform panelRect = newPanel.AddComponent<RectTransform>();
+
+            SetRect(panelRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+            /*
 			panelRect.pivot = pivot;
 
 			panelRect.anchorMin = ReturnAnchor(uianch);
@@ -227,36 +399,36 @@ namespace Jhrino.MFPLevelEditor
 			panelRect.anchoredPosition = anchoredPosition;
 			*/
 
-			Image panelImage = newPanel.AddComponent<Image>();
+            Image panelImage = newPanel.AddComponent<Image>();
 
-			if(imageSource != "")
-			{
-				Texture2D panelTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
-				Sprite panelSprite = Sprite.Create(panelTexture, new Rect(0f, 0f, panelTexture.width, panelTexture.height), new Vector2(0f, 0f), 100f);
-			
-				panelImage.sprite = panelSprite;
-			}
+            if (imageSource != "")
+            {
+                Texture2D panelTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+                Sprite panelSprite = Sprite.Create(panelTexture, new Rect(0f, 0f, panelTexture.width, panelTexture.height), new Vector2(0f, 0f), 100f);
 
-			panelImage.color = panelColor;
+                panelImage.sprite = panelSprite;
+            }
 
-			return newPanel;
-		}
+            panelImage.color = panelColor;
 
-
-		public static void CreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
-		{
-			GameObject newPanel = new GameObject();
-
-			newPanel.transform.SetParent(parent.transform, false);
-			newPanel.name = name;
-			newPanel.layer = 5;
-
-			RectTransform panelRect = newPanel.AddComponent<RectTransform>();
+            return newPanel;
+        }
 
 
-			SetRect(panelRect, uianch, anchoredPosition, sizeDelta, pivot);
+        public static void CreateNewPanel(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Color32 panelColor, GameObject parent = null, string name = "New Panel", string imageSource = "")
+        {
+            GameObject newPanel = new GameObject();
 
-			/*
+            newPanel.transform.SetParent(parent.transform, false);
+            newPanel.name = name;
+            newPanel.layer = 5;
+
+            RectTransform panelRect = newPanel.AddComponent<RectTransform>();
+
+
+            SetRect(panelRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+            /*
 			panelRect.pivot = pivot;
 
 			panelRect.anchorMin = ReturnAnchor(uianch);
@@ -266,32 +438,32 @@ namespace Jhrino.MFPLevelEditor
 
 			panelRect.anchoredPosition = anchoredPosition;
 			*/
-			Image panelImage = newPanel.AddComponent<Image>();
+            Image panelImage = newPanel.AddComponent<Image>();
 
-			if(imageSource != "")
-			{
-				Texture2D panelTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
-				Sprite panelSprite = Sprite.Create(panelTexture, new Rect(0f, 0f, panelTexture.width, panelTexture.height), new Vector2(0f, 0f), 100f);
-			
-				panelImage.sprite = panelSprite;
-			}
+            if (imageSource != "")
+            {
+                Texture2D panelTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+                Sprite panelSprite = Sprite.Create(panelTexture, new Rect(0f, 0f, panelTexture.width, panelTexture.height), new Vector2(0f, 0f), 100f);
 
-			panelImage.color = panelColor;
-		}
-		
-		public static Button ReturnCreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
-		{
-			
-			GameObject createdButtonObject = new GameObject();
-			createdButtonObject.transform.SetParent(parent.transform, false);
-			createdButtonObject.name = name;
-			createdButtonObject.layer = 5;
+                panelImage.sprite = panelSprite;
+            }
 
-			RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
+            panelImage.color = panelColor;
+        }
 
-			SetRect(buttonRect, uianch, anchoredPosition, sizeDelta, pivot);
+        public static Button ReturnCreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
+        {
 
-			/*
+            GameObject createdButtonObject = new GameObject();
+            createdButtonObject.transform.SetParent(parent.transform, false);
+            createdButtonObject.name = name;
+            createdButtonObject.layer = 5;
+
+            RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
+
+            SetRect(buttonRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+            /*
 
 			buttonRect.pivot = pivot;
 
@@ -303,37 +475,37 @@ namespace Jhrino.MFPLevelEditor
 			buttonRect.anchoredPosition = anchoredPosition;
 			*/
 
-			Image buttonImage = createdButtonObject.AddComponent<Image>();
+            Image buttonImage = createdButtonObject.AddComponent<Image>();
 
-			if(imageSource != "")
-			{
-				Texture2D buttonTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
-				Sprite buttonSprite = Sprite.Create(buttonTexture, new Rect(0f, 0f, buttonTexture.width, buttonTexture.height), new Vector2(0f, 0f), 100f);
-			
-				buttonImage.sprite = buttonSprite;
-			}
+            if (imageSource != "")
+            {
+                Texture2D buttonTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+                Sprite buttonSprite = Sprite.Create(buttonTexture, new Rect(0f, 0f, buttonTexture.width, buttonTexture.height), new Vector2(0f, 0f), 100f);
 
-			Button newButton = createdButtonObject.AddComponent<Button>();
-			newButton.transition = buttonTransition;
-			newButton.targetGraphic = buttonImage;
+                buttonImage.sprite = buttonSprite;
+            }
 
-			return newButton;
-		}
+            Button newButton = createdButtonObject.AddComponent<Button>();
+            newButton.transition = buttonTransition;
+            newButton.targetGraphic = buttonImage;
 
-		public static void CreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
-		{
-			
-			GameObject createdButtonObject = new GameObject();
-			createdButtonObject.transform.SetParent(parent.transform, false);
-			createdButtonObject.name = name;
-			createdButtonObject.layer = 5;
+            return newButton;
+        }
 
-			RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
+        public static void CreateNewButton(UIAnchor uianch, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, GameObject parent = null, string name = "New Button", string imageSource = "", Selectable.Transition buttonTransition = Selectable.Transition.ColorTint)
+        {
 
-			
-			SetRect(buttonRect, uianch, anchoredPosition, sizeDelta, pivot);
+            GameObject createdButtonObject = new GameObject();
+            createdButtonObject.transform.SetParent(parent.transform, false);
+            createdButtonObject.name = name;
+            createdButtonObject.layer = 5;
 
-			/*
+            RectTransform buttonRect = createdButtonObject.AddComponent<RectTransform>();
+
+
+            SetRect(buttonRect, uianch, anchoredPosition, sizeDelta, pivot);
+
+            /*
 			buttonRect.pivot = pivot;
 
 			buttonRect.anchorMin = ReturnAnchor(uianch);
@@ -344,102 +516,102 @@ namespace Jhrino.MFPLevelEditor
 			buttonRect.anchoredPosition = anchoredPosition;
 			*/
 
-			Image buttonImage = createdButtonObject.AddComponent<Image>();
-			
-
-			if(imageSource != "")
-			{
-				Texture2D buttonTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
-				Sprite buttonSprite = Sprite.Create(buttonTexture, new Rect(0f, 0f, buttonTexture.width, buttonTexture.height), new Vector2(0f, 0f), 100f);
-			
-				buttonImage.sprite = buttonSprite;
-			}
-
-			Button newButton = createdButtonObject.AddComponent<Button>();
-			newButton.transition = buttonTransition;
-			newButton.targetGraphic = buttonImage;
-		}
+            Image buttonImage = createdButtonObject.AddComponent<Image>();
 
 
-		public static Text ReturnCreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize,  Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
-		{
+            if (imageSource != "")
+            {
+                Texture2D buttonTexture = LoadPNG(LoadFileFromDataFolder(imageSource));
+                Sprite buttonSprite = Sprite.Create(buttonTexture, new Rect(0f, 0f, buttonTexture.width, buttonTexture.height), new Vector2(0f, 0f), 100f);
 
-			GameObject createdTextObject = new GameObject();
-			createdTextObject.transform.SetParent(parent.transform, false);
-			createdTextObject.name = name;
-			createdTextObject.layer = 5;
+                buttonImage.sprite = buttonSprite;
+            }
 
-			RectTransform textRect = createdTextObject.AddComponent<RectTransform>();
+            Button newButton = createdButtonObject.AddComponent<Button>();
+            newButton.transition = buttonTransition;
+            newButton.targetGraphic = buttonImage;
+        }
 
-			/*
+
+        public static Text ReturnCreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
+        {
+
+            GameObject createdTextObject = new GameObject();
+            createdTextObject.transform.SetParent(parent.transform, false);
+            createdTextObject.name = name;
+            createdTextObject.layer = 5;
+
+            RectTransform textRect = createdTextObject.AddComponent<RectTransform>();
+
+            /*
 			textRect.pivot = pivot;
 			textRect.anchorMin = ReturnAnchor(uianch);
 			textRect.anchorMax = ReturnAnchor(uianch);
 			*/
 
-			SetRect(textRect, uianch, anchoredPosition, sizeDelta, pivot);
+            SetRect(textRect, uianch, anchoredPosition, sizeDelta, pivot);
 
-			Text newText = createdTextObject.AddComponent<Text>();
+            Text newText = createdTextObject.AddComponent<Text>();
 
-			newText.resizeTextForBestFit = false;
-			newText.alignByGeometry = false;
+            newText.resizeTextForBestFit = false;
+            newText.alignByGeometry = false;
 
-			newText.font = font;
-			newText.text = text;
-			newText.lineSpacing = 1;
-			newText.alignment = textAlign;
+            newText.font = font;
+            newText.text = text;
+            newText.lineSpacing = 1;
+            newText.alignment = textAlign;
 
-			newText.color = textColor;
-			newText.fontSize = fontSize;
-			
-			//textRect.localScale = localSize;
+            newText.color = textColor;
+            newText.fontSize = fontSize;
 
-			newText.verticalOverflow = wrapV;
-			newText.horizontalOverflow = wrapH;
+            //textRect.localScale = localSize;
 
-			//textRect.sizeDelta = sizeDelta;
-			//textRect.anchoredPosition = anchoredPosition;
-			
-			return newText;
+            newText.verticalOverflow = wrapV;
+            newText.horizontalOverflow = wrapH;
 
-		}
+            //textRect.sizeDelta = sizeDelta;
+            //textRect.anchoredPosition = anchoredPosition;
 
-		public static void CreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize,  Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
-		{
+            return newText;
 
-			GameObject createdTextObject = new GameObject();
-			createdTextObject.transform.SetParent(parent.transform,false);
-			createdTextObject.name = name;
-			createdTextObject.layer = 5;
+        }
 
-			RectTransform textRect = createdTextObject.AddComponent<RectTransform>();
+        public static void CreateNewText(UIAnchor uianch, TextAnchor textAlign, Vector2 anchoredPosition, Vector2 sizeDelta, Vector2 pivot, Vector3 localSize, Font font, Color32 textColor, VerticalWrapMode wrapV, HorizontalWrapMode wrapH, GameObject parent = null, string text = "", string name = "New Text", int fontSize = 16)
+        {
 
-			textRect.pivot = pivot;
-			textRect.anchorMin = ReturnAnchor(uianch);
-			textRect.anchorMax = ReturnAnchor(uianch);
+            GameObject createdTextObject = new GameObject();
+            createdTextObject.transform.SetParent(parent.transform, false);
+            createdTextObject.name = name;
+            createdTextObject.layer = 5;
 
-			Text newText = createdTextObject.AddComponent<Text>();
+            RectTransform textRect = createdTextObject.AddComponent<RectTransform>();
 
-			newText.resizeTextForBestFit = false;
-			newText.alignByGeometry = false;
+            textRect.pivot = pivot;
+            textRect.anchorMin = ReturnAnchor(uianch);
+            textRect.anchorMax = ReturnAnchor(uianch);
 
-			newText.font = font;
-			newText.text = text;
-			newText.lineSpacing = 1;
-			newText.alignment = textAlign;
+            Text newText = createdTextObject.AddComponent<Text>();
 
-			newText.color = textColor;
-			newText.fontSize = fontSize;
-			
-			textRect.localScale = localSize;
+            newText.resizeTextForBestFit = false;
+            newText.alignByGeometry = false;
 
-			newText.verticalOverflow = wrapV;
-			newText.horizontalOverflow = wrapH;
+            newText.font = font;
+            newText.text = text;
+            newText.lineSpacing = 1;
+            newText.alignment = textAlign;
 
-			textRect.sizeDelta = sizeDelta;
-			textRect.anchoredPosition = anchoredPosition;
+            newText.color = textColor;
+            newText.fontSize = fontSize;
 
-		}
-	}
+            textRect.localScale = localSize;
+
+            newText.verticalOverflow = wrapV;
+            newText.horizontalOverflow = wrapH;
+
+            textRect.sizeDelta = sizeDelta;
+            textRect.anchoredPosition = anchoredPosition;
+
+        }
+    }
 }
 	

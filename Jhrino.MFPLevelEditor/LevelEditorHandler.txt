@@ -31,9 +31,9 @@ namespace Jhrino.MFPLevelEditor
 
 		public enum MFPGamemode
 		{
-			NORMAL,
-			SKYFALL,
-			MOTORCYCLE
+			NORMAL = 0,
+			SKYFALL = 1,
+			MOTORCYCLE = 2
 		}
 
 		public bool levelInitialized = false;
@@ -869,7 +869,7 @@ namespace Jhrino.MFPLevelEditor
 
 			//CoordinateField = inputField;
 
-			Button exitedit = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomMiddle, new Vector2(-20, 60), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), inputField.gameObject, "ExitEditModeButton", "");
+			Button exitedit = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomMiddle, new Vector2(-20, 10), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), inputField.gameObject, "ExitEditModeButton", "");
 
 
 			exitedit.onClick.AddListener(delegate()
@@ -885,7 +885,7 @@ namespace Jhrino.MFPLevelEditor
 
 			Button positionButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -122f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PositionButton", "EditorAssets/icons/ico_position.png");
 
-			 propertiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-100.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PropertiesButton", "");
+			 propertiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-100.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PropertiesButton", "EditorAssets/icons/ico_properties.png");
 
 			propertiesButton.onClick.AddListener(delegate()
 			{
@@ -979,53 +979,17 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-216, 187), new Vector2(160, 30), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Post Processing:", "AllowPostProcessText", 64);
 
 
-			GameObject PostProcessingCheckmark = new GameObject();
-			PostProcessingCheckmark.name = "PostProcessCheckmark";
-			PostProcessingCheckmark.transform.parent = PanelOBJ2.transform;
-			RectTransform rectTransform3 = PostProcessingCheckmark.AddComponent<RectTransform>();
-			rectTransform3.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform3.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransform3.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransform3.sizeDelta = new Vector2(20.41f, 20f);
-			rectTransform3.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
-			rectTransform3.anchoredPosition = new Vector2(97.5f, 175.6f);
-			Toggle toggle = PostProcessingCheckmark.AddComponent<Toggle>();
+
+			Toggle toggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(97.5f, 175.6f), new Vector2(20.41f, 20f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ2, "PostProcessingCheckmarkToggle", "", "");
+
 			allowPostProcessToggle = toggle;
 			toggle.isOn = true;
-			GameObject checkmarkbg = new GameObject();
-			checkmarkbg.name = "CheckmarkBackground";
-			checkmarkbg.transform.parent = PostProcessingCheckmark.transform;
-			RectTransform rectTransform4 = checkmarkbg.AddComponent<RectTransform>();
-			rectTransform4.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform4.anchorMin = new Vector2(0f, 1f);
-			rectTransform4.anchorMax = new Vector2(0f, 1f);
-			rectTransform4.sizeDelta = new Vector2(20f, 20f);
-			rectTransform4.anchoredPosition = new Vector2(10f, -10f);
-			rectTransform4.localScale = new Vector3(1f, 1f, 1f);
-			Image checkmarkbgGraphics = checkmarkbg.AddComponent<Image>();
-			toggle.targetGraphic = checkmarkbgGraphics;
-			RectTransform rectTransform5 = new GameObject
-			{
-				name = "Checkmark",
-				transform = 
-				{
-					parent = checkmarkbg.transform
-				}
-			}.AddComponent<RectTransform>();
-			rectTransform5.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform5.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransform5.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransform5.sizeDelta = new Vector2(20f, 20f);
-			rectTransform5.anchoredPosition = new Vector2(0f, 0f);
-			Image checkrectimage = rectTransform5.gameObject.AddComponent<Image>();
-			Texture2D ico_check = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/checkmark.png"));
-			Sprite spr_check = Sprite.Create(ico_check, new Rect(0f, 0f, (float)ico_check.width, (float)ico_check.height), new Vector2(0f, 0f), 100f);
-			checkrectimage.sprite = spr_check;
-			toggle.graphic = checkrectimage;
+
+
 			this.WorldSettingsRoot = PanelOBJ2;
 			this.WorldSettingsRoot.SetActive(false);
 
-			Button worldSettingsButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -700f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "WorldSettingsButton", "");
+			Button worldSettingsButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -700f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "WorldSettingsButton", "EditorAssets/icons/ico_world.png");
 
 			worldSettingsButton.onClick.AddListener(delegate()
 			{
@@ -1034,7 +998,7 @@ namespace Jhrino.MFPLevelEditor
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
-			Button entitiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -850f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "EntitiesButton", "");
+			Button entitiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -850f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "EntitiesButton", "EditorAssets/icons/ico_entities.png");
 
 			entitiesButton.onClick.AddListener(delegate()
 			{
@@ -1047,56 +1011,20 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-235, 125f), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.49257f, 0.49257f, 0.49257f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Color Grading:", "AllowPostProcessText", 64);
 
 
-			GameObject ColorGradingCheckmark = new GameObject();
-			ColorGradingCheckmark.name = "ColorGradingCheckmark";
-			ColorGradingCheckmark.transform.parent = PanelOBJ2.transform;
-			RectTransform colgradecheckrec = ColorGradingCheckmark.AddComponent<RectTransform>();
-			colgradecheckrec.pivot = new Vector2(0.5f, 0.5f);
-			colgradecheckrec.anchorMin = new Vector2(0.5f, 0.5f);
-			colgradecheckrec.anchorMax = new Vector2(0.5f, 0.5f);
-			colgradecheckrec.sizeDelta = new Vector2(20.41f, 20f);
-			colgradecheckrec.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
-			colgradecheckrec.anchoredPosition = new Vector2(97.5f, 121.1f);
-			Toggle colgradetoggle = ColorGradingCheckmark.AddComponent<Toggle>();
-			allowColorGradingToggle = colgradetoggle;
-			colgradetoggle.isOn = true;
+			allowColorGradingToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(97.5f, 121.1f), new Vector2(20.41f, 20f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ2, "ColorGradToggle", "", "");
+			allowColorGradingToggle.isOn = true;
 
+			string[] options = new string[2];
+			options[0] = "NORMAL";
+			options[1] = "SKYFALL";
 
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-252, 80f), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.49257f, 0.49257f, 0.49257f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Gamemode:", "ModeText", 64);
 
+			Dropdown modeDropdown = MFPEditorUtils.ReturnCreateNewDropDown(MFPEditorUtils.UIAnchor.middle, new Vector2(-10, 90), new Vector3(160,30), new Vector2(0.5f,0.5f), new Vector3(1,1,1), options, PanelOBJ2);
 
-			GameObject colgradingcheckmarkbg = new GameObject();
-			colgradingcheckmarkbg.name = "CheckmarkBackground";
-			colgradingcheckmarkbg.transform.parent = ColorGradingCheckmark.transform;
-			RectTransform colgradcheckrect = colgradingcheckmarkbg.AddComponent<RectTransform>();
-			colgradcheckrect.pivot = new Vector2(0.5f, 0.5f);
-			colgradcheckrect.anchorMin = new Vector2(0f, 1f);
-			colgradcheckrect.anchorMax = new Vector2(0f, 1f);
-			colgradcheckrect.sizeDelta = new Vector2(20f, 20f);
-			colgradcheckrect.anchoredPosition = new Vector2(10f, -10f);
-			colgradcheckrect.localScale = new Vector3(1f, 1f, 1f);
-			Image colgradecheckmarkbgGraphics = colgradingcheckmarkbg.AddComponent<Image>();
-			colgradetoggle.targetGraphic = colgradecheckmarkbgGraphics;
-			
+			modeDropdown.onValueChanged.AddListener(delegate{UpdateGamemode(modeDropdown.value);});
 
-			RectTransform colgraderect = new GameObject
-			{
-				name = "Checkmark",
-				transform = 
-				{
-					parent = colgradingcheckmarkbg.transform
-				}
-			}.AddComponent<RectTransform>();
-			colgraderect.pivot = new Vector2(0.5f, 0.5f);
-			colgraderect.anchorMin = new Vector2(0.5f, 0.5f);
-			colgraderect.anchorMax = new Vector2(0.5f, 0.5f);
-			colgraderect.sizeDelta = new Vector2(20f, 20f);
-			colgraderect.anchoredPosition = new Vector2(0f, 0f);
-			Image colgradecheckrectimage = colgraderect.gameObject.AddComponent<Image>();
-
-			colgradecheckrectimage.sprite = spr_check;
-			colgradetoggle.graphic = colgradecheckrectimage;
-
-			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn, SkyColor, allowFog);});
+			allowColorGradingToggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGradingToggle.isOn, SkyColor, allowFog);});
       
 			worldSettingsButton.transform.parent = this.EditorButtonsRoot.transform;
 			
@@ -1105,6 +1033,11 @@ namespace Jhrino.MFPLevelEditor
 			EntitySpawnRoot.SetActive(false);
 
 			MFPEditorLogger.Log("Hud load complete");
+		}
+
+		public void UpdateGamemode(int mode)
+		{
+			Gamemode = (LevelEditorHandler.MFPGamemode)mode;
 		}
 
 		// Token: 0x0600061A RID: 1562
