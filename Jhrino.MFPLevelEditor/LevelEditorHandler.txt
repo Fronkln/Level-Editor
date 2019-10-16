@@ -36,30 +36,112 @@ namespace Jhrino.MFPLevelEditor
 			MOTORCYCLE = 2
 		}
 
+
 		public bool levelInitialized = false;
+
+		public UIWeaponSelectorScript uIWeaponSelector;
 
 
 		//loadda artık bu methodu kullanarak halledeceksin
 
 		
+	
+
+
 		public void LoadModel(GameObject target, string modelname, string textureName = "")
 		{
 	
-		target.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(modelname);
-		target.AddComponent<MeshRenderer>();
-		target.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
-		target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder(textureName));
+			target.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(modelname);
+			target.AddComponent<MeshRenderer>();
+			target.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+			target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder(textureName));
 			
 
 			MFPEditorLogger.Log("Load model complete");
 		}
 
 
+		public void ClearAllPlayerWeapons()
+		{
+
+			playerScript.resetWeapons();
+			for(int i = 0; i <	playerScript.weaponActive.Length; i++)
+			{
+				playerScript.weaponActive[i] = false;
+			}
+			playerScript.weapon = 0;
+			playerScript.changeWeapon(0);
+			Player.GetComponent<UnarmedPlayer>().attackStance = UnarmedPlayer.MFPAttackStance.FIGHTCLUB;
+			playerScript.updateAmmoHUD();
+		}
+
+		public void UnlockWeapon(int wepID)
+		{
+			PlayerScript playerCode = Player.GetComponent<PlayerScript>();
+			playerCode.weaponActive[wepID] = true;
+			playerCode.ammoTotal[wepID] = 128;
+			playerCode.secondaryAmmo[wepID] = 3;
+
+		}
+	
+		public void UpdatePlayerLoadout(int weapon, bool isOn)
+		{;
+
+			switch(weapon)
+			{
+				case 1:
+					pistol = isOn;
+				break;
+
+				case 2:
+					dualPistol = isOn;
+				break;
+
+				case 3:
+					uzi = isOn;
+					break;
+				case 4:
+					dualUzi = isOn;
+				break;
+				case 5:
+					assaultRifle = isOn;
+				break;
+				case 6:
+					shotgun = isOn;
+					break;
+
+			}
+		}
+
+		
+
+		public void PreparePlayerLoadout()
+		{
+			PlayerScript playerCode = Player.GetComponent<PlayerScript>();
+			
+			if(shotgun)
+				UnlockWeapon(6);
+
+			if(assaultRifle)
+				UnlockWeapon(5);
+			if(dualUzi)
+				UnlockWeapon(4);
+			if(uzi)
+				UnlockWeapon(3);
+			if(dualPistol)
+				UnlockWeapon(2);
+			if(pistol)
+				UnlockWeapon(1);
+			
+			uIWeaponSelector.prepareUI();
+			playerCode.updateAmmoHUD();
+
+			
+			
+		}
+
 		public void ConfigureGeometryProperties(GameObject target, int layer, bool disappears, string texturename)
 		{
-			MFPEditorLogger.Log(layer.ToString());
-			MFPEditorLogger.Log(disappears.ToString());
-			MFPEditorLogger.Log(texturename);
 
 			target.layer = layer;
 			if(disappears)
@@ -309,6 +391,10 @@ namespace Jhrino.MFPLevelEditor
 			}
 			//
 
+
+			if(Input.GetKeyDown(KeyCode.L))
+				UnlockWeapon(3);
+
 			if(Gamemode == MFPGamemode.SKYFALL && PlayMod && levelInitialized)
 			{
 				if(root.nrOfEnemiesTotal == root.nrOfEnemiesKilled)
@@ -433,32 +519,39 @@ namespace Jhrino.MFPLevelEditor
 						{
 						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null && !Editing)
 						{
-
+							try
+							{
 							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
-							GameObject newFloor = Instantiate(floor_Wood);
-							newFloor.name = "Wooden Floor";
-							newFloor.SetActive(true);
+								GameObject newFloor = Instantiate(floor_Wood);
+								newFloor.name = "Wooden Floor";
+								newFloor.SetActive(true);
 
-							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
-							 else
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
+								 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
+								 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
+								 else
+								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
 
-							 foreach(GameObject gobject in GeometryFloorLump)
-							{
-								if(gobject.transform.position == newFloor.transform.position)
+								 foreach(GameObject gobject in GeometryFloorLump)
 								{
-									Destroy(newFloor);
-									break;
+									if(gobject.transform.position == newFloor.transform.position)
+									{
+										Destroy(newFloor);
+										break;
+									}
+
 								}
 
-							}
-
-							 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
+								 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
 							 GeometryFloorLump.Add(newFloor);
 							}
-							else
+							}
+							catch
+							{
+							Application.Quit();
+									
+							}
+							if(SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
 
 
@@ -505,7 +598,12 @@ namespace Jhrino.MFPLevelEditor
 			UnityEngine.Object.FindObjectOfType<OptimizerScript>().enabled = false;
 			this.root.nrOfEnemiesTotal = 0;
 			this.HUD = GameObject.Find("HUD/Canvas");
+
+			uIWeaponSelector = GameObject.Find("HUD/Canvas/WeaponSelector").GetComponent<UIWeaponSelectorScript>();
+
 			this.Player = GameObject.Find("Player");
+			Player.AddComponent<UnarmedPlayer>();
+			playerScript = Player.GetComponent<PlayerScript>();
 			this.Camera = GameObject.Find("Main Camera");
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
@@ -832,7 +930,7 @@ namespace Jhrino.MFPLevelEditor
 
 			//
 
-			this.DebugObject = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(-45.6f, 83f),new Vector2(472.9f, 100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(255,255,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "COCK N BALL", "testing", 68);
+			this.DebugObject = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(-45.6f, 83f),new Vector2(472.9f, 100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(255,255,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "Error Loading", "testing", 68);
 
 
 			GameObject gameObject2 = new GameObject();
@@ -894,6 +992,15 @@ namespace Jhrino.MFPLevelEditor
 
 			propertiesButton.gameObject.SetActive(false);
 
+
+			 Button loadoutButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-150.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "LoadoutButton", "EditorAssets/icons/ico_properties.png");
+
+			loadoutButton.onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("playerloadout", false);
+			});
+
+
 			positionButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("position");
@@ -932,14 +1039,42 @@ namespace Jhrino.MFPLevelEditor
 			GameObject PanelOBJ = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(628.2f, 440.51f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,255,255, 100), gameObject, "EntityPanel", "");
 
 
-			// PROPERTIES
-			//
+
 			 PropertiesPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "PropertiesPanel", "");
 
 			PropertiesPanel.SetActive(false);
 
-			// PROPERTİES BİTİŞ
-			//
+			LoadoutPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "LoadoutPanel", "");
+
+			Toggle testPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 230), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "pistolToggle","", "");
+
+			testPistolToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(1, testPistolToggle.isOn);});
+
+			Toggle dualPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 160), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualpistolToggle","", "");
+
+			dualPistolToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(2, dualPistolToggle.isOn);});
+
+			Toggle uziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 90), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "uziToggle","", "");
+
+			uziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(3, uziToggle.isOn);});
+
+			Toggle dualuziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 10), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualuziToggle","", "");
+
+			dualuziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(4, dualuziToggle.isOn);});
+
+			Toggle shotgunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -70), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "shotgunToggle","", "");
+
+			shotgunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(6, shotgunToggle.isOn);});
+
+
+			Toggle assaultToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -140), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "assaultToggle","", "");
+
+			assaultToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(5, assaultToggle.isOn);});
+
+
+
+			LoadoutPanel.SetActive(false);
+
 
 			Button gascanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 158f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "GasCanisterButton", "");
 
@@ -1023,6 +1158,10 @@ namespace Jhrino.MFPLevelEditor
 			Dropdown modeDropdown = MFPEditorUtils.ReturnCreateNewDropDown(MFPEditorUtils.UIAnchor.middle, new Vector2(-10, 90), new Vector3(160,30), new Vector2(0.5f,0.5f), new Vector3(1,1,1), options, PanelOBJ2);
 
 			modeDropdown.onValueChanged.AddListener(delegate{UpdateGamemode(modeDropdown.value);});
+
+			modeDropdown.value = (int)Gamemode;
+
+			gamemodeDropdown = modeDropdown;
 
 			allowColorGradingToggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGradingToggle.isOn, SkyColor, allowFog);});
       
@@ -1304,8 +1443,14 @@ namespace Jhrino.MFPLevelEditor
 				this.HUD.GetComponentInChildren<Canvas>().enabled = true;
 				this.Player.SetActive(true);
 				
+				PreparePlayerLoadout();
 
 				this.Camera.SetActive(true);
+				Camera.transform.position = new Vector3(0,0, Camera.transform.position.z);
+				Camera.GetComponent<CameraScript>().camPos = Camera.transform.position;
+				Camera.GetComponent<CameraScript>().fakePos = Camera.transform.position;
+
+
 				this.CoordinateField.DeactivateInputField();
 				this.CoordinateField.gameObject.SetActive(false);
 				this.EditorCamera.enabled = false;
@@ -1436,6 +1581,7 @@ namespace Jhrino.MFPLevelEditor
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
 				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
+				ClearAllPlayerWeapons();
 				this.Player.SetActive(false);
 				this.Camera.SetActive(false);
 				this.EditorCamera.enabled = true;
@@ -1748,36 +1894,45 @@ namespace Jhrino.MFPLevelEditor
 
 public void DoObjectCleanup()
 {
+	DoMissingArrayCleanup();
+
 	foreach (GameObject obj in this.BrushLump)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 	foreach (GameObject obj in this.GeometryWallLump)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 
 	foreach (GameObject obj in this.GeometryFloorLump)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 	foreach (Transform transform in this.EnemySpawnpoints)
 	{
+				if(transform != null)
 		UnityEngine.Object.Destroy(transform.gameObject);
 	}
 
 	foreach (GameObject obj in GasCanisters)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 
 	foreach (GameObject obj in FryingPans)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 
 	foreach (GameObject obj in Skateboards)
 	{
+		if (obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 }
@@ -1810,6 +1965,20 @@ public void PrototypeLoad()
 				"!EnemySpawn",
 				"!LevelEnd"
 			};
+
+
+		int brushCount = 0;
+
+		foreach(string st in levelFile)
+		{
+			if(st == "!GeometryFloor")
+				brushCount++;	
+		}
+
+		MFPEditorLogger.Log("Brush floor count in map: " + brushCount.ToString());
+
+		brushCount = 0;
+
         for (int i = 0; i < levelFile.Length; i++) //WE'RE JUST GONNA READ THE WHOLE THING
         {
             String tag = levelFile[i]; //It SHOULD only hit this line if its a tag
@@ -1849,8 +2018,9 @@ public void PrototypeLoad()
 
 
 					
-
+					MFPEditorLogger.Log("-------- LEVEL LOAD --------");
 					theme = int.Parse(levelFile[i + 4].Replace("theme = ", ""));
+					MFPEditorLogger.Log("----------------------------");
 					MFPEditorLogger.Log("Level Theme: " + theme);
 
 					float[] Skycolor = Array.ConvertAll(levelFile[i + 5].Replace("SkyColor = ", "").Split(new char[] { ' ' }), float.Parse);
@@ -1881,7 +2051,7 @@ public void PrototypeLoad()
 
 				case "!GeometryWall":
 
-					MFPEditorLogger.Log("Data is about to get into memory");
+
 					
 			        float[] geowallposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
                     float[] geowallrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
@@ -1892,14 +2062,12 @@ public void PrototypeLoad()
 
                     string geowalltexturename = levelFile[i + 6];
 
-					MFPEditorLogger.Log("Data in memory for brush");
 
                     GameObject newWall = Instantiate(wall_Brick);
 					newWall.SetActive(true);
                     newWall.transform.position = new Vector3(geowallposition[0], geowallposition[1], geowallposition[2]);
                     newWall.transform.eulerAngles = new Vector3(geowallrotation[0], geowallrotation[1], geowallrotation[2]);
                     newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
-					MFPEditorLogger.Log("Brush coordinates are set");
                     newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
 					
 					ConfigureGeometryProperties(newWall, int.Parse(properties[0]), properties[1].Equals("true"), levelFile[i + 6]);
@@ -1911,6 +2079,9 @@ public void PrototypeLoad()
 				
 				case "!GeometryFloor":
 
+
+					MFPEditorLogger.Log("Loading brush id: " + brushCount.ToString());
+
 				    float[] geofloorposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
@@ -1918,7 +2089,7 @@ public void PrototypeLoad()
                   
 					string[] floorproperties = levelFile[ i + 5].Split(',');
 
-					MFPEditorLogger.Log("Data in memory for brush");
+	
 
                     GameObject newFloor = Instantiate(floor_Wood);
 					newFloor.SetActive(true);
@@ -1930,7 +2101,8 @@ public void PrototypeLoad()
 					ConfigureGeometryProperties(newFloor, int.Parse(floorproperties[0]), floorproperties[1].Equals("true"), levelFile[i + 6]);
 					GeometryFloorLump.Add(newFloor);
 					i+= 6;
-					
+					brushCount++;
+
 					break;
 
                 case "!Brush": //ITS A BRUSH
@@ -2003,11 +2175,14 @@ public void PrototypeLoad()
 					else
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]), Array.ConvertAll(levelFile[i + 5].Split(new char[] { ',' }), element => element.ToString()));
 							break;
+
+						
             }
         }
 			CalculateLevelHash();
 			MFPEditorLogger.Log("Loading over");
 			ToggleSnapping(false);
+			gamemodeDropdown.value = (int)Gamemode;
 		}
 
 		// Token: 0x06000625 RID: 1573
@@ -2464,7 +2639,8 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
-				PropertiesPanel.SetActive(false);
+				this.PropertiesPanel.SetActive(false);
+				this.LoadoutPanel.SetActive(false);
 				this.adjustingSettings = false;
 				return;
 			}
@@ -2494,7 +2670,13 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 
 					PropertiesSetup(PropertiesWarmup(EditingObject.name));
 
-				
+				}
+				if(menuType == "playerloadout")
+				{
+					this.WorldSettingsRoot.SetActive(false);
+					this.EntitySpawnRoot.SetActive(false);
+					this.PropertiesPanel.SetActive(false);
+					this.LoadoutPanel.SetActive(true);
 				}
 
 				this.adjustingSettings = true;
@@ -2505,6 +2687,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
 				this.PropertiesPanel.SetActive(false);
+				this.LoadoutPanel.SetActive(false);
 
 				this.adjustingSettings = false;
 			}
@@ -2627,6 +2810,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 //---------------------------------------GAMEPLAY-----------------------------------------//
 
 		public MFPGamemode Gamemode = MFPGamemode.NORMAL;
+		public PlayerScript playerScript;
 
 //--------------------------------------------------LEGACY---------------------------------//
 		public List<GameObject> BrushLump = new List<GameObject>();
@@ -2668,12 +2852,19 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 
 //------------------------------- IMPORTANT PANELS ------------------------------------
 			public GameObject PropertiesPanel;
+			public GameObject LoadoutPanel;
 			
 			public List<GameObject> propertyElements = new List<GameObject>();
 
 			public Button propertiesButton;
-//---------------------------------------------------------------------------------------
+			public Dropdown gamemodeDropdown;
 
+
+//---------------------------------------------------------------------------------------
+	
+	public bool pistol, dualPistol, uzi, dualUzi, shotgun, assaultRifle, sniper;
+
+//----------------------------
 
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
