@@ -100,6 +100,7 @@ public class LevelChangerScript : MonoBehaviour
 				}
 			}
 		}
+		this.player.transform.position = new Vector3(0f, 0f, 0f);
 		new GameObject().AddComponent<LevelEditorHandler>();
 		UnityEngine.Object.Destroy(GameObject.Find("glass_window_frame_large"));
 		UnityEngine.Object.Destroy(GameObject.Find("glass_window_frame_large"));

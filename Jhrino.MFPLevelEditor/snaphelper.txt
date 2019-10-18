@@ -1,0 +1,46 @@
+using System;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	// Token: 0x020000F5 RID: 245
+	public class snaphelper : MonoBehaviour
+	{
+		// Token: 0x060006AA RID: 1706 RVA: 0x000020A9 File Offset: 0x000002A9
+		public snaphelper()
+		{
+		}
+
+		// Token: 0x060006AB RID: 1707 RVA: 0x0000557E File Offset: 0x0000377E
+		public void Start()
+		{
+			this.buildcollision = base.gameObject.GetComponent<BoxCollider>();
+		}
+
+		// Token: 0x060006AC RID: 1708 RVA: 0x000020A7 File Offset: 0x000002A7
+		public void Update()
+		{
+		}
+
+		// Token: 0x040013E8 RID: 5096
+		public snaphelper.Axis snapaxis;
+
+		// Token: 0x040013E9 RID: 5097
+		public bool isWallNode;
+
+		// Token: 0x040013EA RID: 5098
+		public GameObject SnappedObject;
+
+		// Token: 0x040013EB RID: 5099
+		private BoxCollider buildcollision;
+
+		// Token: 0x020000F6 RID: 246
+		public enum Axis
+		{
+			// Token: 0x040013ED RID: 5101
+			PositiveX,
+			// Token: 0x040013EE RID: 5102
+			NegativeX
+		}
+	}
+}

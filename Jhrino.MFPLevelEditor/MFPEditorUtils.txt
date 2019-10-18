@@ -51,6 +51,13 @@ namespace Jhrino.MFPLevelEditor
         }
 
 
+		public static void doPedroHint(RootScript root, string txt, float timer = -99999)
+		{
+			root.pedroHintTimer = timer;
+			root.StartCoroutine(root.doPedroHint(txt));
+		}
+
+
         public static string NormalizeInputFieldIntValue(string value, int min, int max)
         {
             int valConverted = int.Parse(value);

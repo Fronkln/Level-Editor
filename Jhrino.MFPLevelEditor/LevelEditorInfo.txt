@@ -2,15 +2,22 @@ using System;
 
 namespace Jhrino.MFPLevelEditor
 {
-	// Token: 0x020000ED RID: 237
+	// Token: 0x020000F2 RID: 242
 	public static class LevelEditorInfo
 	{
-		// Token: 0x06000655 RID: 1621 RVA: 0x00005099 File Offset: 0x00003299
+		// Token: 0x060006A2 RID: 1698 RVA: 0x000054F7 File Offset: 0x000036F7
 		static LevelEditorInfo()
 		{
 		}
 
-		// Token: 0x0400137E RID: 4990
+		// Token: 0x040013DC RID: 5084
 		public static float version = 0.23f;
+
+		public static string[] levelEditorHints = new string[3]
+		{
+			"X key is the shortcut to exit editing mode.",
+			"You can configure object properties with\n the properties button.",
+			"Your level is auto-saved when you enter playmode."
+		};
 	}
 }

@@ -71,7 +71,7 @@ namespace Jhrino.MFPLevelEditor
 			}
 			playerScript.weapon = 0;
 			playerScript.changeWeapon(0);
-			Player.GetComponent<UnarmedPlayer>().attackStance = UnarmedPlayer.MFPAttackStance.FIGHTCLUB;
+			Player.GetComponent<WeaponManager>().attackStance = WeaponManager.MFPAttackStance.FIGHTCLUB;
 			playerScript.updateAmmoHUD();
 		}
 
@@ -109,6 +109,15 @@ namespace Jhrino.MFPLevelEditor
 				case 6:
 					shotgun = isOn;
 					break;
+				case 7:
+					turretGun = isOn;
+					break;
+				case 8:
+					shockRifle = isOn;
+					break;
+				case 10:
+					crossbow = isOn;
+					break;
 
 			}
 		}
@@ -119,9 +128,16 @@ namespace Jhrino.MFPLevelEditor
 		{
 			PlayerScript playerCode = Player.GetComponent<PlayerScript>();
 			
+			if(crossbow)
+				UnlockWeapon(10);
+			if(sniper)
+				UnlockWeapon(9);
+			if(shockRifle)
+				UnlockWeapon(8);
+			if(turretGun)
+				UnlockWeapon(7);
 			if(shotgun)
 				UnlockWeapon(6);
-
 			if(assaultRifle)
 				UnlockWeapon(5);
 			if(dualUzi)
@@ -548,7 +564,7 @@ namespace Jhrino.MFPLevelEditor
 							}
 							catch
 							{
-							Application.Quit();
+								MFPEditorLogger.Log("Placement error encountered, chaos prevented");
 									
 							}
 							if(SnapTarget.GetComponent<snaphelper>().isWallNode)
@@ -602,7 +618,7 @@ namespace Jhrino.MFPLevelEditor
 			uIWeaponSelector = GameObject.Find("HUD/Canvas/WeaponSelector").GetComponent<UIWeaponSelectorScript>();
 
 			this.Player = GameObject.Find("Player");
-			Player.AddComponent<UnarmedPlayer>();
+			Player.AddComponent<WeaponManager>();
 			playerScript = Player.GetComponent<PlayerScript>();
 			this.Camera = GameObject.Find("Main Camera");
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
@@ -1031,6 +1047,7 @@ namespace Jhrino.MFPLevelEditor
 			this.EditorButtonsRoot = new GameObject();
 			this.EditorButtonsRoot.transform.parent = canvas.transform;
 
+			loadoutButton.transform.parent = EditorButtonsRoot.transform;
 			positionButton.transform.parent = this.EditorButtonsRoot.transform;
 			colorButton.transform.parent = this.EditorButtonsRoot.transform;
 			scaleButton.transform.parent = this.EditorButtonsRoot.transform;
@@ -1070,6 +1087,10 @@ namespace Jhrino.MFPLevelEditor
 			Toggle assaultToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -140), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "assaultToggle","", "");
 
 			assaultToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(5, assaultToggle.isOn);});
+
+			Toggle turretGunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -210), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "turretGunToggle","", "");
+
+			turretGunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(7, turretGunToggle.isOn);});
 
 
 
@@ -1612,6 +1633,8 @@ namespace Jhrino.MFPLevelEditor
 
 				levelInitialized = false;
 
+				MFPEditorUtils.doPedroHint(root, LevelEditorInfo.levelEditorHints[UnityEngine.Random.Range(0, LevelEditorInfo.levelEditorHints.Length)], -999);
+
 				DoMissingArrayCleanup();
 			}
 		}
@@ -1769,6 +1792,13 @@ namespace Jhrino.MFPLevelEditor
 		public void PrototypeSave()
 		{
 			DoMissingArrayCleanup();
+
+
+			foreach(GameObject obj in GameObject.FindObjectsOfType<GameObject>())
+			{
+				if(obj.name == "Floor" && !GeometryFloorLump.Contains(obj))
+					GeometryFloorLump.Add(obj);
+			}
 
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
@@ -2862,7 +2892,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 
 //---------------------------------------------------------------------------------------
 	
-	public bool pistol, dualPistol, uzi, dualUzi, shotgun, assaultRifle, sniper;
+	public bool pistol, dualPistol, uzi, dualUzi, shotgun, assaultRifle, shockRifle, turretGun, crossbow, sniper;
 
 //----------------------------
 
