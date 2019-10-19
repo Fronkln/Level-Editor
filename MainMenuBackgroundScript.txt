@@ -1,0 +1,324 @@
+using System;
+using Boo.Lang.Runtime;
+using Rewired;
+using UnityEngine;
+using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityScript.Lang;
+using Jhrino.MFPLevelEditor;
+
+// Token: 0x0200006E RID: 110
+[Serializable]
+public class MainMenuBackgroundScript : MonoBehaviour
+{
+
+	public Image fadeBlack_Arena;
+
+	// Token: 0x060002A8 RID: 680 RVA: 0x000020A9 File Offset: 0x000002A9
+	public MainMenuBackgroundScript()
+	{
+	}
+
+	// Token: 0x060002A9 RID: 681 RVA: 0x00003548 File Offset: 0x00001748
+	public virtual void Awake()
+	{
+		this.player = ReInput.players.GetPlayer(0);
+	}
+
+
+	// Token: 0x060002AA RID: 682 RVA: 0x0003D974 File Offset: 0x0003BB74
+	public virtual void Start()
+	{
+
+		GameObject.Find("MFP_Logo/MFP_Logo (1)").GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(Application.dataPath + "/LevelEditor_Jhrino/MFP_logo_editor.png");
+		Texture2D texture = MFPEditorUtils.LoadPNG(Application.dataPath + "/LevelEditor_Jhrino/MFPA_pedrocool.png");
+		Sprite replacementface = GameObject.Find("Pedro_high_res/pedro_face_big").GetComponent<SpriteRenderer>().sprite;
+		Sprite pedrocoolface = Sprite.Create(texture, replacementface.rect, new Vector2(0.5010355f, 0.4879137f));
+		GameObject.Find("Pedro_high_res/pedro_face_big").GetComponent<SpriteRenderer>().sprite = pedrocoolface;
+
+		GameObject gameObject = GameObject.Find("RootShared");
+		if (gameObject == null)
+		{
+			gameObject = new GameObject();
+			gameObject.gameObject.name = "RootShared";
+			gameObject.AddComponent(typeof(RootSharedScript));
+		}
+		this.rootShared = (RootSharedScript)gameObject.GetComponent(typeof(RootSharedScript));
+		this.theCanvas = GameObject.Find("MainMenuCanvas").transform;
+		this.camHolder = GameObject.Find("CameraHolder").transform;
+		this.camHolderStartRot = this.camHolder.rotation;
+		this.theCam = GameObject.Find("TheCamera").transform;
+		this.camStartPos = this.theCam.localPosition;
+		this.camStartRot = this.theCam.localRotation;
+		this.camTarget = this.camHolder.Find("CamTarget").transform;
+		this.camTargetStartPos = this.camTarget.localPosition;
+		this.gunLightHolder = GameObject.Find("GunLightHolder").transform;
+		this.gunLight = (Light)this.gunLightHolder.Find("GunLight").GetComponent(typeof(Light));
+		this.gunLightTimer = (float)UnityEngine.Random.Range(90, 180);
+		this.gunSound = (AudioSource)this.gunLightHolder.Find("GunSound").GetComponent(typeof(AudioSource));
+		this.audioSnapshotToTrigger.TransitionTo((float)0);
+		this.audioMixer.SetFloat("MasterVolume", (float)0);
+		this.audioMixer.SetFloat("NormalTimeMusicHighPass", (float)0);
+		this.startSound = (AudioSource)GameObject.Find("StartSound").GetComponent(typeof(AudioSource));
+		this.blackFade = (Image)this.theCanvas.Find("BlackFade").GetComponent(typeof(Image));
+		int num = 1;
+		Color color = this.blackFade.color;
+		float num2 = color.a = (float)num;
+		Color color2 = this.blackFade.color = color;
+		this.optionsMenu = (OptionsMenuScript)this.theCanvas.Find("OptionsMenu").GetComponent(typeof(OptionsMenuScript));
+		this.inputHelperScript = (InputHelperScript)GameObject.Find("Rewired Input Manager").GetComponent(typeof(InputHelperScript));
+		if (this.rootShared.isDemo)
+		{
+			this.introCamBlendAmount = 1f;
+		}
+		else if (this.rootShared.doMainMenuIntro)
+		{
+			this.introCamBlendAmount = 1f;
+			GameObject fadeblack_arena = UnityEngine.Object.Instantiate<GameObject>(this.blackFade.transform.gameObject, this.theCanvas);
+			this.fadeBlack_Arena = fadeblack_arena.GetComponent<Image>();
+			this.fadeBlack_Arena.enabled = false;
+			base.Invoke("ArenaFade", 4f);
+			this.rootShared.doMainMenuIntro = false;
+		}
+		else
+		{
+			this.optionsMenu.buildMainMenu();
+			this.introCamBlendAmount = 1f;
+		}
+
+		introCamBlendAmount = 1f;
+
+		this.rootShared.adjustUIForAspectRatio();
+		((Text)GameObject.Find("MainMenuCanvas/BuildInfoText").GetComponent(typeof(Text))).text = "v" + this.rootShared.currentBuildVersionNumber;
+	}
+
+	// Token: 0x060002AB RID: 683 RVA: 0x0003DCA4 File Offset: 0x0003BEA4
+	public virtual void Update()
+	{
+		float num = Time.deltaTime * (float)144;
+		float num2 = (Time.timeSinceLevelLoad - (float)20) * 0.1f;
+		float num3 = (Time.timeSinceLevelLoad - (float)20) * 0.5f;
+		this.camHolder.rotation = this.camHolderStartRot * Quaternion.Euler(Mathf.Sin(num2) * (float)5, Mathf.Sin(num2 * 0.5f) * 7.5f, Mathf.Sin(num2 * 0.33f) * (float)3);
+		this.camTarget.localPosition = this.camTargetStartPos + new Vector3(Mathf.Sin(num2) * 1.5f, Mathf.Sin(num2 * 0.5f) * (float)3, Mathf.Sin(num2 * 0.33f) * 1.7f);
+		this.gunLightTimer -= num;
+		if (this.gunLightTimer <= (float)0)
+		{
+			this.gunLightHolder.rotation = Quaternion.Euler((float)0, (float)UnityEngine.Random.Range(0, 180), (float)0);
+			this.gunSound.clip = this.gunSounds[UnityEngine.Random.Range(0, Extensions.get_length(this.gunSounds))];
+			this.gunSound.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+			this.gunSound.volume = UnityEngine.Random.Range(0.3f, 0.6f);
+			this.gunSound.Play();
+			if (UnityEngine.Random.value >= 0.8f || this.shotsInARow > 0)
+			{
+				this.gunLightTimer = (float)UnityEngine.Random.Range(8, 30);
+				this.shotsInARow--;
+				if (this.shotsInARow < 0)
+				{
+					this.shotsInARow = UnityEngine.Random.Range(2, 6);
+				}
+			}
+			else
+			{
+				this.gunLightTimer = (float)UnityEngine.Random.Range(90, 600);
+			}
+		}
+		if (!this.startGame)
+		{
+			float a = Mathf.Clamp01(this.blackFade.color.a - 0.0025f * num);
+			Color color = this.blackFade.color;
+			float num4 = color.a = a;
+			Color color2 = this.blackFade.color = color;
+		}
+		else
+		{
+			this.startGameZoomSpeed -= 0.0025f * num;
+			this.camHolder.localScale = this.camHolder.localScale + Vector3.one * this.startGameZoomSpeed * 0.05f * num;
+			if (this.camHolder.localScale.z <= 0.1f)
+			{
+				this.camHolder.localScale = Vector3.one * 0.1f;
+			}
+			this.startGameTimer += num;
+			if (this.startGameTimer > 30f)
+			{
+				float a2 = this.blackFade.color.a + 0.007f * num;
+				Color color2 = this.blackFade.color;
+				color2.a = a2;
+				this.blackFade.color = color2;
+				this.audioMixer.SetFloat("MasterVolume", Mathf.Clamp(this.blackFade.color.a * -80f, -80f, 0f));
+			}
+			if (this.startGameTimer > 60f)
+			{
+				SceneManager.LoadScene(7, LoadSceneMode.Single);
+			}
+		}
+		if (!Input.GetKey("f11") && !this.hasEnabledOptionsMenu)
+		{
+			bool flag = default(bool);
+			Controller controllerToUse = this.inputHelperScript.GetControllerToUse(true, false);
+			if (!RuntimeServices.EqualityOperator(controllerToUse, null) && controllerToUse.GetAnyButtonDown())
+			{
+				flag = true;
+			}
+			controllerToUse = this.inputHelperScript.GetControllerToUse(true, true);
+			if (!RuntimeServices.EqualityOperator(controllerToUse, null) && controllerToUse.GetAnyButtonDown())
+			{
+				flag = true;
+			}
+			controllerToUse = this.inputHelperScript.GetControllerToUse(false, false);
+			if (!RuntimeServices.EqualityOperator(controllerToUse, null) && controllerToUse.GetAnyButtonDown())
+			{
+				flag = true;
+			}
+			if (flag)
+			{
+				this.introCamBlendAmount = (float)1;
+			}
+		}
+	}
+
+	// Token: 0x060002AC RID: 684 RVA: 0x0003E0CC File Offset: 0x0003C2CC
+	public virtual void LateUpdate()
+	{
+		if (this.doBlendCam)
+		{
+			this.introCamBlendAmount = Mathf.Clamp01(this.introCamBlendAmount + Time.deltaTime / (float)14);
+		}
+		float t = this.camBlendCurve.Evaluate(this.introCamBlendAmount);
+		this.theCam.position = Vector3.Lerp(this.theCam.position, this.camTarget.position, t);
+		this.theCam.rotation = Quaternion.Slerp(this.theCam.rotation, this.camTarget.rotation, t);
+	}
+
+	// Token: 0x060002AD RID: 685 RVA: 0x0000355B File Offset: 0x0000175B
+	public virtual void enableMenu()
+	{
+		if (!this.hasEnabledOptionsMenu)
+		{
+			this.optionsMenu.menuEnabled = true;
+			this.hasEnabledOptionsMenu = true;
+			SceneManager.LoadScene(7);
+		}
+	}
+
+	// Token: 0x060002AE RID: 686 RVA: 0x0000357B File Offset: 0x0000177B
+	public virtual void blendCam()
+	{
+		this.doBlendCam = true;
+	}
+
+	// Token: 0x060002AF RID: 687 RVA: 0x0003E160 File Offset: 0x0003C360
+
+	public virtual void ArenaFade()
+	{
+		this.fadeBlack_Arena.enabled = true;
+		Color fixedColor = this.fadeBlack_Arena.color;
+		fixedColor.a = 1f;
+		this.fadeBlack_Arena.color = fixedColor;
+		this.fadeBlack_Arena.CrossFadeAlpha(0f, 0f, true);
+		this.fadeBlack_Arena.CrossFadeAlpha(1f, 4f, false);
+		Invoke("enableMenu", 5f);
+	}
+
+
+	public virtual void doStartGame()
+	{
+		Controller lastActiveController = this.player.controllers.GetLastActiveController();
+		PlatformPlayerPrefs.SetInt("gamepad", (lastActiveController.type != ControllerType.Joystick) ? 0 : 1);
+		PlatformPlayerPrefs.Save();
+		this.startGame = true;
+		this.startSound.Play();
+		this.startGameZoomSpeed = 0.15f;
+	}
+
+	// Token: 0x060002B0 RID: 688 RVA: 0x000020A7 File Offset: 0x000002A7
+	public virtual void Main()
+	{
+	}
+
+	// Token: 0x040007F3 RID: 2035
+	private RootSharedScript rootShared;
+
+	// Token: 0x040007F4 RID: 2036
+	private Transform theCanvas;
+
+	// Token: 0x040007F5 RID: 2037
+	private Transform camHolder;
+
+	// Token: 0x040007F6 RID: 2038
+	private Quaternion camHolderStartRot;
+
+	// Token: 0x040007F7 RID: 2039
+	private Transform theCam;
+
+	// Token: 0x040007F8 RID: 2040
+	private Vector3 camStartPos;
+
+	// Token: 0x040007F9 RID: 2041
+	private Quaternion camStartRot;
+
+	// Token: 0x040007FA RID: 2042
+	private Transform camTarget;
+
+	// Token: 0x040007FB RID: 2043
+	private Vector3 camTargetStartPos;
+
+	// Token: 0x040007FC RID: 2044
+	private bool doBlendCam;
+
+	// Token: 0x040007FD RID: 2045
+	private float introCamBlendAmount;
+
+	// Token: 0x040007FE RID: 2046
+	public AnimationCurve camBlendCurve;
+
+	// Token: 0x040007FF RID: 2047
+	private Transform gunLightHolder;
+
+	// Token: 0x04000800 RID: 2048
+	private Light gunLight;
+
+	// Token: 0x04000801 RID: 2049
+	private float gunLightTimer;
+
+	// Token: 0x04000802 RID: 2050
+	private AudioSource gunSound;
+
+	// Token: 0x04000803 RID: 2051
+	private int shotsInARow;
+
+	// Token: 0x04000804 RID: 2052
+	public AudioMixer audioMixer;
+
+	// Token: 0x04000805 RID: 2053
+	public AudioMixerSnapshot audioSnapshotToTrigger;
+
+	// Token: 0x04000806 RID: 2054
+	public AudioClip[] gunSounds;
+
+	// Token: 0x04000807 RID: 2055
+	private bool startGame;
+
+	// Token: 0x04000808 RID: 2056
+	private float startGameTimer;
+
+	// Token: 0x04000809 RID: 2057
+	private float startGameZoomSpeed;
+
+	// Token: 0x0400080A RID: 2058
+	private AudioSource startSound;
+
+	// Token: 0x0400080B RID: 2059
+	private Image blackFade;
+
+	// Token: 0x0400080C RID: 2060
+	private bool hasEnabledOptionsMenu;
+
+	// Token: 0x0400080D RID: 2061
+	private OptionsMenuScript optionsMenu;
+
+	// Token: 0x0400080E RID: 2062
+	private InputHelperScript inputHelperScript;
+
+	// Token: 0x0400080F RID: 2063
+	private Player player;
+}

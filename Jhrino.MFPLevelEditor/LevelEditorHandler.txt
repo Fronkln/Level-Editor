@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -12,14 +12,383 @@ using UnityEngine.UI;
 
 //TODO:Add frying pan sounds
 
+
+/*
+
+	NOTLAR
+
+	PROPERTIES SEÇENEK 1: -345, 301.5     FONT 48
+	EXPLOSIONVISUALSCRIPTE Bİ GÖZ AT DOPOSTSETUPDA HATA VERİNCE SINIRSIZ PATLAMA OLUYOR
+
+
+*/
+
 namespace Jhrino.MFPLevelEditor
 {
 	// Token: 0x020000E1 RID: 225
 	public class LevelEditorHandler : MonoBehaviour
 	{
 
+		public enum MFPGamemode
+		{
+			NORMAL = 0,
+			SKYFALL = 1,
+			MOTORCYCLE = 2
+		}
+
+
+		public bool levelInitialized = false;
+
+		public UIWeaponSelectorScript uIWeaponSelector;
+
+
+		//loadda artık bu methodu kullanarak halledeceksin
+
+		
+	
+
+
+		public void LoadModel(GameObject target, string modelname, string textureName = "")
+		{
+	
+			target.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(modelname);
+			target.AddComponent<MeshRenderer>();
+			target.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+			target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder(textureName));
+			
+
+			MFPEditorLogger.Log("Load model complete");
+		}
+
+
+		public void ClearAllPlayerWeapons()
+		{
+
+			playerScript.resetWeapons();
+			for(int i = 0; i <	playerScript.weaponActive.Length; i++)
+			{
+				playerScript.weaponActive[i] = false;
+			}
+			playerScript.weapon = 0;
+			playerScript.changeWeapon(0);
+			Player.GetComponent<WeaponManager>().attackStance = WeaponManager.MFPAttackStance.FIGHTCLUB;
+			playerScript.updateAmmoHUD();
+		}
+
+		public void UnlockWeapon(int wepID)
+		{
+			playerScript.weaponActive[wepID] = true;
+			playerScript.ammoTotal[wepID] = 128;
+			playerScript.secondaryAmmo[wepID] = 3;
+
+		}
+
+		public void GiveFullAmmo()
+		{
+			for(int i = 1; i <= 10; i++)
+			{
+				if(playerScript.weaponActive[i])
+				{
+					playerScript.ammo[i] = root.ammoFullClip[i];
+					playerScript.ammoTotal[i] = root.ammoMax[i];
+				}
+			}
+		}
+	
+		public void UpdatePlayerLoadout(int weapon, bool isOn)
+		{;
+
+			switch(weapon)
+			{
+				case 1:
+					pistol = isOn;
+				break;
+
+				case 2:
+					dualPistol = isOn;
+				break;
+
+				case 3:
+					uzi = isOn;
+					break;
+				case 4:
+					dualUzi = isOn;
+				break;
+				case 5:
+					assaultRifle = isOn;
+				break;
+				case 6:
+					shotgun = isOn;
+					break;
+				case 7:
+					shockRifle = isOn;
+					break;
+				case 8:
+					turretGun = isOn;
+					break;
+				case 9:
+					sniper = isOn;
+					break; 
+				case 10:
+					crossbow = isOn;
+					break;
+
+			}
+		}
+
+		
+
+		public void PreparePlayerLoadout()
+		{
+			
+			if(crossbow)
+				UnlockWeapon(10);
+			if(sniper)
+				UnlockWeapon(9);
+			if(turretGun)
+				UnlockWeapon(8);
+			if(shockRifle)
+				UnlockWeapon(7);
+			if(shotgun)
+				UnlockWeapon(6);
+			if(assaultRifle)
+				UnlockWeapon(5);
+			if(dualUzi)
+				UnlockWeapon(4);
+			if(uzi)
+				UnlockWeapon(3);
+			if(dualPistol)
+				UnlockWeapon(2);
+			if(pistol)
+				UnlockWeapon(1);
+			
+			uIWeaponSelector.prepareUI();
+			GiveFullAmmo();
+			playerScript.updateAmmoHUD();
+			
+
+			
+			
+		}
+
+		public void ConfigureGeometryProperties(GameObject target, int layer, bool disappears, string texturename)
+		{
+
+			target.layer = layer;
+			if(disappears)
+			{
+				target.AddComponent<AudioSource>();
+				target.AddComponent<DisappearPlatformScript>();
+				target.GetComponent<DisappearPlatformScript>().enabled = false;
+			}
+
+			target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(texturename));
+
+
+			string normalmap = texturename;
+			normalmap = normalmap.Replace(".png", "");
+			normalmap = normalmap + "_normal.png";
+			target.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
+	
+			target.GetComponent<MeshRenderer>().material.mainTexture.name = texturename;
+		}
+
+
+		public void OnInputValueChanged(string inputText, string property)
+		{
+
+		}
+		public void OnInputValueChanged(InputField field, string inputText, string property, int minVal, int maxVal)
+		{
+			field.text = MFPEditorUtils.NormalizeInputFieldIntValue(inputText, minVal, maxVal);
+
+			switch(property)
+			{
+				default:
+					MFPEditorLogger.Log("No case exists for property " + property);
+					break;
+				case "weaponID":
+					EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(field.text);
+					break;
+				case "explosionStrength":
+					EditingObject.GetComponent<GasCanisterScript>().explosionSize = int.Parse(field.text);
+					break;
+				
+			}
+		}
+
+		public void OnToggleChanged(Toggle toggle, string property, GameObject target)
+		{
+			switch(property)
+			{
+				default:
+					return;
+				case "disappears":
+					if(toggle.isOn)
+					{
+						if(!target.GetComponent<DisappearPlatformScript>());
+						{
+							target.AddComponent<AudioSource>();
+							target.AddComponent<DisappearPlatformScript>().enabled = false;
+
+						}
+					}
+					else
+						if(target.GetComponent<DisappearPlatformScript>())
+						{
+
+							Destroy(target.GetComponent<AudioSource>());
+							Destroy(target.GetComponent<DisappearPlatformScript>());
+						}
+				break;
+
+				case "shoot_through":
+					if(toggle.isOn)
+						{
+							target.layer = 15;
+							MFPEditorLogger.Log("Shoot-through");
+						}
+					else
+						{
+							target.layer = 8;
+							MFPEditorLogger.Log("Solid");
+						}
+				
+				break;
+
+			}
+			
+		}
+
+
+		public void PropertiesSetup(string objtype)
+		{
+
+			if(EditingObject == null)
+				return;
+
+
+			foreach(GameObject element in propertyElements)
+			{
+				Destroy(element);
+			}
+
+			MFPEditorLogger.Log("we opened with type " + objtype);
+
+	
+			switch(objtype)
+			{
+				default:
+					MFPEditorLogger.Log("Object type " + objtype + " does not exist!");
+					break;
+
+				case "floor":
+					
+					Text disappearText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Disappears:", "TestPrroperties", 48);
+
+					Toggle disappearCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 301.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "OptionTest", "", "");
+
+					if(EditingObject.GetComponent<DisappearPlatformScript>())
+						disappearCheck.isOn = true;
+					else
+						disappearCheck.isOn = false;
+					
+					disappearCheck.onValueChanged.AddListener(delegate
+					{
+						OnToggleChanged(disappearCheck, "disappears", EditingObject);
+					});
+
+
+
+					Text shootThroughText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 226.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Shoot Through:", "ShootThrough", 48);
+
+					Toggle sthroughCheck = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-100, 226.5f), new Vector2(45,45), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "OptionTest", "", "");
+
+					if(EditingObject.layer == 15)
+						sthroughCheck.isOn = true;
+					else
+						sthroughCheck.isOn = false;
+					
+					sthroughCheck.onValueChanged.AddListener(delegate
+					{
+						OnToggleChanged(sthroughCheck, "shoot_through", EditingObject);
+					});
+
+
+					propertyElements.Add(disappearText.gameObject);
+					propertyElements.Add(disappearCheck.gameObject);
+					propertyElements.Add(shootThroughText.gameObject);
+					propertyElements.Add(sthroughCheck.gameObject);
+
+
+					MFPEditorLogger.Log("Properties initilizaiton complete");
+				break;
+
+				case "GasCanister":
+					Text GasCanMagnDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Explosion Strength:", "GasCanMagnDesc", 48);
+
+					Text GasCanMagnText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-45, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, EditingObject.GetComponent<GasCanisterScript>().explosionSize.ToString(), "GasCanMagn", 48);
+
+					InputField gasCanMagnInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "MagnTextF", "", GasCanMagnText, true, InputField.CharacterValidation.Integer);
+
+					gasCanMagnInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(gasCanMagnInput, gasCanMagnInput.text, "explosionStrength", 1, 999);
+					});
+
+					propertyElements.Add(GasCanMagnDesc.gameObject);
+					propertyElements.Add(GasCanMagnText.gameObject);
+				break;
+				
+				case "EnemySpawner":
+					Text WeaponIDDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Weapon ID:", "WeaponIDDesc", 48);
+
+					Text WeaponIDText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon.ToString(), "WeaponID", 48);
+
+					InputField testInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "TestField", "", WeaponIDText, true, InputField.CharacterValidation.Integer);
+
+					testInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(testInput, testInput.text, "weaponID", 1, 9);
+					});
+
+					propertyElements.Add(testInput.gameObject);
+					propertyElements.Add(WeaponIDDesc.gameObject);
+					propertyElements.Add(WeaponIDText.gameObject);
+				break;
+				
+			}
+		}
+
+
+		///
+		/// RELEASE YAPARKEN KAPA BUNU
+		//
+		//
+
+		public bool isDebug = false;
+		public Text coordinateDebugger;
+
+
 		public void PostPlayModeCleanup()
 		{
+
+			foreach(Projector blood in GameObject.FindObjectsOfType<Projector>())
+			{
+				Destroy(blood.gameObject);
+			}
+
+			foreach(WeaponPickupScript wep in GameObject.FindObjectsOfType<WeaponPickupScript>())
+			{
+				Destroy(wep.gameObject);
+			}
+
+
+			foreach(GameObject gib in GameObject.FindGameObjectsWithTag("Gib"))
+			{
+				Destroy(gib);
+			}
+
 			foreach(GameObject Canister in GasCanisters)
 			{
 				Canister.SetActive(true);
@@ -48,12 +417,38 @@ namespace Jhrino.MFPLevelEditor
 				Destroy(skateboard);
 			}
 
+			foreach(DisappearPlatformScript platformScript in GameObject.FindObjectsOfType<DisappearPlatformScript>())
+			{
+				platformScript.ResetPlatform();
+				platformScript.enabled = false;
+			}
+
 
 		}
 
 		// Token: 0x06000615 RID: 1557
 		private void Update()
 		{
+			//
+			//
+			//
+			if(isDebug)
+			{
+				string mouseCoords = Input.mousePosition.ToString().Replace(".0", "");
+				coordinateDebugger.text = mouseCoords.Split(',')[0] +  ", " + mouseCoords.Split(',')[1] + ")";
+			}
+			//
+
+
+			if(Input.GetKeyDown(KeyCode.L))
+				UnlockWeapon(3);
+
+			if(Gamemode == MFPGamemode.SKYFALL && PlayMod && levelInitialized)
+			{
+				if(root.nrOfEnemiesTotal == root.nrOfEnemiesKilled)
+					GameObject.FindObjectOfType<LevelChangerScript>().doTheThing();
+			}
+
 			if (Input.GetKeyDown(KeyCode.P))
 			{
 				this.PlayMode();
@@ -74,7 +469,7 @@ namespace Jhrino.MFPLevelEditor
 			if (this.PlayMod)
 			{
 				LevelEditorHandler.levelTimer += Time.timeScale;
-				if ((double)this.Player.GetComponent<PlayerScript>().health < 0.02)
+				if ((double)playerScript.health < 0.02)
 				{
 					LevelEditorHandler.PlayerisDeadAndForceAutoLoad = true;
 				}
@@ -86,11 +481,17 @@ namespace Jhrino.MFPLevelEditor
 					this.EditingMode();
 				}
 
+				/* şuanlık buglu
 				if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.V))
 				{
 					if(CopiedObject != null)
 					{
+						ExitEditMode();
 						GameObject copiedObject = Instantiate(CopiedObject);
+						foreach(LevelEditorAxis extraAxis in copiedObject.GetComponentsInChildren<LevelEditorAxis>())
+						{
+							Destroy(extraAxis.gameObject);
+						}
 						if(copiedObject.name.Contains("FryingPan"))
 							FryingPans.Add(copiedObject);
 						if(copiedObject.name.Contains("GasCanister"))
@@ -102,6 +503,7 @@ namespace Jhrino.MFPLevelEditor
 						EnterEditMode(copiedObject);
 					}
 				}
+				*/
 
 				RaycastHit raycastHit;
 				if (Input.GetMouseButtonDown(0) && !this.Editing && !SnapToBuild && !this.adjustingSettings && Physics.Raycast(this.EditorCamera.ScreenPointToRay(Input.mousePosition), out raycastHit))
@@ -132,18 +534,20 @@ namespace Jhrino.MFPLevelEditor
 				if (Input.GetKeyDown(KeyCode.K) && !this.Editing)
 				{
 					GameObject gameObject2 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+					gameObject2.name = "EnemySpawner";
 					UnityEngine.Object.Destroy(gameObject2.GetComponent<SphereCollider>());
 					gameObject2.AddComponent<CapsuleCollider>();
 					gameObject2.layer = 8;
 					gameObject2.transform.localScale = new Vector3(gameObject2.transform.localScale.x, 4f, gameObject2.transform.localScale.x);
 					gameObject2.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, -0.1f);
 					gameObject2.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+					gameObject2.AddComponent<MFPEnemySpawner>();
 					this.EnemySpawnpoints.Add(gameObject2.transform);
 					this.EnterEditMode(gameObject2);
 				}
 
 
-				if(!PlayMod && SnapToBuild)
+				if(!PlayMod && SnapToBuild && !Editing)
 				{
 					RaycastHit hit;
 					Ray ray = EditorCamera.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition);
@@ -161,23 +565,27 @@ namespace Jhrino.MFPLevelEditor
 
 						if(Input.GetMouseButtonDown(0))
 						{
-						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null)
+							snaphelper snappy = SnapTarget.GetComponent<snaphelper>();
+
+						if(snappy != null && SnapTarget != null && !Editing)
 						{
-
-							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
+							if(!snappy.isWallNode)
 							{
-							GameObject newFloor = Instantiate(floor_Wood);
-							newFloor.name = "Wooden Floor";
-							newFloor.SetActive(true);
+								GameObject newFloor = Instantiate(floor_Wood);
+								newFloor.name = "Wooden Floor";
+								newFloor.SetActive(true);
 
-							 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
-							 else
-							 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);
+								 if(snappy.snapaxis == snaphelper.Axis.NegativeX)
+								 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
+								 else
+								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
 
+
+								 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
 							 GeometryFloorLump.Add(newFloor);
+							
 							}
-							else
+							if(SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
 
 
@@ -212,16 +620,29 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000617 RID: 1559
 		private void Start()
 		{
+			if(Inst == null)
+				Inst = this;
+
 			this.LoadEditorAssets();
+
 			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
 			{
 				Directory.CreateDirectory(MFPEditorUtils.LoadFileFromDataFolder("Levels/default"));
 			}
 			this.root = GameObject.Find("Root").GetComponent<RootScript>();
+			
 			UnityEngine.Object.FindObjectOfType<OptimizerScript>().enabled = false;
 			this.root.nrOfEnemiesTotal = 0;
+			root.stopSpeechBubble();
+			root.dontAllowActionMode = true;
 			this.HUD = GameObject.Find("HUD/Canvas");
+
+			uIWeaponSelector = GameObject.Find("HUD/Canvas/WeaponSelector").GetComponent<UIWeaponSelectorScript>();
+
 			this.Player = GameObject.Find("Player");
+			Player.AddComponent<WeaponManager>();
+			playerScript = Player.GetComponent<PlayerScript>();
+			ClearAllPlayerWeapons();
 			this.Camera = GameObject.Find("Main Camera");
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
@@ -248,15 +669,13 @@ namespace Jhrino.MFPLevelEditor
 			SceneLight.renderMode = LightRenderMode.ForcePixel;
 			SceneLight.shadows = LightShadows.None;
 			SceneLight.color = new Color32(255,244, 214, 255);
-			SceneLight.cullingMask = 1 << 8 | 1 << 14;
+			SceneLight.cullingMask = 1 << 8 | 1 << 14 | 1 << 15;
 
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
 			this.Player.SetActive(false);
 			this.Camera.SetActive(false);
-			this.HUD.GetComponentInChildren<Canvas>().enabled = false;
-			this.EnemySample = GameObject.Find("New Enemy");
-			this.EnemySample.SetActive(false);
+			ToggleHUD(false);
 			/* OLD BULDING 
 			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject.layer = 8;
@@ -457,11 +876,12 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.transform.parent = gameObject3.transform;
 			this.SpawnEditorHud();
 			LevelEditorHandler.Inst = this;
-			GameObject gameObject4 = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			GameObject gameObject4 = new GameObject();
+			LoadModel(gameObject4, MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/player_model_editorgizmo.obj"), "EditorAssets/BaseGame/textures/player_character.png");
 			UnityEngine.Object.Destroy(gameObject4.GetComponent<SphereCollider>());
 			gameObject4.AddComponent<CapsuleCollider>();
-			gameObject4.transform.localScale = new Vector3(gameObject4.transform.localScale.x, 4f, gameObject4.transform.localScale.x);
 			gameObject4.name = "PlayerSpawn";
+		//	gameObject4.transform.rotation = new Quaternion(gameObject4.transform.rotation.x, 0, gameObject4.transform.rotation.z, gameObject4.transform.rotation.w);
 			GameObject gameObject5 = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject5.transform.position = new Vector3(5f, 0f, 0f);
 			gameObject5.transform.localScale = new Vector3(1f, 1f, 4f);
@@ -470,7 +890,6 @@ namespace Jhrino.MFPLevelEditor
 			gameObject5.GetComponent<MeshRenderer>().material.color = Color.green;
 			this.FinishLevelTrigger = gameObject5;
 			this.PlayerSpawn = gameObject4.transform;
-			this.PlayerSpawn.transform.GetComponent<MeshRenderer>().material.color = new Color(1f, 0.5f, 1f);
 			this.PlayerSpawn.transform.position = new Vector3(0f, 1f, 0f);
 			this.PlayMod = false;
 			List<string> list = new List<string>();
@@ -483,7 +902,6 @@ namespace Jhrino.MFPLevelEditor
 				this.PrototypeLoad();
 				LevelEditorHandler.PlayerisDeadAndForceAutoLoad = false;
 			}
-			File.WriteAllLines("F:\\steamapps2\\steamapps\\common\\My Friend Pedro\\jhrino_log.txt", list.ToArray());
 		}
 
 		// Token: 0x06000618 RID: 1560
@@ -518,6 +936,9 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000619 RID: 1561
 		public void SpawnEditorHud()
 		{
+
+
+
 			GameObject gameObject = new GameObject();
 			gameObject.layer = 5;
 			gameObject.name = "Canvus";
@@ -536,31 +957,18 @@ namespace Jhrino.MFPLevelEditor
 			canvasScaler.scaleFactor = 0.5f;
 			canvasScaler.referencePixelsPerUnit = 100f;
 			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
-			GameObject gameObject5 = new GameObject();
-			gameObject5.transform.parent = gameObject.transform;
-			gameObject5.layer = 5;
-			gameObject5.AddComponent<RectTransform>();
-			gameObject5.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject5.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
-			gameObject5.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
-			Text text = gameObject5.AddComponent<Text>();
-			Material material = new Material(Shader.Find("UI/Default"));
-			text.material = material;
-			text.text = "GAME OVER";
-			text.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text.fontStyle = FontStyle.Bold;
-			text.fontSize = 68;
-			text.lineSpacing = 1f;
-			text.supportRichText = false;
-			text.alignment = TextAnchor.MiddleCenter;
-			text.horizontalOverflow = HorizontalWrapMode.Overflow;
-			text.verticalOverflow = VerticalWrapMode.Overflow;
-			text.resizeTextForBestFit = false;
-			text.alignByGeometry = false;
-			text.GetComponent<RectTransform>().sizeDelta = new Vector2(472.9f, 100f);
-			this.DebugObject = text;
-			gameObject5.GetComponent<RectTransform>().anchoredPosition = new Vector2(-45.6f, 83f);
-			new GameObject();
+
+
+			//
+			//DEBUG
+
+			if(isDebug)
+				coordinateDebugger = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(0,200), new Vector2(160, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color(100,0,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "coordinate", "CoordinateDEbugger", 32);
+
+			//
+
+			this.DebugObject = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.bottomMiddle, TextAnchor.MiddleCenter, new Vector2(-45.6f, 83f),new Vector2(472.9f, 100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(255,255,255,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gameObject, "Error Loading", "testing", 68);
+
 
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "CoordinateField";
@@ -577,6 +985,8 @@ namespace Jhrino.MFPLevelEditor
 
 
 			//image.raycastTarget = true;
+			
+			
 			InputField inputField = gameObject2.AddComponent<InputField>();
 			this.CoordinateField = inputField;
 			inputField.interactable = true;
@@ -588,26 +998,18 @@ namespace Jhrino.MFPLevelEditor
 			inputField.caretWidth = 1;
 			inputField.shouldHideMobileInput = true;
 			inputField.readOnly = false;
+			
+
+			//InputField inputField = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.topLeft, new Vector2(0,0), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "CoordinateField", "", this.DebugObject);
+
+			//CoordinateField = inputField;
+
+			Button exitedit = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomMiddle, new Vector2(-20, 10), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), inputField.gameObject, "ExitEditModeButton", "");
 
 
-			GameObject ExitEditModeButton = new GameObject();
-			ExitEditModeButton.transform.parent = inputField.transform;
-			ExitEditModeButton.AddComponent<RectTransform>();
-			ExitEditModeButton.layer = 5;
-			ExitEditModeButton.AddComponent<RectTransform>();
-			ExitEditModeButton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			ExitEditModeButton.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0f);
-			ExitEditModeButton.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0f);
-			ExitEditModeButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, 60);
-			ExitEditModeButton.AddComponent<Image>();
-
-			Button exitedit = ExitEditModeButton.AddComponent<Button>();
-			exitedit.transition = Selectable.Transition.ColorTint;
-			exitedit.targetGraphic = ExitEditModeButton.GetComponent<Image>();
-			exitedit.interactable = true;
 			exitedit.onClick.AddListener(delegate()
 			{
-				this.ExitEditMode();
+				ExitEditMode();
 			});
 
 
@@ -615,407 +1017,241 @@ namespace Jhrino.MFPLevelEditor
 			gameObject2.transform.parent = gameObject.transform;
 			this.DebugObject.transform.parent = gameObject2.transform;
 			inputField.gameObject.SetActive(false);
-			GameObject gameObject3 = new GameObject();
-			gameObject3.transform.parent = gameObject.transform;
-			gameObject3.layer = 5;
-			gameObject3.AddComponent<RectTransform>();
-			gameObject3.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject3.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject3.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic = gameObject3.AddComponent<Image>();
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
-			Button button = gameObject3.AddComponent<Button>();
-			button.transition = Selectable.Transition.ColorTint;
-			button.targetGraphic = targetGraphic;
-			button.interactable = true;
-			gameObject3.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -122f);
-			Texture2D ico_pos = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_position.png"));
-			Sprite spr_pos = Sprite.Create(ico_pos, new Rect(0f, 0f, (float)ico_pos.width, (float)ico_pos.height), new Vector2(0f, 0f), 100f);
-			targetGraphic.sprite = spr_pos;
-			button.onClick.AddListener(delegate()
+
+			Button positionButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -122f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PositionButton", "EditorAssets/icons/ico_position.png");
+
+			 propertiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-100.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "PropertiesButton", "EditorAssets/icons/ico_properties.png");
+
+			propertiesButton.onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("properties", false);
+			});
+
+			propertiesButton.gameObject.SetActive(false);
+
+
+			 Button loadoutButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-500.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "LoadoutButton", "EditorAssets/icons/ico_loadout.png");
+
+			loadoutButton.onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("playerloadout", false);
+			});
+
+
+			positionButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("position");
 			});
-			GameObject gameObject6 = new GameObject();
-			gameObject6.transform.parent = gameObject.transform;
-			gameObject6.layer = 5;
-			gameObject6.AddComponent<RectTransform>();
-			gameObject6.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject6.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject6.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic2 = gameObject6.AddComponent<Image>();
-			gameObject6.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -255.9f);
-			Button button2 = gameObject6.AddComponent<Button>();
-			Texture2D ico_rot = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_rotation.png"));
-			Sprite spr_rot = Sprite.Create(ico_rot, new Rect(0f, 0f, (float)ico_rot.width, (float)ico_rot.height), new Vector2(0f, 0f), 100f);
-			targetGraphic2.sprite = spr_rot;
-			button2.transition = Selectable.Transition.ColorTint;
-			button2.targetGraphic = targetGraphic2;
-			button2.interactable = true;
-			button2.onClick.AddListener(delegate()
+
+
+			Button rotationButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -255.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "RotationButton", "EditorAssets/icons/ico_rotation.png");
+
+			rotationButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("rotation");
 			});
-			GameObject gameObject7 = new GameObject();
-			gameObject7.transform.parent = gameObject.transform;
-			gameObject7.layer = 5;
-			gameObject7.AddComponent<RectTransform>();
-			gameObject7.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject7.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject7.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			Image targetGraphic3 = gameObject7.AddComponent<Image>();
-			gameObject7.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -400f);
-			Button button3 = gameObject7.AddComponent<Button>();
-			Texture2D ico_sca = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_scale.png"));
-			Sprite spr_sca = Sprite.Create(ico_sca, new Rect(0f, 0f, (float)ico_sca.width, (float)ico_sca.height), new Vector2(0f, 0f), 100f);
-			targetGraphic3.sprite = spr_sca;
-			button3.transition = Selectable.Transition.ColorTint;
-			button3.targetGraphic = targetGraphic3;
-			button3.interactable = true;
-			button3.onClick.AddListener(delegate()
+
+			Button scaleButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -400f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "ScaleButton", "EditorAssets/icons/ico_scale.png");
+
+			scaleButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("scale");
 			});
-			GameObject gameObject4 = new GameObject();
-			gameObject4.transform.parent = gameObject.transform;
-			gameObject4.layer = 5;
-			gameObject4.AddComponent<RectTransform>();
-			gameObject4.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject4.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject4.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			gameObject4.AddComponent<Image>();
-			gameObject4.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -550f);
-			Button button4 = gameObject4.AddComponent<Button>();
-			Texture2D ico_col = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/ico_color.png"));
-			Sprite spr_col = Sprite.Create(ico_col, new Rect(0f, 0f, (float)ico_col.width, (float)ico_col.height), new Vector2(0f, 0f), 100f);
-			gameObject4.GetComponent<Image>().sprite = spr_col;
-			button4.transition = Selectable.Transition.ColorTint;
-			button4.targetGraphic = gameObject4.GetComponent<Image>();
-			button4.interactable = true;
-			button4.onClick.AddListener(delegate()
+
+			Button colorButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -550f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "ColorButton", "EditorAssets/icons/ico_color.png");
+
+			colorButton.onClick.AddListener(delegate()
 			{
 				this.ChangeEditType("color");
 			});
+
 			this.EditorButtonsRoot = new GameObject();
 			this.EditorButtonsRoot.transform.parent = canvas.transform;
-			gameObject3.transform.parent = this.EditorButtonsRoot.transform;
-			gameObject4.transform.parent = this.EditorButtonsRoot.transform;
-			gameObject7.transform.parent = this.EditorButtonsRoot.transform;
-			gameObject6.transform.parent = this.EditorButtonsRoot.transform;
-			GameObject PanelOBJ = new GameObject();
-			PanelOBJ.transform.parent = gameObject.transform;
-			PanelOBJ.name = "EntitiesListContainer";
-			Image Panel = PanelOBJ.AddComponent<Image>();
-			Panel.color = new Color(Panel.color.r, Panel.color.b, Panel.color.b, 0.3921569f);
-			RectTransform component = PanelOBJ.GetComponent<RectTransform>();
-			component.anchorMin = new Vector2(0.5f, 0.5f);
-			component.anchorMax = new Vector2(0.5f, 0.5f);
-			component.pivot = new Vector2(0.5f, 0.5f);
-			component.sizeDelta = new Vector2(628.2f, 440.51f);
-			component.anchoredPosition = new Vector2(0f, 0f);
-			GameObject gameObject8 = new GameObject();
-			gameObject8.name = "GasCanisterButton";
-			gameObject8.transform.parent = PanelOBJ.transform;
-			RectTransform rectTransform2 = gameObject8.AddComponent<RectTransform>();
-			rectTransform2.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransform2.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransform2.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform2.sizeDelta = new Vector2(254.86f, 30f);
-			rectTransform2.anchoredPosition = new Vector2(0f, 158f);
-			Button gascanButton = gameObject8.AddComponent<Button>();
-			Image gascanButtonGraphics = gascanButton.gameObject.AddComponent<Image>();
-			gascanButton.targetGraphic = gascanButtonGraphics;
+
+			loadoutButton.transform.parent = EditorButtonsRoot.transform;
+			positionButton.transform.parent = this.EditorButtonsRoot.transform;
+			colorButton.transform.parent = this.EditorButtonsRoot.transform;
+			scaleButton.transform.parent = this.EditorButtonsRoot.transform;
+			rotationButton.transform.parent = this.EditorButtonsRoot.transform;
+
+			GameObject PanelOBJ = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(628.2f, 440.51f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,255,255, 100), gameObject, "EntityPanel", "");
+
+
+
+			 PropertiesPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "PropertiesPanel", "");
+
+			PropertiesPanel.SetActive(false);
+
+			LoadoutPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "LoadoutPanel", "");
+
+			 testPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 320), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "pistolToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-125, 320), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Pistol:", "pistolText", 28);
+
+			testPistolToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(1, testPistolToggle.isOn);});
+
+			 dualPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 240), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualpistolToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-155, 240), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Dual Pistol:", "dualPistolText", 28);
+
+			dualPistolToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(2, dualPistolToggle.isOn);});
+
+			 uziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 160), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "uziToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-110, 160), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Uzi:", "uziText", 28);
+
+			uziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(3, uziToggle.isOn);});
+
+			 dualUziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 80), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualuziToggle","", "");
+
+			
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-135, 80), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Dual Uzi:", "dualUziText", 28);
+
+			dualUziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(4, dualUziToggle.isOn);});
+
+			 shotgunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 0), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "shotgunToggle","", "");
+
+			shotgunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(6, shotgunToggle.isOn);});
+
+			
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-140, 0), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Shotgun:", "shotgunText", 28);
+
+
+			 assaultRifleToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -80), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "assaultRifleToggle","", "");
+
+			assaultRifleToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(5, assaultRifleToggle.isOn);});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-175, -80), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Machine Gun:", "shotgunText", 28);
+
+			 sniperToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -160), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "sniperToggle","", "");
+
+			sniperToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(9, sniperToggle.isOn);});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-125, -160), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Sniper:", "sniperText", 28);
+
+			shockRifleToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -240), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "shockRifleToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-160, -240), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Shock Rifle:", "shockRifleText", 28);
+
+			shockRifleToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(7, shockRifleToggle.isOn);});
+
+			 turretGunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -320), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "turretGunToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-155, -320), new Vector3(160,30), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Turret Gun:", "turretGunText", 28);
+
+			turretGunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(8, turretGunToggle.isOn);});
+			
+			 crossbowToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(150, 320), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "crossbowToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(50, 320), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Crossbow:", "crossbowText", 28);
+
+			crossbowToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(10, crossbowToggle.isOn);});
+
+
+			LoadoutPanel.SetActive(false);
+
+
+			Button gascanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 158f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "GasCanisterButton", "");
+
 
 			gascanButton.onClick.AddListener(delegate()
 			{
 				this.SpawnEntity("gascanister", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			GameObject gameObject9 = new GameObject();
-			gameObject9.name = "GasCanisterButtonText";
-			gameObject9.transform.parent = gascanButton.transform;
-			RectTransform gascanButtonRect = gameObject9.AddComponent<RectTransform>();
-			gascanButtonRect.anchorMin = new Vector2(0f, 0f);
-			gascanButtonRect.anchorMax = new Vector2(1f, 1f);
-			gascanButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			gascanButtonRect.anchoredPosition = new Vector2(0f, 0f);
-			Text text2 = gameObject9.AddComponent<Text>();
-			text2.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text2.text = "Gas Canister";
-			text2.alignment = TextAnchor.MiddleCenter;
-			gascanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-			text2.color = new Color(0f, 0f, 0f);
-			text2.fontSize = 64;
-			text2.verticalOverflow = VerticalWrapMode.Overflow;
-			text2.horizontalOverflow = HorizontalWrapMode.Overflow;
 
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, gascanButton.gameObject, "Gas Canister", "GasCanisterButtonText", 64);
 
-
-			GameObject fryingPanButton = new GameObject();
-			fryingPanButton.name = "FryingPanButton";
-			fryingPanButton.transform.parent = PanelOBJ.transform;
-			RectTransform rectTransformbutt = fryingPanButton.AddComponent<RectTransform>();
-			rectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
-			rectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
-			rectTransformbutt.anchoredPosition = new Vector2(0f, 115f);
-			Button fpanButton = fryingPanButton.AddComponent<Button>();
-			Image fryingpanButtonGraphics = fpanButton.gameObject.AddComponent<Image>();
-			fpanButton.targetGraphic = fryingpanButtonGraphics;
+			Button fpanButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 115f), new Vector2(254.86f, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "FryingPanButton");
 
 			fpanButton.onClick.AddListener(delegate()
 			{
 				this.SpawnEntity("fryingpan", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			GameObject fryingPanText = new GameObject();
-			fryingPanText.name = "FryingPanButtonText";
-			fryingPanText.transform.parent = fpanButton.transform;
-			RectTransform fpanButtonRect = fryingPanText.AddComponent<RectTransform>();
-			fpanButtonRect.anchorMin = new Vector2(0f, 0f);
-			fpanButtonRect.anchorMax = new Vector2(1f, 1f);
-			fpanButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			fpanButtonRect.anchoredPosition = new Vector2(0f, 0f);
-			Text pantext = fryingPanText.AddComponent<Text>();
-			pantext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			pantext.text = "Frying Pan";
-			pantext.alignment = TextAnchor.MiddleCenter;
-			fpanButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-			pantext.color = new Color(0f, 0f, 0f);
-			pantext.fontSize = 64;
-			pantext.verticalOverflow = VerticalWrapMode.Overflow;
-			pantext.horizontalOverflow = HorizontalWrapMode.Overflow;
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, fpanButton.gameObject, "Frying Pan", "FryingPanButtonText", 64);
 
+			Button skateBoardButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 72), new Vector2(254.86f, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "SkateboardButton");
 
-
-			GameObject skateboardButton = new GameObject();
-			skateboardButton.name = "SkateboardButton";
-			skateboardButton.transform.parent = PanelOBJ.transform;
-			RectTransform skaterectTransformbutt = skateboardButton.AddComponent<RectTransform>();
-			skaterectTransformbutt.anchorMin = new Vector2(0.5f, 0.5f);
-			skaterectTransformbutt.anchorMax = new Vector2(0.5f, 0.5f);
-			skaterectTransformbutt.pivot = new Vector2(0.5f, 0.5f);
-			skaterectTransformbutt.sizeDelta = new Vector2(254.86f, 30f);
-			skaterectTransformbutt.anchoredPosition = new Vector2(0f, 72f);
-			Button skateButton = skateboardButton.AddComponent<Button>();
-			Image skateboardButtonGraphics = skateButton.gameObject.AddComponent<Image>();
-			skateButton.targetGraphic = skateboardButtonGraphics;
-
-			skateButton.onClick.AddListener(delegate()
+			skateBoardButton.onClick.AddListener(delegate()
 			{
 				this.SpawnEntity("skateboard", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
 			});
 
-			GameObject skateboardText = new GameObject();
-			skateboardText.name = "SkateboardButtonText";
-			skateboardText.transform.parent = skateButton.transform;
-			RectTransform skateboardButtonRect = skateboardText.AddComponent<RectTransform>();
-			skateboardButtonRect.anchorMin = new Vector2(0f, 0f);
-			skateboardButtonRect.anchorMax = new Vector2(1f, 1f);
-			skateboardButtonRect.pivot = new Vector2(0.5f, 0.5f);
-			skateboardButtonRect.anchoredPosition = new Vector2(0f, 0f);
-			Text skatetext = skateboardText.AddComponent<Text>();
-			skatetext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			skatetext.text = "Skateboard";
-			skatetext.alignment = TextAnchor.MiddleCenter;
-			skateboardButtonRect.localScale = new Vector3(0.45943f, 0.45943f, 0.45943f);
-			skatetext.color = new Color(0f, 0f, 0f);
-			skatetext.fontSize = 64;
-			skatetext.verticalOverflow = VerticalWrapMode.Overflow;
-			skatetext.horizontalOverflow = HorizontalWrapMode.Overflow;
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateBoardButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
 
-
-		
 
 
 			this.EntitySpawnRoot = PanelOBJ;
-			GameObject PanelOBJ2 = new GameObject();
-			PanelOBJ2.transform.parent = gameObject.transform;
-			PanelOBJ2.name = "WorldSettingsContainer";
-			Image Panel2 = PanelOBJ2.AddComponent<Image>();
-			Panel2.color = new Color(Panel2.color.r, Panel2.color.b, Panel2.color.b, 0.7f);
-			RectTransform component2 = PanelOBJ2.GetComponent<RectTransform>();
-			component2.anchorMin = new Vector2(0.5f, 0.5f);
-			component2.anchorMax = new Vector2(0.5f, 0.5f);
-			component2.pivot = new Vector2(0.5f, 0.5f);
-			component2.sizeDelta = new Vector2(576.2f, 447.6f);
-			component2.anchoredPosition = new Vector2(0f, 0f);
-			GameObject gameObject10 = new GameObject();
-			gameObject10.transform.parent = PanelOBJ2.transform;
-			gameObject10.name = "AllowPostProcessText";
-			RectTransform pptextrect = gameObject10.AddComponent<RectTransform>();
-			pptextrect.anchorMin = new Vector2(0.5f, 0.5f);
-			pptextrect.anchorMax = new Vector2(0.5f, 0.5f);
-			pptextrect.pivot = new Vector2(0.5f, 0.5f);
-			pptextrect.anchoredPosition = new Vector2(-216f, 187f);
-			pptextrect.sizeDelta = new Vector2(160f, 30f);
-			Text text3 = gameObject10.AddComponent<Text>();
-			text3.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			text3.text = "Allow Post Processing:";
-			text3.alignment = TextAnchor.UpperLeft;
-			pptextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
-			text3.color = new Color(0f, 0f, 0f);
-			text3.fontSize = 64;
-			text3.verticalOverflow = VerticalWrapMode.Overflow;
-			text3.horizontalOverflow = HorizontalWrapMode.Overflow;
-			GameObject PostProcessingCheckmark = new GameObject();
-			PostProcessingCheckmark.name = "PostProcessCheckmark";
-			PostProcessingCheckmark.transform.parent = PanelOBJ2.transform;
-			RectTransform rectTransform3 = PostProcessingCheckmark.AddComponent<RectTransform>();
-			rectTransform3.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform3.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransform3.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransform3.sizeDelta = new Vector2(20.41f, 20f);
-			rectTransform3.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
-			rectTransform3.anchoredPosition = new Vector2(97.5f, 175.6f);
-			Toggle toggle = PostProcessingCheckmark.AddComponent<Toggle>();
+
+			GameObject PanelOBJ2 = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(576.2f, 447.6f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color(255,255,255, 160), gameObject, "WorldSettingsContainer", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-216, 187), new Vector2(160, 30), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Post Processing:", "AllowPostProcessText", 64);
+
+
+
+			Toggle toggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(97.5f, 175.6f), new Vector2(20.41f, 20f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ2, "PostProcessingCheckmarkToggle", "", "");
+
 			allowPostProcessToggle = toggle;
 			toggle.isOn = true;
-			GameObject checkmarkbg = new GameObject();
-			checkmarkbg.name = "CheckmarkBackground";
-			checkmarkbg.transform.parent = PostProcessingCheckmark.transform;
-			RectTransform rectTransform4 = checkmarkbg.AddComponent<RectTransform>();
-			rectTransform4.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform4.anchorMin = new Vector2(0f, 1f);
-			rectTransform4.anchorMax = new Vector2(0f, 1f);
-			rectTransform4.sizeDelta = new Vector2(20f, 20f);
-			rectTransform4.anchoredPosition = new Vector2(10f, -10f);
-			rectTransform4.localScale = new Vector3(1f, 1f, 1f);
-			Image checkmarkbgGraphics = checkmarkbg.AddComponent<Image>();
-			toggle.targetGraphic = checkmarkbgGraphics;
-			RectTransform rectTransform5 = new GameObject
-			{
-				name = "Checkmark",
-				transform = 
-				{
-					parent = checkmarkbg.transform
-				}
-			}.AddComponent<RectTransform>();
-			rectTransform5.pivot = new Vector2(0.5f, 0.5f);
-			rectTransform5.anchorMin = new Vector2(0.5f, 0.5f);
-			rectTransform5.anchorMax = new Vector2(0.5f, 0.5f);
-			rectTransform5.sizeDelta = new Vector2(20f, 20f);
-			rectTransform5.anchoredPosition = new Vector2(0f, 0f);
-			Image checkrectimage = rectTransform5.gameObject.AddComponent<Image>();
-			Texture2D ico_check = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/icons/checkmark.png"));
-			Sprite spr_check = Sprite.Create(ico_check, new Rect(0f, 0f, (float)ico_check.width, (float)ico_check.height), new Vector2(0f, 0f), 100f);
-			checkrectimage.sprite = spr_check;
-			toggle.graphic = checkrectimage;
+
+
 			this.WorldSettingsRoot = PanelOBJ2;
 			this.WorldSettingsRoot.SetActive(false);
-			GameObject gameObject11 = new GameObject();
-			gameObject11.transform.parent = gameObject.transform;
-			gameObject11.layer = 5;
-			gameObject11.AddComponent<RectTransform>();
-			gameObject11.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			gameObject11.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			gameObject11.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			gameObject11.AddComponent<Image>();
-			gameObject11.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -700f);
-			gameObject11.AddComponent<Button>().onClick.AddListener(delegate()
+
+			Button worldSettingsButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -700f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "WorldSettingsButton", "EditorAssets/icons/ico_world.png");
+
+			worldSettingsButton.onClick.AddListener(delegate()
 			{
 				this.ToggleSettingsMenu("world", false);
 			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
-	
-			GameObject entitiesbutton = new GameObject();
-			entitiesbutton.transform.parent = gameObject.transform;
-			entitiesbutton.layer = 5;
-			entitiesbutton.AddComponent<RectTransform>();
-			entitiesbutton.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-			entitiesbutton.GetComponent<RectTransform>().anchorMin = new Vector2(1f, 1f);
-			entitiesbutton.GetComponent<RectTransform>().anchorMax = new Vector2(1f, 1f);
-			entitiesbutton.AddComponent<Image>();
-			entitiesbutton.GetComponent<RectTransform>().anchoredPosition = new Vector2(-128f, -850f);
-			entitiesbutton.AddComponent<Button>().onClick.AddListener(delegate()
+			Button entitiesButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -850f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "EntitiesButton", "EditorAssets/icons/ico_entities.png");
+
+			entitiesButton.onClick.AddListener(delegate()
 			{
 				this.ToggleSettingsMenu("entities", false);
 			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
-		
-			GameObject AllowColorGradingTex = new GameObject();
-			AllowColorGradingTex.transform.parent = PanelOBJ2.transform;
-			AllowColorGradingTex.name = "AllowColorGradingText";
-
-			RectTransform cgtextrect = AllowColorGradingTex.AddComponent<RectTransform>();
-			cgtextrect.anchorMin = new Vector2(0.5f, 0.5f);
-			cgtextrect.anchorMax = new Vector2(0.5f, 0.5f);
-			cgtextrect.pivot = new Vector2(0.5f, 0.5f);
-			cgtextrect.anchoredPosition = new Vector2(-235f, 125f);
-			pptextrect.sizeDelta = new Vector2(160f, 30f);
-			Text cgtext = AllowColorGradingTex.AddComponent<Text>();
-			cgtext.font = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-			cgtext.text = "Allow Color Grading:";
-			cgtext.alignment = TextAnchor.UpperLeft;
-			cgtextrect.localScale = new Vector3(0.49257f, 0.49257f, 0.49257f);
-			cgtext.color = new Color(0f, 0f, 0f);
-			cgtext.fontSize = 64;
-			cgtext.verticalOverflow = VerticalWrapMode.Overflow;
-			cgtext.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-
-			GameObject ColorGradingCheckmark = new GameObject();
-			ColorGradingCheckmark.name = "ColorGradingCheckmark";
-			ColorGradingCheckmark.transform.parent = PanelOBJ2.transform;
-			RectTransform colgradecheckrec = ColorGradingCheckmark.AddComponent<RectTransform>();
-			colgradecheckrec.pivot = new Vector2(0.5f, 0.5f);
-			colgradecheckrec.anchorMin = new Vector2(0.5f, 0.5f);
-			colgradecheckrec.anchorMax = new Vector2(0.5f, 0.5f);
-			colgradecheckrec.sizeDelta = new Vector2(20.41f, 20f);
-			colgradecheckrec.localScale = new Vector3(1.9014f, 1.9014f, 1.9014f);
-			colgradecheckrec.anchoredPosition = new Vector2(97.5f, 121.1f);
-			Toggle colgradetoggle = ColorGradingCheckmark.AddComponent<Toggle>();
-			allowColorGradingToggle = colgradetoggle;
-			colgradetoggle.isOn = true;
-
-
-			GameObject colgradingcheckmarkbg = new GameObject();
-			colgradingcheckmarkbg.name = "CheckmarkBackground";
-			colgradingcheckmarkbg.transform.parent = ColorGradingCheckmark.transform;
-			RectTransform colgradcheckrect = colgradingcheckmarkbg.AddComponent<RectTransform>();
-			colgradcheckrect.pivot = new Vector2(0.5f, 0.5f);
-			colgradcheckrect.anchorMin = new Vector2(0f, 1f);
-			colgradcheckrect.anchorMax = new Vector2(0f, 1f);
-			colgradcheckrect.sizeDelta = new Vector2(20f, 20f);
-			colgradcheckrect.anchoredPosition = new Vector2(10f, -10f);
-			colgradcheckrect.localScale = new Vector3(1f, 1f, 1f);
-			Image colgradecheckmarkbgGraphics = colgradingcheckmarkbg.AddComponent<Image>();
-			colgradetoggle.targetGraphic = colgradecheckmarkbgGraphics;
 			
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-235, 125f), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.49257f, 0.49257f, 0.49257f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Allow Color Grading:", "AllowPostProcessText", 64);
 
-			RectTransform colgraderect = new GameObject
-			{
-				name = "Checkmark",
-				transform = 
-				{
-					parent = colgradingcheckmarkbg.transform
-				}
-			}.AddComponent<RectTransform>();
-			colgraderect.pivot = new Vector2(0.5f, 0.5f);
-			colgraderect.anchorMin = new Vector2(0.5f, 0.5f);
-			colgraderect.anchorMax = new Vector2(0.5f, 0.5f);
-			colgraderect.sizeDelta = new Vector2(20f, 20f);
-			colgraderect.anchoredPosition = new Vector2(0f, 0f);
-			Image colgradecheckrectimage = colgraderect.gameObject.AddComponent<Image>();
 
-			colgradecheckrectimage.sprite = spr_check;
-			colgradetoggle.graphic = colgradecheckrectimage;
+			allowColorGradingToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(97.5f, 121.1f), new Vector2(20.41f, 20f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ2, "ColorGradToggle", "", "");
+			allowColorGradingToggle.isOn = true;
 
-			colgradetoggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, colgradetoggle.isOn, SkyColor, allowFog);});
+			string[] options = new string[2];
+			options[0] = "NORMAL";
+			options[1] = "SKYFALL";
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-252, 80f), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.49257f, 0.49257f, 0.49257f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Gamemode:", "ModeText", 64);
+
+			Dropdown modeDropdown = MFPEditorUtils.ReturnCreateNewDropDown(MFPEditorUtils.UIAnchor.middle, new Vector2(-10, 90), new Vector3(160,30), new Vector2(0.5f,0.5f), new Vector3(1,1,1), options, PanelOBJ2);
+
+			modeDropdown.onValueChanged.AddListener(delegate{UpdateGamemode(modeDropdown.value);});
+
+			modeDropdown.value = (int)Gamemode;
+
+			gamemodeDropdown = modeDropdown;
+
+			allowColorGradingToggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGradingToggle.isOn, SkyColor, allowFog);});
       
-			gameObject11.transform.parent = this.EditorButtonsRoot.transform;
+			worldSettingsButton.transform.parent = this.EditorButtonsRoot.transform;
 			
-			entitiesbutton.transform.parent = this.EditorButtonsRoot.transform;
+			entitiesButton.transform.parent = this.EditorButtonsRoot.transform;
 
 			EntitySpawnRoot.SetActive(false);
 
-
 			MFPEditorLogger.Log("Hud load complete");
+		}
+
+		public void UpdateGamemode(int mode)
+		{
+			Gamemode = (LevelEditorHandler.MFPGamemode)mode;
 		}
 
 		// Token: 0x0600061A RID: 1562
@@ -1252,6 +1488,11 @@ namespace Jhrino.MFPLevelEditor
 				this.CoordinateField.text = totext255;
 			}
 			this.Editing = true;
+
+			propertiesButton.gameObject.SetActive(true);
+
+			if(PropertiesPanel.activeSelf)
+				PropertiesSetup(PropertiesWarmup(EditingObject.name));
 		}
 
 		// Token: 0x0600061E RID: 1566
@@ -1267,6 +1508,9 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.ExitEditMode();
 				}
+				root.stopSpeechBubble();
+				root.dontAllowActionMode = false;
+				root.pedroHintTimer = 0;
 				this.EditorButtonsRoot.SetActive(false);
 				this.ToggleSettingsMenu(null, true);
 				this.root.nrOfEnemiesTotal = 0;
@@ -1274,9 +1518,27 @@ namespace Jhrino.MFPLevelEditor
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = false;
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = false;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
-				this.HUD.GetComponentInChildren<Canvas>().enabled = true;
+				ToggleHUD(true);
 				this.Player.SetActive(true);
+			
+				playerScript.dodging = false;
+				playerScript.nrOfDodgeSpins = 0;
+				playerScript.onGround = true;
+				playerScript.xSpeed = 0;
+				playerScript.ySpeed = 0;
+				playerScript.dodgeSpinAngle = 0;
+				playerScript.health = 1;
+
+				Player.GetComponent<Rigidbody>().velocity = new Vector3(0,0,0);
+				
+				PreparePlayerLoadout();
+
 				this.Camera.SetActive(true);
+				Camera.transform.position = new Vector3(0,0, Camera.transform.position.z);
+				Camera.GetComponent<CameraScript>().camPos = Camera.transform.position;
+				Camera.GetComponent<CameraScript>().fakePos = Camera.transform.position;
+
+
 				this.CoordinateField.DeactivateInputField();
 				this.CoordinateField.gameObject.SetActive(false);
 				this.EditorCamera.enabled = false;
@@ -1287,17 +1549,11 @@ namespace Jhrino.MFPLevelEditor
 				{
 					array[j].enabled = false;
 				}
-				foreach (Transform transform in this.EnemySpawnpoints)
-				{
-					transform.GetComponent<MeshRenderer>().enabled = false;
-					transform.GetComponent<CapsuleCollider>().enabled = false;
-					GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.EnemySample);
-					this.Enemies.Add(gameObject);
-					gameObject.SetActive(true);
-					gameObject.transform.position = transform.position;
-					this.root.nrOfEnemiesTotal++;
-				}
 
+				foreach(DisappearPlatformScript platformScript in GameObject.FindObjectsOfType<DisappearPlatformScript>())
+				{
+					platformScript.enabled = true;
+				}
 
 				foreach(GameObject Canister in GasCanisters)
 				{
@@ -1310,14 +1566,13 @@ namespace Jhrino.MFPLevelEditor
 					newCanister.GetComponent<Rigidbody>().drag = 0.1f;
 					newCanister.GetComponent<Rigidbody>().angularDrag = 0.05f;
 
-					newCanister.AddComponent<ObjectKickScript>().objType = 3;
-					newCanister.AddComponent<GasCanisterScript>().explosionSize = 2;
-					newCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
-					newCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+
 					newCanister.AddComponent<AudioSource>();
 					newCanister.AddComponent<PhysicsSoundsScript>();
 					newCanister.AddComponent<AutoAimTargetScript>();
 					newCanister.AddComponent<OptimizerScript>();
+
+					newCanister.GetComponent<GasCanisterScript>().explosionSize = Canister.GetComponent<GasCanisterScript>().explosionSize;
 
 					LevelGasCanisters.Add(newCanister);
 
@@ -1377,21 +1632,38 @@ namespace Jhrino.MFPLevelEditor
 				}
 
 
+				SetupGameMode(Gamemode);
+
 				this.FinishLevelTrigger.GetComponent<MeshRenderer>().enabled = false;
-				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
+				if(Gamemode != MFPGamemode.SKYFALL)
+				{
+					FinishLevelTrigger.GetComponent<BoxCollider>().enabled = true;
+					this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = true;
+				}
+				else
+					FinishLevelTrigger.GetComponent<BoxCollider>().enabled = false;
+
 				this.root.nrOfEnemiesTotal = this.root.nrOfEnemiesTotal / 2;
 				this.root.nrOfEnemiesTotal -= this.root.nrOfEnemiesTotal;
 				this.CalculateLevelHash();
 				this.root.dontAllowCheckpointSave = true;
+
+				levelInitialized = true;
+
 				return;
 			}
-			if (this.PlayMod)
+			if (this.PlayMod && !root.levelEnded)
 			{
+
+				MFPEditorUtils.doPedroHint(LevelEditorInfo.levelEditorHints[UnityEngine.Random.Range(0, LevelEditorInfo.levelEditorHints.Length)], -99999);
+
+				root.dontAllowActionMode = true;
 				this.EditorButtonsRoot.SetActive(true);
 				LevelEditorHandler.levelTimer = 0f;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
-				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
+				ToggleHUD(false);
+				ClearAllPlayerWeapons();
 				this.Player.SetActive(false);
 				this.Camera.SetActive(false);
 				this.EditorCamera.enabled = true;
@@ -1420,6 +1692,9 @@ namespace Jhrino.MFPLevelEditor
 				this.FinishLevelTrigger.GetComponent<BoxCollider>().isTrigger = false;
 				this.Enemies.Clear();
 
+				levelInitialized = false;
+
+
 				DoMissingArrayCleanup();
 			}
 		}
@@ -1442,11 +1717,18 @@ namespace Jhrino.MFPLevelEditor
 			PreviousObject = EditingObject;
 			this.EditingObject = null;
 			this.Editing = false;
+
+			propertiesButton.gameObject.SetActive(false);
+			if(PropertiesPanel.activeSelf)
+				ToggleSettingsMenu("properties", false);
+
+
 		}
 
 		// Token: 0x06000620 RID: 1568
 		public void LoadEditorAssets()
 		{
+			Arial =  Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font; 
 			this.EditorAxeMesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/axe.obj"));
 			this.DefaultTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png"));
 			string texname = MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png");
@@ -1571,6 +1853,13 @@ namespace Jhrino.MFPLevelEditor
 		{
 			DoMissingArrayCleanup();
 
+
+			foreach(GameObject obj in GameObject.FindObjectsOfType<GameObject>())
+			{
+				if(obj.name == "Floor" && !GeometryFloorLump.Contains(obj))
+					GeometryFloorLump.Add(obj);
+			}
+
 			List<string> SavedLevel = new List<string>();
 			string item = this.PlayerSpawn.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 			string item2 = this.FinishLevelTrigger.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
@@ -1580,11 +1869,24 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("allowColorGrading = " + this.allowColorGrading.ToString());
 			SavedLevel.Add("theme = " + this.theme);
 			SavedLevel.Add("SkyColor = " + BackgroundCamera.GetComponent<Camera>().backgroundColor.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
+			SavedLevel.Add("gamemode = " + Gamemode.ToString());
 			SavedLevel.Add("!Player");
 			SavedLevel.Add(item);
 			SavedLevel.Add("!LevelEnd");
 			SavedLevel.Add(item2);
 			SavedLevel.Add(this.FinishLevelTrigger.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			SavedLevel.Add("!Equipment");
+			SavedLevel.Add(pistol.ToString());
+			SavedLevel.Add(dualPistol.ToString());
+			SavedLevel.Add(uzi.ToString());
+			SavedLevel.Add(dualUzi.ToString());
+			SavedLevel.Add(shotgun.ToString());
+			SavedLevel.Add(assaultRifle.ToString());
+			SavedLevel.Add(sniper.ToString());
+			SavedLevel.Add(crossbow.ToString());
+			SavedLevel.Add(shockRifle.ToString());
+			SavedLevel.Add(turretGun.ToString());
+
 			MFPEditorLogger.Log("player coordinates added");
 			MFPEditorLogger.Log("----");
 			int num = 2;
@@ -1593,7 +1895,8 @@ namespace Jhrino.MFPLevelEditor
 				string text = this.EnemySpawnpoints[num - 2].transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", "");
 				SavedLevel.Add("!EnemySpawn");
 				SavedLevel.Add(text);
-				MFPEditorLogger.Log("added coordinate " + text);
+				SavedLevel.Add(this.EnemySpawnpoints[num-2].GetComponent<MFPEnemySpawner>().enemyWeapon.ToString());
+	
 				num++;
 			}
 			MFPEditorLogger.Log("----");
@@ -1604,7 +1907,18 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
-				SavedLevel.Add(lump.layer.ToString());
+
+				string properties = "";
+
+				properties += lump.layer;
+				if(lump.GetComponent<DisappearPlatformScript>())
+					properties += ",true";
+				else
+					properties += ",false";
+
+
+				SavedLevel.Add(properties);
+
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
@@ -1615,7 +1929,16 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(lump.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.color.ToString().Replace("(", "").Replace(")", "").Replace(",", "").Replace("RGBA", ""));
-				SavedLevel.Add(lump.layer.ToString());
+
+				string properties = "";
+
+				properties += lump.layer;
+				if(lump.GetComponent<DisappearPlatformScript>())
+					properties += ",true";
+				else
+					properties += ",false";			
+
+				SavedLevel.Add(properties);
 				SavedLevel.Add(lump.GetComponent<MeshRenderer>().material.mainTexture.name);
 			}
 
@@ -1626,6 +1949,7 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(gasCanister.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(gasCanister.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(gasCanister.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(gasCanister.GetComponent<GasCanisterScript>().explosionSize.ToString());
 			}
 
 			foreach(GameObject pan in FryingPans)
@@ -1672,42 +1996,51 @@ namespace Jhrino.MFPLevelEditor
 
 public void DoObjectCleanup()
 {
+	DoMissingArrayCleanup();
+
 	foreach (GameObject obj in this.BrushLump)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 	foreach (GameObject obj in this.GeometryWallLump)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 
 	foreach (GameObject obj in this.GeometryFloorLump)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 	foreach (Transform transform in this.EnemySpawnpoints)
 	{
+				if(transform != null)
 		UnityEngine.Object.Destroy(transform.gameObject);
 	}
 
 	foreach (GameObject obj in GasCanisters)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 
 	foreach (GameObject obj in FryingPans)
 	{
+		if(obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 
 	foreach (GameObject obj in Skateboards)
 	{
+		if (obj != null)
 		UnityEngine.Object.Destroy(obj);
 	}
 }
 	
 		// Token: 0x06000624 RID: 1572
-public void PrototypeLoad()
+	public void PrototypeLoad()
 		{
 			if (this.Editing)
 			{
@@ -1734,6 +2067,20 @@ public void PrototypeLoad()
 				"!EnemySpawn",
 				"!LevelEnd"
 			};
+
+
+		int brushCount = 0;
+
+		foreach(string st in levelFile)
+		{
+			if(st == "!GeometryFloor")
+				brushCount++;	
+		}
+
+		MFPEditorLogger.Log("Brush floor count in map: " + brushCount.ToString());
+
+		brushCount = 0;
+
         for (int i = 0; i < levelFile.Length; i++) //WE'RE JUST GONNA READ THE WHOLE THING
         {
             String tag = levelFile[i]; //It SHOULD only hit this line if its a tag
@@ -1773,9 +2120,10 @@ public void PrototypeLoad()
 
 
 					
-
+					MFPEditorLogger.Log("-------- LEVEL LOAD --------");
 					theme = int.Parse(levelFile[i + 4].Replace("theme = ", ""));
-					root.theme = theme;
+					MFPEditorLogger.Log("----------------------------");
+					MFPEditorLogger.Log("Level Theme: " + theme);
 
 					float[] Skycolor = Array.ConvertAll(levelFile[i + 5].Replace("SkyColor = ", "").Split(new char[] { ' ' }), float.Parse);
 
@@ -1784,54 +2132,82 @@ public void PrototypeLoad()
 
 				    SkyColor = BackgroundCamera.GetComponent<Camera>().backgroundColor;
 
-					i += 5;
+					switch(levelFile[i + 6].Replace("gamemode = ", ""))
+					{
+						default:
+								MFPEditorLogger.Log("Invalid gamemode " + levelFile[i+6].Replace("gamemode = ", ""));
+								Gamemode = MFPGamemode.NORMAL;
+								break;
+						case "NORMAL":
+								Gamemode = MFPGamemode.NORMAL;
+								break;
+						case "SKYFALL":
+								Gamemode = MFPGamemode.SKYFALL;
+								break;
+
+					}
+
+
+					i += 6;
+					break;
+
+				case "!Equipment":
+
+						testPistolToggle.isOn = levelFile[i + 1].Equals("True");
+						dualPistolToggle.isOn = levelFile[i + 2].Equals("True");
+						uziToggle.isOn = levelFile[i + 3].Equals("True");
+						dualUziToggle.isOn = levelFile[i + 4].Equals("True");
+						shotgunToggle.isOn = levelFile[i + 5].Equals("True");
+						assaultRifleToggle.isOn = levelFile[i + 6].Equals("True");
+						sniperToggle.isOn = levelFile[i + 7].Equals("True");
+						crossbowToggle.isOn = levelFile[i + 8].Equals("True");
+						shockRifleToggle.isOn = levelFile[i + 9].Equals("True");
+						turretGunToggle.isOn = levelFile[i + 10].Equals("True");
+	
+						i+= 10;
 					break;
 
 				case "!GeometryWall":
 
-					MFPEditorLogger.Log("Data is about to get into memory");
+
 					
 			        float[] geowallposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
                     float[] geowallrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
                     float[] geowallscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
                     float[] geowallcolor = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-                    int geowallproperty = int.Parse(levelFile[i + 5]);
+
+					string[] properties = levelFile[i + 5].Split(',');
+
                     string geowalltexturename = levelFile[i + 6];
 
-					MFPEditorLogger.Log("Data in memory for brush");
 
                     GameObject newWall = Instantiate(wall_Brick);
 					newWall.SetActive(true);
                     newWall.transform.position = new Vector3(geowallposition[0], geowallposition[1], geowallposition[2]);
                     newWall.transform.eulerAngles = new Vector3(geowallrotation[0], geowallrotation[1], geowallrotation[2]);
                     newWall.transform.localScale = new Vector3(geowallscale[0], geowallscale[1], geowallscale[2]);
-					MFPEditorLogger.Log("Brush coordinates are set");
                     newWall.GetComponent<MeshRenderer>().material.color = new Color(geowallcolor[0], geowallcolor[1], geowallcolor[2]);
-					newWall.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geowalltexturename));
-					MFPEditorLogger.Log("Textures are loaded");
-					string normalmap = geowalltexturename;
-					normalmap = normalmap.Replace(".png", "");
-					normalmap = normalmap + "_normal.png";
-					newWall.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap)));
-					MFPEditorLogger.Log("Normalmaps are loaded");
-					newWall.GetComponent<MeshRenderer>().material.mainTexture.name = geowalltexturename;
-					newWall.gameObject.layer = geowallproperty;
-					MFPEditorLogger.Log("Texture names and layer is set");
+					
+					ConfigureGeometryProperties(newWall, int.Parse(properties[0]), properties[1].Equals("true"), levelFile[i + 6]);
+
 					GeometryWallLump.Add(newWall);
-					MFPEditorLogger.Log("Brush load complete");
+
 					i+= 6;
 					break;
 				
 				case "!GeometryFloor":
 
+
+					MFPEditorLogger.Log("Loading brush id: " + brushCount.ToString());
+
 				    float[] geofloorposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorrotation = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorscale = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
                     float[] geofloorcolor = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-                    int geofloorproperty = int.Parse(levelFile[i + 5]);
-                    string geofloortexturename = levelFile[i + 6];
+                  
+					string[] floorproperties = levelFile[ i + 5].Split(',');
 
-					MFPEditorLogger.Log("Data in memory for brush");
+	
 
                     GameObject newFloor = Instantiate(floor_Wood);
 					newFloor.SetActive(true);
@@ -1839,16 +2215,12 @@ public void PrototypeLoad()
                     newFloor.transform.eulerAngles = new Vector3(geofloorrotation[0], geofloorrotation[1], geofloorrotation[2]);
                     newFloor.transform.localScale = new Vector3(geofloorscale[0], geofloorscale[1], geofloorscale[2]);
                     newFloor.GetComponent<MeshRenderer>().material.color = new Color(geofloorcolor[0], geofloorcolor[1], geofloorcolor[2]);
-					newFloor.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(geofloortexturename));
-					newFloor.GetComponent<MeshRenderer>().material.mainTexture.name = geofloortexturename;
-					string normalmap_floor = geofloortexturename;
-					geofloortexturename = geofloortexturename.Replace(".png", "");
-					geofloortexturename = geofloortexturename + " _normal.png";
-					newFloor.GetComponent<MeshRenderer>().material.SetTexture("_BumpMap", MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder(normalmap_floor)));
-					newFloor.gameObject.layer = geofloorproperty;
+
+					ConfigureGeometryProperties(newFloor, int.Parse(floorproperties[0]), floorproperties[1].Equals("true"), levelFile[i + 6]);
 					GeometryFloorLump.Add(newFloor);
 					i+= 6;
-					
+					brushCount++;
+
 					break;
 
                 case "!Brush": //ITS A BRUSH
@@ -1886,15 +2258,17 @@ public void PrototypeLoad()
                     float[] enemyposition = Array.ConvertAll(levelFile[i + 1].Split(new char[] { ' ' }), float.Parse);
 
                     GameObject gameObject3 = GameObject.CreatePrimitive(0);
+					gameObject3.name = "EnemySpawner";
                     Destroy(gameObject3.GetComponent<SphereCollider>());
                     gameObject3.AddComponent<CapsuleCollider>();
                     gameObject3.layer = 8;
                     gameObject3.transform.localScale = new Vector3(gameObject3.transform.localScale.x, 4f, gameObject3.transform.localScale.x);
                     gameObject3.transform.position = new Vector3(enemyposition[0], enemyposition[1], enemyposition[2]);
                     gameObject3.GetComponent<MeshRenderer>().material.color = new Color(1f, 0f, 0f);
+					gameObject3.AddComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(levelFile[i + 2]);
                     this.EnemySpawnpoints.Add(gameObject3.transform);
 
-                    i++;
+                    i+=2;
                     break;
 
                 case "!LevelEnd":
@@ -1914,14 +2288,21 @@ public void PrototypeLoad()
 					   float[] entityposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
 					   float[] entityrotation = Array.ConvertAll(levelFile[i + 3].Split(new char[] { ' ' }), float.Parse);
 					   float[] entityscale = Array.ConvertAll(levelFile[i + 4].Split(new char[] { ' ' }), float.Parse);
-
+					if(entityName.ToLower() != "gascanister")
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]));
+					else
+					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]), Array.ConvertAll(levelFile[i + 5].Split(new char[] { ',' }), element => element.ToString()));
+					i+= 4;
 							break;
+
+
+						
             }
         }
 			CalculateLevelHash();
 			MFPEditorLogger.Log("Loading over");
 			ToggleSnapping(false);
+			gamemodeDropdown.value = (int)Gamemode;
 		}
 
 		// Token: 0x06000625 RID: 1573
@@ -1949,6 +2330,94 @@ public void PrototypeLoad()
 			MFPEditorLogger.Log(DateTime.Now.ToString("MM/dd/yyyy HH:mm"));
 			MFPEditorLogger.Log("------------------------------------------");
 		}
+
+
+
+		public void SetupGameMode(MFPGamemode GMODE)
+		{
+			switch(GMODE)
+			{
+				case MFPGamemode.NORMAL:
+					playerScript.skyfall = false;
+					break;
+				case MFPGamemode.SKYFALL:
+					playerScript.skyfall = true;
+					break;
+			}
+
+				MFPEditorLogger.Log("Start spawn");
+
+				foreach(Transform spawn in EnemySpawnpoints)
+				{
+					spawn.GetComponent<MFPEnemySpawner>().UpdateData();
+					spawn.GetComponent<MFPEnemySpawner>().SpawnEnemy();
+				}
+
+
+				MFPEditorLogger.Log("End spawn");
+			
+		}
+public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale, string[] properties)
+			{
+				
+				switch(entity)
+				{
+					default:
+						MFPEditorLogger.Log("Invalid entity " + entity + '"');
+					break;
+					//TODO: Add saving and loading for gas canisters
+					case "gascanister":
+						if(GasCanister == null)
+						{
+							GameObject newGasCanister = new GameObject();
+							newGasCanister.name = "GasCanister";
+							newGasCanister.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/GasCanister.obj"));
+							newGasCanister.AddComponent<MeshRenderer>();
+							newGasCanister.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newGasCanister.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newGasCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newGasCanister.transform.position = savePosition;
+								newGasCanister.transform.eulerAngles = saveRotation;
+								newGasCanister.transform.localScale = saveScale;
+							}
+							newGasCanister.AddComponent<BoxCollider>();
+
+
+							newGasCanister.AddComponent<ObjectKickScript>().objType = 3;
+							newGasCanister.AddComponent<GasCanisterScript>().explosionSize = int.Parse(properties[0]);
+							newGasCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+							newGasCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+
+							GasCanister = Instantiate(newGasCanister);
+							GasCanister.SetActive(false);
+
+							GasCanisters.Add(newGasCanister);
+						}
+						else
+						{
+							GameObject preloadedCanister = Instantiate(GasCanister);
+							preloadedCanister.name = "GasCanister";
+
+							preloadedCanister.SetActive(true);
+							if(!isSaveObject)
+							preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								preloadedCanister.transform.position = savePosition;
+								preloadedCanister.transform.eulerAngles = saveRotation;
+								preloadedCanister.transform.localScale = saveScale;
+							}
+
+						preloadedCanister.GetComponent<GasCanisterScript>().explosionSize = int.Parse(properties[0]);
+
+							GasCanisters.Add(preloadedCanister);
+						}
+						break;
+			}
+			}
 
 
 		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
@@ -1979,6 +2448,12 @@ public void PrototypeLoad()
 							}
 							newGasCanister.AddComponent<BoxCollider>();
 
+
+							newGasCanister.AddComponent<ObjectKickScript>().objType = 3;
+							newGasCanister.AddComponent<GasCanisterScript>().explosionSize = 2;
+							newGasCanister.GetComponent<ObjectKickScript>().bounceOnEnemyHit = true;
+							newGasCanister.GetComponent<ObjectKickScript>().reactOnBulletHit = true;
+
 							GasCanister = Instantiate(newGasCanister);
 							GasCanister.SetActive(false);
 
@@ -1987,6 +2462,8 @@ public void PrototypeLoad()
 						else
 						{
 							GameObject preloadedCanister = Instantiate(GasCanister);
+							preloadedCanister.name = "GasCanister";
+
 							preloadedCanister.SetActive(true);
 							if(!isSaveObject)
 							preloadedCanister.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
@@ -2150,6 +2627,35 @@ public void PrototypeLoad()
 							Skateboards.Add(preloadedSkateboard);
 						}
 					break;
+					case "flipTable":
+
+							//buggy right now so cant be spawned yet
+							GameObject newFlipTable = new GameObject();
+							newFlipTable.name = "FlipTable";
+							newFlipTable.layer = 8;
+
+							newFlipTable.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/FlipTable.obj"));
+							newFlipTable.AddComponent<MeshRenderer>();
+							newFlipTable.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+							newFlipTable.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+							if(!isSaveObject)
+							newFlipTable.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+							else
+							{
+								newFlipTable.transform.position = savePosition;
+								newFlipTable.transform.eulerAngles = saveRotation;
+								newFlipTable.transform.localScale = saveScale;
+							}
+							newFlipTable.AddComponent<BoxCollider>();
+							newFlipTable.GetComponent<BoxCollider>().size = new Vector3(2.923683f, 1.986196f, 1.358783f);
+							newFlipTable.GetComponent<BoxCollider>().center = new Vector3(-2.923683f, 1.986196f, 0.5974959f);
+
+							newFlipTable.AddComponent<AudioSource>();
+							newFlipTable.AddComponent<SoundScript>();
+							//newFlipTable.AddComponent<TableFlipScript>();
+
+							levelFlipTables.Add(newFlipTable);
+					break;
 				}
 
 			}
@@ -2231,9 +2737,20 @@ public void PrototypeLoad()
 		// Token: 0x06000703 RID: 1795
 
 
+		public string PropertiesWarmup(string objname)
+		{
+			if(EditingObject.name.Contains("Floor") || EditingObject.name.Contains("Wall"))
+				return "floor";
+			if(EditingObject.name == "EnemySpawner");
+				return EditingObject.name;
+
+			return "no";
+		}
+
+
 		public void ToggleSettingsMenu(string menuType, bool forceOff)
 		{
-			if(this.Editing)
+			if(this.Editing && menuType != "properties")
 				ExitEditMode();
 			if(SnapToBuild)
 				ToggleSnapping(false);
@@ -2242,6 +2759,8 @@ public void PrototypeLoad()
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
+				this.PropertiesPanel.SetActive(false);
+				this.LoadoutPanel.SetActive(false);
 				this.adjustingSettings = false;
 				return;
 			}
@@ -2251,11 +2770,33 @@ public void PrototypeLoad()
 				{
 					this.WorldSettingsRoot.SetActive(true);
 					this.EntitySpawnRoot.SetActive(false);
+					PropertiesPanel.SetActive(false);
 				}
 				if(menuType == "entities")
 				{
 					this.WorldSettingsRoot.SetActive(false);
 					this.EntitySpawnRoot.SetActive(true);
+					PropertiesPanel.SetActive(false);
+				}
+				if(menuType == "properties")
+				{
+					MFPEditorLogger.Log("fired menu change");
+					if(WorldSettingsRoot != null)
+					WorldSettingsRoot.SetActive(false);
+					if(EntitySpawnRoot != null)
+					EntitySpawnRoot.SetActive(false);
+					if(PropertiesPanel != null)
+					PropertiesPanel.SetActive(true);
+
+					PropertiesSetup(PropertiesWarmup(EditingObject.name));
+
+				}
+				if(menuType == "playerloadout")
+				{
+					this.WorldSettingsRoot.SetActive(false);
+					this.EntitySpawnRoot.SetActive(false);
+					this.PropertiesPanel.SetActive(false);
+					this.LoadoutPanel.SetActive(true);
 				}
 
 				this.adjustingSettings = true;
@@ -2265,8 +2806,79 @@ public void PrototypeLoad()
 			{
 				this.WorldSettingsRoot.SetActive(false);
 				this.EntitySpawnRoot.SetActive(false);
+				this.PropertiesPanel.SetActive(false);
+				this.LoadoutPanel.SetActive(false);
+
 				this.adjustingSettings = false;
 			}
+		}
+
+
+
+		public void ToggleHUD(bool toggle)
+		{
+			
+			foreach (Canvas canvas in  GameObject.FindObjectsOfType<Canvas>())
+			{
+				switch(canvas.name)
+				{
+					case "WeaponSelector":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "NewWeapon":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "Cursors":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "HealthAndSlowMo":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "WeaponPanel":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "ScoreHud":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "DodgeAlert":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "ScoreBloodHolder":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "DamageCanvas":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+				}
+			}
+			
 		}
 
 		// Token: 0x04001338 RID: 4920
@@ -2380,9 +2992,17 @@ public void PrototypeLoad()
 
 		public Toggle allowPostProcessToggle;
 		public Toggle allowColorGradingToggle;
+
+
+
+//---------------------------------------GAMEPLAY-----------------------------------------//
+
+		public MFPGamemode Gamemode = MFPGamemode.NORMAL;
+		public PlayerScript playerScript;
+
 //--------------------------------------------------LEGACY---------------------------------//
 		public List<GameObject> BrushLump = new List<GameObject>();
-
+	
 //-----------------------------IMPROVED BUILDING DEPENDENCIES------------------------------//
 		public GameObject SnapTarget;
 			
@@ -2397,6 +3017,8 @@ public void PrototypeLoad()
 
 		public List<GameObject> Skateboards = new List<GameObject>();
 		public List<GameObject> LevelSkateboards = new List<GameObject>();
+
+		public List<GameObject> levelFlipTables = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
@@ -2411,12 +3033,29 @@ public void PrototypeLoad()
 
 		//PRELOADED CONTENT
 		public Material DefaultStandardShader;
-
+		public Font Arial;
 
 		public PhysicMaterial Slippery = new PhysicMaterial();
 		public PhysicMaterial SkateboardTop = new PhysicMaterial();
 
-//-------------------------------------------------------------------------------------------
+//------------------------------- IMPORTANT PANELS ------------------------------------
+			public GameObject PropertiesPanel;
+			public GameObject LoadoutPanel;
+			
+			public List<GameObject> propertyElements = new List<GameObject>();
+
+			public Button propertiesButton;
+			public Dropdown gamemodeDropdown;
+
+
+			public Toggle testPistolToggle, dualPistolToggle, uziToggle, dualUziToggle, shotgunToggle, assaultRifleToggle, sniperToggle, crossbowToggle, shockRifleToggle, turretGunToggle;
+
+//---------------------------------------------------------------------------------------
+	
+	public bool pistol, dualPistol, uzi, dualUzi, shotgun, assaultRifle, shockRifle, turretGun, crossbow, sniper;
+
+//----------------------------
+
 		// Token: 0x020000E2 RID: 226
 		public enum CameraMode
 		{
@@ -2426,4 +3065,4 @@ public void PrototypeLoad()
 			Enabled
 		}
 	}
-}
+}	
