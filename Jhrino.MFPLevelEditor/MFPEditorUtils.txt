@@ -51,10 +51,15 @@ namespace Jhrino.MFPLevelEditor
         }
 
 
-		public static void doPedroHint(RootScript root, string txt, float timer = -99999)
+		public static void doPedroHint(string txt, float timer = -99999)
 		{
-			root.pedroHintTimer = timer;
-			root.StartCoroutine(root.doPedroHint(txt));
+			RootScript root = GameObject.Find("Root").GetComponent<RootScript>();
+
+			if(root != null)
+			{
+				root.pedroHintTimer = timer;
+				root.StartCoroutine(root.doPedroHint(txt));
+			}
 		}
 
 

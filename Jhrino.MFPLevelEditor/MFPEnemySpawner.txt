@@ -26,7 +26,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 			transform.GetComponent<MeshRenderer>().enabled = false;
 			transform.GetComponent<CapsuleCollider>().enabled = false;
-			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(LevelEditorHandler.Inst.EnemySample);
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(LevelChangerScript.Inst.EnemySampleProvided);
 			EnemyScript enemyScript = gameObject.GetComponent<EnemyScript>();
 
 			gameObject.SetActive(false);
@@ -34,9 +34,6 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorLogger.Log("Spawning enemy with weapon ID " + enemyWeapon.ToString() + " and type " + enemyScript.enemyType.ToString());
 
 			enemyScript.weapon = enemyWeapon;
-			if(LevelEditorHandler.Inst.theme > 5)
-			enemyScript.themeOverride = 4;
-			else
 			enemyScript.themeOverride = LevelEditorHandler.Inst.theme;
 
 

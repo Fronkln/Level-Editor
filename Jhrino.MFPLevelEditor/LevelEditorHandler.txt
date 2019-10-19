@@ -77,11 +77,22 @@ namespace Jhrino.MFPLevelEditor
 
 		public void UnlockWeapon(int wepID)
 		{
-			PlayerScript playerCode = Player.GetComponent<PlayerScript>();
-			playerCode.weaponActive[wepID] = true;
-			playerCode.ammoTotal[wepID] = 128;
-			playerCode.secondaryAmmo[wepID] = 3;
+			playerScript.weaponActive[wepID] = true;
+			playerScript.ammoTotal[wepID] = 128;
+			playerScript.secondaryAmmo[wepID] = 3;
 
+		}
+
+		public void GiveFullAmmo()
+		{
+			for(int i = 1; i <= 10; i++)
+			{
+				if(playerScript.weaponActive[i])
+				{
+					playerScript.ammo[i] = root.ammoFullClip[i];
+					playerScript.ammoTotal[i] = root.ammoMax[i];
+				}
+			}
 		}
 	
 		public void UpdatePlayerLoadout(int weapon, bool isOn)
@@ -110,11 +121,14 @@ namespace Jhrino.MFPLevelEditor
 					shotgun = isOn;
 					break;
 				case 7:
-					turretGun = isOn;
-					break;
-				case 8:
 					shockRifle = isOn;
 					break;
+				case 8:
+					turretGun = isOn;
+					break;
+				case 9:
+					sniper = isOn;
+					break; 
 				case 10:
 					crossbow = isOn;
 					break;
@@ -126,15 +140,14 @@ namespace Jhrino.MFPLevelEditor
 
 		public void PreparePlayerLoadout()
 		{
-			PlayerScript playerCode = Player.GetComponent<PlayerScript>();
 			
 			if(crossbow)
 				UnlockWeapon(10);
 			if(sniper)
 				UnlockWeapon(9);
-			if(shockRifle)
-				UnlockWeapon(8);
 			if(turretGun)
+				UnlockWeapon(8);
+			if(shockRifle)
 				UnlockWeapon(7);
 			if(shotgun)
 				UnlockWeapon(6);
@@ -150,7 +163,9 @@ namespace Jhrino.MFPLevelEditor
 				UnlockWeapon(1);
 			
 			uIWeaponSelector.prepareUI();
-			playerCode.updateAmmoHUD();
+			GiveFullAmmo();
+			playerScript.updateAmmoHUD();
+			
 
 			
 			
@@ -357,6 +372,23 @@ namespace Jhrino.MFPLevelEditor
 
 		public void PostPlayModeCleanup()
 		{
+
+			foreach(Projector blood in GameObject.FindObjectsOfType<Projector>())
+			{
+				Destroy(blood.gameObject);
+			}
+
+			foreach(WeaponPickupScript wep in GameObject.FindObjectsOfType<WeaponPickupScript>())
+			{
+				Destroy(wep.gameObject);
+			}
+
+
+			foreach(GameObject gib in GameObject.FindGameObjectsWithTag("Gib"))
+			{
+				Destroy(gib);
+			}
+
 			foreach(GameObject Canister in GasCanisters)
 			{
 				Canister.SetActive(true);
@@ -437,7 +469,7 @@ namespace Jhrino.MFPLevelEditor
 			if (this.PlayMod)
 			{
 				LevelEditorHandler.levelTimer += Time.timeScale;
-				if ((double)this.Player.GetComponent<PlayerScript>().health < 0.02)
+				if ((double)playerScript.health < 0.02)
 				{
 					LevelEditorHandler.PlayerisDeadAndForceAutoLoad = true;
 				}
@@ -533,39 +565,25 @@ namespace Jhrino.MFPLevelEditor
 
 						if(Input.GetMouseButtonDown(0))
 						{
-						if(SnapTarget != null && SnapTarget.GetComponent<snaphelper>().SnappedObject == null && !Editing)
+							snaphelper snappy = SnapTarget.GetComponent<snaphelper>();
+
+						if(snappy != null && SnapTarget != null && !Editing)
 						{
-							try
-							{
-							if(!SnapTarget.GetComponent<snaphelper>().isWallNode)
+							if(!snappy.isWallNode)
 							{
 								GameObject newFloor = Instantiate(floor_Wood);
 								newFloor.name = "Wooden Floor";
 								newFloor.SetActive(true);
 
-								 if(SnapTarget.GetComponent<snaphelper>().snapaxis == snaphelper.Axis.NegativeX)
+								 if(snappy.snapaxis == snaphelper.Axis.NegativeX)
 								 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
 								 else
 								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
 
-								 foreach(GameObject gobject in GeometryFloorLump)
-								{
-									if(gobject.transform.position == newFloor.transform.position)
-									{
-										Destroy(newFloor);
-										break;
-									}
-
-								}
 
 								 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
 							 GeometryFloorLump.Add(newFloor);
-							}
-							}
-							catch
-							{
-								MFPEditorLogger.Log("Placement error encountered, chaos prevented");
-									
+							
 							}
 							if(SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
@@ -606,13 +624,17 @@ namespace Jhrino.MFPLevelEditor
 				Inst = this;
 
 			this.LoadEditorAssets();
+
 			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
 			{
 				Directory.CreateDirectory(MFPEditorUtils.LoadFileFromDataFolder("Levels/default"));
 			}
 			this.root = GameObject.Find("Root").GetComponent<RootScript>();
+			
 			UnityEngine.Object.FindObjectOfType<OptimizerScript>().enabled = false;
 			this.root.nrOfEnemiesTotal = 0;
+			root.stopSpeechBubble();
+			root.dontAllowActionMode = true;
 			this.HUD = GameObject.Find("HUD/Canvas");
 
 			uIWeaponSelector = GameObject.Find("HUD/Canvas/WeaponSelector").GetComponent<UIWeaponSelectorScript>();
@@ -620,6 +642,7 @@ namespace Jhrino.MFPLevelEditor
 			this.Player = GameObject.Find("Player");
 			Player.AddComponent<WeaponManager>();
 			playerScript = Player.GetComponent<PlayerScript>();
+			ClearAllPlayerWeapons();
 			this.Camera = GameObject.Find("Main Camera");
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
@@ -652,9 +675,7 @@ namespace Jhrino.MFPLevelEditor
 
 			this.Player.SetActive(false);
 			this.Camera.SetActive(false);
-			this.HUD.GetComponentInChildren<Canvas>().enabled = false;
-			this.EnemySample = GameObject.Find("New Enemy");
-			this.EnemySample.SetActive(false);
+			ToggleHUD(false);
 			/* OLD BULDING 
 			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
 			gameObject.layer = 8;
@@ -1009,7 +1030,7 @@ namespace Jhrino.MFPLevelEditor
 			propertiesButton.gameObject.SetActive(false);
 
 
-			 Button loadoutButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-150.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "LoadoutButton", "EditorAssets/icons/ico_properties.png");
+			 Button loadoutButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topLeft, new Vector2(128,-500.9f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "LoadoutButton", "EditorAssets/icons/ico_loadout.png");
 
 			loadoutButton.onClick.AddListener(delegate()
 			{
@@ -1063,35 +1084,68 @@ namespace Jhrino.MFPLevelEditor
 
 			LoadoutPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(938.5f, 731.4f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,53,84, 100), gameObject, "LoadoutPanel", "");
 
-			Toggle testPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 230), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "pistolToggle","", "");
+			 testPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 320), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "pistolToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-125, 320), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Pistol:", "pistolText", 28);
 
 			testPistolToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(1, testPistolToggle.isOn);});
 
-			Toggle dualPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 160), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualpistolToggle","", "");
+			 dualPistolToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 240), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualpistolToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-155, 240), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Dual Pistol:", "dualPistolText", 28);
 
 			dualPistolToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(2, dualPistolToggle.isOn);});
 
-			Toggle uziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 90), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "uziToggle","", "");
+			 uziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 160), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "uziToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-110, 160), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Uzi:", "uziText", 28);
 
 			uziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(3, uziToggle.isOn);});
 
-			Toggle dualuziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 10), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualuziToggle","", "");
+			 dualUziToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 80), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "dualuziToggle","", "");
 
-			dualuziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(4, dualuziToggle.isOn);});
+			
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-135, 80), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Dual Uzi:", "dualUziText", 28);
 
-			Toggle shotgunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -70), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "shotgunToggle","", "");
+			dualUziToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(4, dualUziToggle.isOn);});
+
+			 shotgunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, 0), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "shotgunToggle","", "");
 
 			shotgunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(6, shotgunToggle.isOn);});
 
+			
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-140, 0), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Shotgun:", "shotgunText", 28);
 
-			Toggle assaultToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -140), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "assaultToggle","", "");
 
-			assaultToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(5, assaultToggle.isOn);});
+			 assaultRifleToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -80), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "assaultRifleToggle","", "");
 
-			Toggle turretGunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -210), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "turretGunToggle","", "");
+			assaultRifleToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(5, assaultRifleToggle.isOn);});
 
-			turretGunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(7, turretGunToggle.isOn);});
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-175, -80), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Machine Gun:", "shotgunText", 28);
 
+			 sniperToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -160), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "sniperToggle","", "");
+
+			sniperToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(9, sniperToggle.isOn);});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-125, -160), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Sniper:", "sniperText", 28);
+
+			shockRifleToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -240), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "shockRifleToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-160, -240), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Shock Rifle:", "shockRifleText", 28);
+
+			shockRifleToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(7, shockRifleToggle.isOn);});
+
+			 turretGunToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(-50, -320), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "turretGunToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(-155, -320), new Vector3(160,30), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Turret Gun:", "turretGunText", 28);
+
+			turretGunToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(8, turretGunToggle.isOn);});
+			
+			 crossbowToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(150, 320), new Vector2(50,50), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), LoadoutPanel, "crossbowToggle","", "");
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter, new Vector3(50, 320), new Vector3(1,1), new Vector3(0.5f, 0.5f), new Vector3(1,1,1), Arial, Color.black, VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, LoadoutPanel, "Crossbow:", "crossbowText", 28);
+
+			crossbowToggle.onValueChanged.AddListener(delegate{UpdatePlayerLoadout(10, crossbowToggle.isOn);});
 
 
 			LoadoutPanel.SetActive(false);
@@ -1454,6 +1508,9 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.ExitEditMode();
 				}
+				root.stopSpeechBubble();
+				root.dontAllowActionMode = false;
+				root.pedroHintTimer = 0;
 				this.EditorButtonsRoot.SetActive(false);
 				this.ToggleSettingsMenu(null, true);
 				this.root.nrOfEnemiesTotal = 0;
@@ -1461,8 +1518,18 @@ namespace Jhrino.MFPLevelEditor
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = false;
 				this.PlayerSpawn.GetComponent<MeshRenderer>().enabled = false;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
-				this.HUD.GetComponentInChildren<Canvas>().enabled = true;
+				ToggleHUD(true);
 				this.Player.SetActive(true);
+			
+				playerScript.dodging = false;
+				playerScript.nrOfDodgeSpins = 0;
+				playerScript.onGround = true;
+				playerScript.xSpeed = 0;
+				playerScript.ySpeed = 0;
+				playerScript.dodgeSpinAngle = 0;
+				playerScript.health = 1;
+
+				Player.GetComponent<Rigidbody>().velocity = new Vector3(0,0,0);
 				
 				PreparePlayerLoadout();
 
@@ -1587,21 +1654,15 @@ namespace Jhrino.MFPLevelEditor
 			}
 			if (this.PlayMod && !root.levelEnded)
 			{
-				foreach(Projector blood in GameObject.FindObjectsOfType<Projector>())
-				{
-					Destroy(blood.gameObject);
-				}
 
-				foreach(WeaponPickupScript wep in GameObject.FindObjectsOfType<WeaponPickupScript>())
-				{
-					Destroy(wep.gameObject);
-				}
+				MFPEditorUtils.doPedroHint(LevelEditorInfo.levelEditorHints[UnityEngine.Random.Range(0, LevelEditorInfo.levelEditorHints.Length)], -99999);
 
+				root.dontAllowActionMode = true;
 				this.EditorButtonsRoot.SetActive(true);
 				LevelEditorHandler.levelTimer = 0f;
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				this.PlayerSpawn.GetComponent<CapsuleCollider>().enabled = true;
-				this.HUD.GetComponentInChildren<Canvas>().enabled = false;
+				ToggleHUD(false);
 				ClearAllPlayerWeapons();
 				this.Player.SetActive(false);
 				this.Camera.SetActive(false);
@@ -1633,7 +1694,6 @@ namespace Jhrino.MFPLevelEditor
 
 				levelInitialized = false;
 
-				MFPEditorUtils.doPedroHint(root, LevelEditorInfo.levelEditorHints[UnityEngine.Random.Range(0, LevelEditorInfo.levelEditorHints.Length)], -999);
 
 				DoMissingArrayCleanup();
 			}
@@ -1815,6 +1875,18 @@ namespace Jhrino.MFPLevelEditor
 			SavedLevel.Add("!LevelEnd");
 			SavedLevel.Add(item2);
 			SavedLevel.Add(this.FinishLevelTrigger.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			SavedLevel.Add("!Equipment");
+			SavedLevel.Add(pistol.ToString());
+			SavedLevel.Add(dualPistol.ToString());
+			SavedLevel.Add(uzi.ToString());
+			SavedLevel.Add(dualUzi.ToString());
+			SavedLevel.Add(shotgun.ToString());
+			SavedLevel.Add(assaultRifle.ToString());
+			SavedLevel.Add(sniper.ToString());
+			SavedLevel.Add(crossbow.ToString());
+			SavedLevel.Add(shockRifle.ToString());
+			SavedLevel.Add(turretGun.ToString());
+
 			MFPEditorLogger.Log("player coordinates added");
 			MFPEditorLogger.Log("----");
 			int num = 2;
@@ -1968,7 +2040,7 @@ public void DoObjectCleanup()
 }
 	
 		// Token: 0x06000624 RID: 1572
-public void PrototypeLoad()
+	public void PrototypeLoad()
 		{
 			if (this.Editing)
 			{
@@ -2079,6 +2151,22 @@ public void PrototypeLoad()
 					i += 6;
 					break;
 
+				case "!Equipment":
+
+						testPistolToggle.isOn = levelFile[i + 1].Equals("True");
+						dualPistolToggle.isOn = levelFile[i + 2].Equals("True");
+						uziToggle.isOn = levelFile[i + 3].Equals("True");
+						dualUziToggle.isOn = levelFile[i + 4].Equals("True");
+						shotgunToggle.isOn = levelFile[i + 5].Equals("True");
+						assaultRifleToggle.isOn = levelFile[i + 6].Equals("True");
+						sniperToggle.isOn = levelFile[i + 7].Equals("True");
+						crossbowToggle.isOn = levelFile[i + 8].Equals("True");
+						shockRifleToggle.isOn = levelFile[i + 9].Equals("True");
+						turretGunToggle.isOn = levelFile[i + 10].Equals("True");
+	
+						i+= 10;
+					break;
+
 				case "!GeometryWall":
 
 
@@ -2180,7 +2268,7 @@ public void PrototypeLoad()
 					gameObject3.AddComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(levelFile[i + 2]);
                     this.EnemySpawnpoints.Add(gameObject3.transform);
 
-                    i++;
+                    i+=2;
                     break;
 
                 case "!LevelEnd":
@@ -2204,7 +2292,9 @@ public void PrototypeLoad()
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]));
 					else
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]), Array.ConvertAll(levelFile[i + 5].Split(new char[] { ',' }), element => element.ToString()));
+					i+= 4;
 							break;
+
 
 						
             }
@@ -2248,10 +2338,10 @@ public void PrototypeLoad()
 			switch(GMODE)
 			{
 				case MFPGamemode.NORMAL:
-					Player.GetComponent<PlayerScript>().skyfall = false;
+					playerScript.skyfall = false;
 					break;
 				case MFPGamemode.SKYFALL:
-					Player.GetComponent<PlayerScript>().skyfall = true;
+					playerScript.skyfall = true;
 					break;
 			}
 
@@ -2723,6 +2813,74 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 			}
 		}
 
+
+
+		public void ToggleHUD(bool toggle)
+		{
+			
+			foreach (Canvas canvas in  GameObject.FindObjectsOfType<Canvas>())
+			{
+				switch(canvas.name)
+				{
+					case "WeaponSelector":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "NewWeapon":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "Cursors":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "HealthAndSlowMo":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "WeaponPanel":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "ScoreHud":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "DodgeAlert":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "ScoreBloodHolder":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+					case "DamageCanvas":
+						if(toggle)
+							canvas.enabled = true;
+						else
+							canvas.enabled = false;
+						break;
+				}
+			}
+			
+		}
+
 		// Token: 0x04001338 RID: 4920
 		public GameObject Player;
 
@@ -2889,6 +3047,8 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 			public Button propertiesButton;
 			public Dropdown gamemodeDropdown;
 
+
+			public Toggle testPistolToggle, dualPistolToggle, uziToggle, dualUziToggle, shotgunToggle, assaultRifleToggle, sniperToggle, crossbowToggle, shockRifleToggle, turretGunToggle;
 
 //---------------------------------------------------------------------------------------
 	

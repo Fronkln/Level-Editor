@@ -13,11 +13,16 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x040013DC RID: 5084
 		public static float version = 0.23f;
 
-		public static string[] levelEditorHints = new string[3]
+		public static string[] levelEditorHints = new string[7]
 		{
 			"X key is the shortcut to exit editing mode.",
+			"You can use the L key to delete selected\nobject.",
 			"You can configure object properties with\n the properties button.",
-			"Your level is auto-saved when you enter playmode."
+			"Your level is auto-saved when you enter playmode.",
+			"Are you seeing this DeadToast?",
+			"This mod is work-in-progress, more\nfeatures will come.",
+			"You can switch to the crossbow by\ndouble pressing sniper key."
+
 		};
 	}
 }

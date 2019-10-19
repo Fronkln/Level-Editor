@@ -14,6 +14,8 @@ namespace Jhrino.MFPLevelEditor
 
 		public AnimationClip fightStance, defaultStance;
 		
+		public AudioSource kickWooshAudio;
+
 		public AnimatorOverrideController punchAnim;
 
 		public bool left = false;
@@ -30,7 +32,7 @@ namespace Jhrino.MFPLevelEditor
 			CROSSBOW
 		}
 
-		public MFPSlot9Weapon Slot9Weapon = MFPSlot9Weapon.NONE;
+		public MFPSlot9Weapon Slot9Weapon = MFPSlot9Weapon.SNIPER;
 
 		// Token: 0x06000861 RID: 2145
 		public void Awake()
@@ -40,12 +42,14 @@ namespace Jhrino.MFPLevelEditor
 			this.handR = transform.Find("PlayerGraphics/Armature/Center/LowerBack/UpperBack/Neck/Head");
 			player = ReInput.players.GetPlayer(0);
 
+			kickWooshAudio = this.transform.Find("PlayerGraphics/Armature/Center/Hip_L/UpperLeg_L/LowerLeg_L/Foot_L/FootTip_L").gameObject.GetComponent<AudioSource>();
+
 			root = GameObject.FindObjectOfType<RootScript>();
 		}
 
 		public void OnEnable()
 		{
-			Slot9Weapon = MFPSlot9Weapon.NONE;
+			Slot9Weapon = MFPSlot9Weapon.SNIPER;
 		}
 
 		// Token: 0x06000863 RID: 2147
@@ -89,6 +93,7 @@ namespace Jhrino.MFPLevelEditor
 			switch(stance)
 			{
 				case MFPAttackStance.KICKING:
+					this.punchAnim["Idle"] = defaultStance;
 					this.punchAnim["Attack_Kick0"] = kickAnims[0];
 					this.punchAnim["Attack_Kick45"] = kickAnims[1];
 					this.punchAnim["Attack_Kick90"] = kickAnims[2];
@@ -106,39 +111,65 @@ namespace Jhrino.MFPLevelEditor
 			}
 		}
 
-		// Token: 0x0600087E RID: 2174
-		public void Update()
-		{
 
+		public void LateUpdate()
+		{
+			
 			if(player.GetButtonDown("Rifle"))
 			{
-
-					this.playerScript.timeSinceDodgeUsed = (float)0;
-				root.StartCoroutine(root.doPedroHint(root.GetTranslation("pHint1")));
 
 				if(playerScript.weaponActive[9] && !playerScript.weaponActive[10])
 					return;
 
-				if(!playerScript.weaponActive[9] && playerScript.weaponActive[10])
+				if(playerScript.weaponActive[10] && !playerScript.weaponActive[9] && playerScript.weapon != 10)
+					playerScript.changeWeapon(10);
+
+				if(playerScript.weaponActive[9] && playerScript.weaponActive[10])
 					if(Slot9Weapon == MFPSlot9Weapon.SNIPER)
 					{
 						playerScript.changeWeapon(10);
 						Slot9Weapon = MFPSlot9Weapon.CROSSBOW;
+						return;
 					}
 					else
 					{
-						playerScript.changeWeapon(7);
+						playerScript.changeWeapon(9);
 						Slot9Weapon = MFPSlot9Weapon.SNIPER;
+						return;
 					}
 			}
 				
+		}
+
+		// Token: 0x0600087E RID: 2174
+		public void Update()
+		{
 
 			if(playerScript.weapon != 0 && Input.GetKeyDown(KeyCode.Alpha0))
 			{
 				
 				playerScript.changeWeapon(0);
+				attackStance = MFPAttackStance.FIGHTCLUB;
+				SwitchFightMode(attackStance);
 				playerAnim.SetFloat("IdleNr", 0);
 			}
+
+			if(Input.GetKeyDown(KeyCode.Alpha8) && playerScript.weaponActive[7] && playerScript.weapon != 7)
+				playerScript.changeWeapon(7);
+			if(Input.GetKeyDown(KeyCode.Alpha9) && playerScript.weaponActive[8] && playerScript.weapon != 8)
+				playerScript.changeWeapon(7);
+
+			
+					if(player.GetButtonDown("Kick"))
+					{
+						if(attackStance == MFPAttackStance.FIGHTCLUB)
+						{
+							attackStance = MFPAttackStance.KICKING;
+							SwitchFightMode(attackStance);
+						}
+						
+					}
+
 
 
 			if(playerScript.weapon > 0 && attackStance == MFPAttackStance.FIGHTCLUB)
@@ -151,18 +182,12 @@ namespace Jhrino.MFPLevelEditor
 			{
 				RaycastHit hit;
 
+				if(playerAnim.GetFloat("IdleNr") == 1)
+					playerAnim.SetFloat("IdleNr", 0);
+					
+
 				if(playerScript.punchTimer <= 15)
 				{
-
-					if(player.GetButtonDown("Kick"))
-					{
-						if(attackStance == MFPAttackStance.FIGHTCLUB)
-						{
-							attackStance = MFPAttackStance.KICKING;
-							SwitchFightMode(attackStance);
-						}
-					}
-
 					if(player.GetButtonDown("Fire"))
 					{
 
@@ -175,6 +200,10 @@ namespace Jhrino.MFPLevelEditor
 							kPunch = true;
 							playerAnim.CrossFadeInFixedTime("MeleeKick", 0.05f, 0, 0.15f);
 							playerScript.punchTimer = 30f;
+							kickWooshAudio.clip = playerScript.kickWooshSound;
+							kickWooshAudio.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+							kickWooshAudio.volume = UnityEngine.Random.Range(0.9f, 1f);
+							kickWooshAudio.Play();
 
 
 							//kickwooshsource unutma
@@ -240,6 +269,10 @@ namespace Jhrino.MFPLevelEditor
 					{
 						kickAnims.Add(clip);
 					}
+
+					if(clip.name == "Idle")
+					 defaultStance = clip;
+					
 					
 				}
 			this.playerAnim.runtimeAnimatorController = this.punchAnim;
