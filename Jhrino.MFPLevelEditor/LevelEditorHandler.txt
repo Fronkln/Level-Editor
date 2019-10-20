@@ -423,6 +423,13 @@ namespace Jhrino.MFPLevelEditor
 				platformScript.enabled = false;
 			}
 
+			foreach(TableFlipScript tableFlip in GameObject.FindObjectsOfType<TableFlipScript>())
+			{
+				tableFlip.ResetTable();
+			}
+
+
+
 
 		}
 
@@ -1181,6 +1188,16 @@ namespace Jhrino.MFPLevelEditor
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, skateBoardButton.gameObject, "Skateboard", "SkateboardButtonText", 64);
 
 
+			Button flipTableButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 30), new Vector2(254.86f, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "flipTableButton");
+
+			flipTableButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("fliptable", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, flipTableButton.gameObject, "Flippable Table", "flipTableButtonText", 64);
+
+
 
 			this.EntitySpawnRoot = PanelOBJ;
 
@@ -1520,6 +1537,7 @@ namespace Jhrino.MFPLevelEditor
 				this.Player.transform.position = this.PlayerSpawn.transform.position;
 				ToggleHUD(true);
 				this.Player.SetActive(true);
+
 			
 				playerScript.dodging = false;
 				playerScript.nrOfDodgeSpins = 0;
@@ -1554,6 +1572,14 @@ namespace Jhrino.MFPLevelEditor
 				{
 					platformScript.enabled = true;
 				}
+				foreach(GameObject table in levelFlipTables)
+				{
+					if(table.GetComponent<TableFlipScript>() == null)
+					{
+						table.AddComponent<TableFlipScript>().startPos = table.transform.position;
+					}
+				}
+
 
 				foreach(GameObject Canister in GasCanisters)
 				{
@@ -1764,7 +1790,8 @@ namespace Jhrino.MFPLevelEditor
 
 		public void DoMissingArrayCleanup()
 		{
-				for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
+
+			for (int i = this.EnemySpawnpoints.Count - 1; i > -1; i--)
 			{
 				if (this.EnemySpawnpoints[i] == null)
 				{
@@ -1844,6 +1871,12 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.BrushLump.RemoveAt(j);
 				}
+			}
+
+			for(int j = levelFlipTables.Count - 1; j > -1; j--)
+			{
+				if(levelFlipTables[j] == null)
+					levelFlipTables.RemoveAt(j);
 			}
 
 		}
@@ -1968,6 +2001,15 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(board.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(board.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 				SavedLevel.Add(board.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
+			foreach(GameObject table in levelFlipTables)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = flipTable");
+				SavedLevel.Add(table.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(table.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(table.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 			}
 
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
@@ -2282,7 +2324,7 @@ public void DoObjectCleanup()
                     i += 2;
                     break;
 				case "!Entity":
-						string entityName = levelFile[i + 1].Replace("entityType = ", "");
+						string entityName = levelFile[i + 1].Replace("entityType = ", "").Replace('"', ' ');
 						MFPEditorLogger.Log(entityName);
 
 					   float[] entityposition = Array.ConvertAll(levelFile[i + 2].Split(new char[] { ' ' }), float.Parse);
@@ -2627,17 +2669,22 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 							Skateboards.Add(preloadedSkateboard);
 						}
 					break;
-					case "flipTable":
+					case "fliptable":
 
 							//buggy right now so cant be spawned yet
 							GameObject newFlipTable = new GameObject();
 							newFlipTable.name = "FlipTable";
-							newFlipTable.layer = 8;
+							newFlipTable.layer = 16;
 
 							newFlipTable.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/FlipTable.obj"));
 							newFlipTable.AddComponent<MeshRenderer>();
 							newFlipTable.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
 							newFlipTable.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder("EditorAssets/BaseGame/textures/texture_collection_1.png"));
+
+							newFlipTable.AddComponent<BoxCollider>();
+							newFlipTable.GetComponent<BoxCollider>().size = new Vector3(2.923683f, 1.986196f, 1.358783f);
+							newFlipTable.GetComponent<BoxCollider>().center = new Vector3(-1.192093e-07f, -1.192093e-07f, 1.358783f);
+
 							if(!isSaveObject)
 							newFlipTable.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
 							else
@@ -2646,13 +2693,12 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 								newFlipTable.transform.eulerAngles = saveRotation;
 								newFlipTable.transform.localScale = saveScale;
 							}
-							newFlipTable.AddComponent<BoxCollider>();
-							newFlipTable.GetComponent<BoxCollider>().size = new Vector3(2.923683f, 1.986196f, 1.358783f);
-							newFlipTable.GetComponent<BoxCollider>().center = new Vector3(-2.923683f, 1.986196f, 0.5974959f);
+
+							newFlipTable.transform.eulerAngles = new Vector3(-90,0,0);
+
 
 							newFlipTable.AddComponent<AudioSource>();
 							newFlipTable.AddComponent<SoundScript>();
-							//newFlipTable.AddComponent<TableFlipScript>();
 
 							levelFlipTables.Add(newFlipTable);
 					break;

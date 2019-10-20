@@ -1,0 +1,245 @@
+using System;
+using UnityEngine;
+
+// Token: 0x020000CF RID: 207
+[Serializable]
+public class TableFlipScript : MonoBehaviour
+{
+	// Token: 0x060005A3 RID: 1443 RVA: 0x000020A9 File Offset: 0x000002A9
+	public TableFlipScript()
+	{
+	}
+
+	public Vector3  startPos, startScale, startRotEuler;
+	
+
+	// Token: 0x060005A4 RID: 1444 RVA: 0x0008DC90 File Offset: 0x0008BE90
+	public virtual void saveState()
+	{
+		this.flippedS = this.flipped;
+		this.flipRightMultiplierS = this.flipRightMultiplier;
+		this.flippedDoOnceS = this.flippedDoOnce;
+		this.rotPosS = this.rotPos;
+		this.rotOffsetS = this.rotOffset;
+		this.rotSpeedS = this.rotSpeed;
+		this.deactivateTimerS = this.deactivateTimer;
+		this.widthS = this.width;
+	}
+
+	// Token: 0x060005A5 RID: 1445 RVA: 0x0008DD00 File Offset: 0x0008BF00
+	public virtual void loadState()
+	{
+		this.flipped = this.flippedS;
+		this.flipRightMultiplier = this.flipRightMultiplierS;
+		this.flippedDoOnce = this.flippedDoOnceS;
+		this.rotPos = this.rotPosS;
+		this.rotOffset = this.rotOffsetS;
+		this.rotSpeed = this.rotSpeedS;
+		this.deactivateTimer = this.deactivateTimerS;
+		this.width = this.widthS;
+	}
+
+	// Token: 0x060005A6 RID: 1446 RVA: 0x00004974 File Offset: 0x00002B74
+	public virtual void LateUpdate()
+	{
+		if (this.root.doCheckpointSave)
+		{
+			this.saveState();
+		}
+		if (this.root.doCheckpointLoad)
+		{
+			this.loadState();
+		}
+	}
+
+
+	
+	public void ResetTable()
+	{
+
+		transform.eulerAngles = startRotEuler;
+		transform.position = startPos;
+		transform.localScale = startScale;
+		Destroy(this);
+	}
+
+	// Token: 0x060005A7 RID: 1447 RVA: 0x0008DD70 File Offset: 0x0008BF70
+	public virtual void Start()
+	{
+		startScale = transform.localScale;
+		startRotEuler = transform.eulerAngles;
+
+		this.startRot = this.transform.localRotation;
+		this.rotPos = this.transform.position;
+		this.objCol = (Collider)this.GetComponent(typeof(Collider));
+		this.boundHeight = this.objCol.bounds.size.y;
+		this.width = this.objCol.bounds.size.x;
+		this.root = (RootScript)GameObject.Find("Root").GetComponent(typeof(RootScript));
+		this.statsTracker = (StatsTrackerScript)GameObject.Find("RootShared").GetComponent(typeof(StatsTrackerScript));
+		this.player = GameObject.Find("Player").transform;
+		this.playerScript = (PlayerScript)this.player.GetComponent(typeof(PlayerScript));
+		this.outlineEffect = (OutlineEffect)GameObject.Find("Main Camera").GetComponent(typeof(OutlineEffect));
+		this.directionArrow = GameObject.Find("HUD/DirectionArrow");
+		this.theAudioSource = (AudioSource)this.GetComponent(typeof(AudioSource));
+	}
+
+	// Token: 0x060005A8 RID: 1448 RVA: 0x0008DEC8 File Offset: 0x0008C0C8
+	public virtual void Update()
+	{
+		if (this.flipped)
+		{
+			if (!this.flippedDoOnce)
+			{
+				this.transform.tag = "Untagged";
+				this.flippedDoOnce = true;
+				this.statsTracker.tablesFlipped = this.statsTracker.tablesFlipped + 1;
+				this.statsTracker.achievementCheck();
+				this.theAudioSource.volume = UnityEngine.Random.Range(0.8f, (float)1);
+				this.theAudioSource.pitch = UnityEngine.Random.Range(0.95f, 1.05f);
+				this.theAudioSource.Play();
+				this.rotPos.x = this.rotPos.x + this.objCol.bounds.extents.x * 0.9f * this.flipRightMultiplier;
+			}
+			this.rotOffset = (this.transform.localRotation * Quaternion.Inverse(this.startRot)).eulerAngles.z;
+			if (this.rotOffset > (float)180)
+			{
+				this.rotOffset -= (float)360;
+			}
+			this.rotSpeed += this.root.DampAdd((float)-87 * this.flipRightMultiplier, this.rotOffset, 0.04f);
+			this.rotSpeed = this.root.Damp((float)0, this.rotSpeed, 0.2f);
+			bool flag;
+			if (flag = (this.transform.localRotation.eulerAngles.x > (float)180))
+			{
+				flag = (this.transform.localRotation.eulerAngles.x < (float)357);
+			}
+			bool flag2 = flag;
+			this.transform.RotateAround((!flag2) ? (this.rotPos + new Vector3(this.boundHeight * this.flipRightMultiplier, (float)0, (float)0)) : this.rotPos, Vector3.forward, this.rotSpeed * this.root.timescale);
+			this.deactivateTimer += this.root.timescale;
+			if (this.deactivateTimer >= (float)40)
+			{
+				this.flipped = false;
+				((TableFlipScript)this.GetComponent(typeof(TableFlipScript))).enabled = false;
+			}
+		}
+		else
+		{
+			Vector3 vector = this.transform.position - this.player.position;
+			if (vector.magnitude < this.width * 1.5f && Mathf.Abs(vector.x) < this.width + (float)2 && ((vector.x > (float)0 && this.playerScript.faceRight) || (vector.x < (float)0 && !this.playerScript.faceRight)) && (this.player.position.x < this.objCol.bounds.min.x || this.player.position.x > this.objCol.bounds.max.x))
+			{
+				this.root.highlightObject(this.transform, false, this.root.GetTranslation("interact6"), 1.6f);
+				this.root.showHintFlipTable = true;
+				if ((this.playerScript.punchTimer > (float)15 || this.playerScript.kUse) && this.root.prevOutlinedObject == this.transform)
+				{
+					if (this.playerScript.kUse)
+					{
+						this.playerScript.flipTable();
+					}
+					this.flipRightMultiplier = (float)((vector.x <= (float)0) ? -1 : 1);
+					this.flipped = true;
+				}
+			}
+		}
+	}
+
+	// Token: 0x060005A9 RID: 1449 RVA: 0x0008E2DC File Offset: 0x0008C4DC
+	public virtual void OnCollisionStay(Collision col)
+	{
+		if (this.flipped && col.gameObject.layer != 13)
+		{
+			int num = 4;
+			Vector3 velocity = col.rigidbody.velocity;
+			float num2 = velocity.y = (float)num;
+			Vector3 vector = col.rigidbody.velocity = velocity;
+			float x = -this.rotSpeed * 0.3f;
+			Vector3 velocity2 = col.rigidbody.velocity;
+			float num3 = velocity2.x = x;
+			Vector3 vector2 = col.rigidbody.velocity = velocity2;
+			float z = this.rotSpeed;
+			Vector3 angularVelocity = col.rigidbody.angularVelocity;
+			float num4 = angularVelocity.z = z;
+			Vector3 vector3 = col.rigidbody.angularVelocity = angularVelocity;
+		}
+	}
+
+	// Token: 0x060005AA RID: 1450 RVA: 0x000020A7 File Offset: 0x000002A7
+	public virtual void Main()
+	{
+	}
+
+	// Token: 0x04001259 RID: 4697
+	public bool flipped;
+
+	// Token: 0x0400125A RID: 4698
+	public float flipRightMultiplier;
+
+	// Token: 0x0400125B RID: 4699
+	private bool flippedDoOnce;
+
+	// Token: 0x0400125C RID: 4700
+	private Quaternion startRot;
+
+	// Token: 0x0400125D RID: 4701
+	private Vector3 rotPos;
+
+	// Token: 0x0400125E RID: 4702
+	private Collider objCol;
+
+	// Token: 0x0400125F RID: 4703
+	private float rotOffset;
+
+	// Token: 0x04001260 RID: 4704
+	private float rotSpeed;
+
+	// Token: 0x04001261 RID: 4705
+	private float boundHeight;
+
+	// Token: 0x04001262 RID: 4706
+	private RootScript root;
+
+	// Token: 0x04001263 RID: 4707
+	private StatsTrackerScript statsTracker;
+
+	// Token: 0x04001264 RID: 4708
+	private float deactivateTimer;
+
+	// Token: 0x04001265 RID: 4709
+	private Transform player;
+
+	// Token: 0x04001266 RID: 4710
+	private PlayerScript playerScript;
+
+	// Token: 0x04001267 RID: 4711
+	private float width;
+
+	// Token: 0x04001268 RID: 4712
+	private OutlineEffect outlineEffect;
+
+	// Token: 0x04001269 RID: 4713
+	private GameObject directionArrow;
+
+	// Token: 0x0400126A RID: 4714
+	private AudioSource theAudioSource;
+
+	// Token: 0x0400126B RID: 4715
+	private bool flippedS;
+
+	// Token: 0x0400126C RID: 4716
+	private float flipRightMultiplierS;
+
+	// Token: 0x0400126D RID: 4717
+	private bool flippedDoOnceS;
+
+	// Token: 0x0400126E RID: 4718
+	private Vector3 rotPosS;
+
+	// Token: 0x0400126F RID: 4719
+	private float rotOffsetS;
+
+	// Token: 0x04001270 RID: 4720
+	private float rotSpeedS;
+
+	// Token: 0x04001271 RID: 4721
+	private float deactivateTimerS;
+
+	// Token: 0x04001272 RID: 4722
+	private float widthS;
+}
