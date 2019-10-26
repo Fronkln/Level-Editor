@@ -221,6 +221,11 @@ namespace Jhrino.MFPLevelEditor
 				case "weaponID":
 					EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(field.text);
 					break;
+				
+				case "intensity":
+					EditingObject.GetComponent<Light>().intensity = float.Parse(field.text);
+					break;
+
 				case "explosionStrength":
 					if(tutorialContinuing)
 						{
@@ -374,6 +379,24 @@ namespace Jhrino.MFPLevelEditor
 					propertyElements.Add(testInput.gameObject);
 					propertyElements.Add(WeaponIDDesc.gameObject);
 					propertyElements.Add(WeaponIDText.gameObject);
+				break;
+
+
+				case "PointLight":
+					Text IntensityDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Intensity:", "IntensityDesc", 48);
+
+					Text IntensityText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, EditingObject.GetComponent<Light>().intensity.ToString(), "Intensity", 48);
+
+					InputField intensityInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-75, 301.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "IntensityField", "", IntensityText, true, InputField.CharacterValidation.Decimal);
+
+					intensityInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(intensityInput, intensityInput.text, "intensity", 0, 50);
+					});
+
+					propertyElements.Add(intensityInput.gameObject);
+					propertyElements.Add(IntensityDesc.gameObject);
+					propertyElements.Add(IntensityText.gameObject);
 				break;
 				
 			}
@@ -613,12 +636,21 @@ namespace Jhrino.MFPLevelEditor
 								newFloor.SetActive(true);
 
 								 if(snappy.snapaxis == snaphelper.Axis.NegativeX)
-								 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, 0);
+								 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);
 								 else
-								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
+								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);	
 
 							if(tutorialContinuing && MFPLevelEditorTutorial.Inst != null && MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_OBJECT)
 									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+
+								foreach(GameObject @object in GeometryWallLump)
+								{
+									if(newFloor.transform.position == @object.transform.position)
+									{
+										Destroy(newFloor);
+										return;
+									}
+								}
 
 
 								 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
@@ -635,9 +667,22 @@ namespace Jhrino.MFPLevelEditor
 							    newWall.transform.position = new Vector3(SnapTarget.transform.position.x, SnapTarget.transform.position.y, SnapTarget.transform.position.z);
 								 newWall.transform.eulerAngles = new Vector3(0, -90, 0);
 
+								foreach(GameObject @object in GeometryWallLump)
+								{
+									if(newWall.transform.position == @object.transform.position)
+									{
+										Destroy(newWall);
+										return;
+									}
+								}
+
+
 								SnapTarget.GetComponent<snaphelper>().SnappedObject = newWall;
+
+
 									GeometryWallLump.Add(newWall);
 									MFPEditorLogger.Log(newWall.name + " added");
+
 								
 							}
 							
@@ -665,8 +710,15 @@ namespace Jhrino.MFPLevelEditor
 
 			this.LoadEditorAssets();
 
-			//tutorial
-			new GameObject().AddComponent<MFPLevelEditorTutorial>();
+			//tutorial şuan commentli kesinlikle aç
+			//
+			//
+			//
+			//
+			//
+			//new GameObject().AddComponent<MFPLevelEditorTutorial>();
+
+
 			tutorialContinuing = true;
 
 			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
@@ -1233,6 +1285,16 @@ namespace Jhrino.MFPLevelEditor
 			});
 
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, flipTableButton.gameObject, "Flippable Table", "flipTableButtonText", 64);
+
+
+			Button lightButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 0), new Vector2(254.86f, 30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ, "lightButton");
+
+			lightButton.onClick.AddListener(delegate()
+			{
+				this.SpawnEntity("light", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, lightButton.gameObject, "Light", "lightButtonText", 64);
 
 
 
@@ -1808,6 +1870,7 @@ namespace Jhrino.MFPLevelEditor
 		{
 			Arial =  Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font; 
 			this.EditorAxeMesh = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/axe.obj"));
+			lightModel = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/lightmodel.obj"));
 			this.DefaultTexture = MFPEditorUtils.LoadPNG(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png"));
 			string texname = MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/dev_measuregeneric01b.png");
 			texname = texname.Replace(MFPEditorUtils.LoadFileFromDataFolder(""), "");
@@ -2387,7 +2450,7 @@ public void DoObjectCleanup()
 					else
 					SpawnEntity(entityName.ToLower(), true, new Vector3(entityposition[0], entityposition[1], entityposition[2]), new Vector3(entityrotation[0],entityrotation[1], entityrotation[2]), new Vector3(entityscale[0], entityscale[1], entityscale[2]), Array.ConvertAll(levelFile[i + 5].Split(new char[] { ',' }), element => element.ToString()));
 					i+= 4;
-							break;
+					break;
 
 
 						
@@ -2505,7 +2568,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 								preloadedCanister.transform.localScale = saveScale;
 							}
 
-						preloadedCanister.GetComponent<GasCanisterScript>().explosionSize = int.Parse(properties[0]);
+							preloadedCanister.GetComponent<GasCanisterScript>().explosionSize = int.Parse(properties[0]);
 
 							GasCanisters.Add(preloadedCanister);
 						}
@@ -2768,6 +2831,31 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 							newFlipTable.AddComponent<SoundScript>();
 
 							levelFlipTables.Add(newFlipTable);
+					break;
+
+					case "light":
+						GameObject newLight = new GameObject();
+						newLight.AddComponent<MeshFilter>().mesh = lightModel;
+						MeshRenderer meshRend = newLight.AddComponent<MeshRenderer>();
+						meshRend.material = new Material(DefaultStandardShader);
+						meshRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+						meshRend.receiveShadows = false;
+
+						newLight.AddComponent<Light>();
+						newLight.AddComponent<BoxCollider>();
+
+						newLight.name = "PointLight";
+
+						if(!isSaveObject)
+						newLight.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+						else
+						{
+							newLight.transform.position = savePosition;
+							newLight.transform.eulerAngles = saveRotation;
+							newLight.transform.localScale = saveScale;
+						}
+			
+
 					break;
 				}
 
@@ -3167,6 +3255,9 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 		public PhysicMaterial Slippery = new PhysicMaterial();
 		public PhysicMaterial SkateboardTop = new PhysicMaterial();
 
+
+		public Mesh lightModel;
+
 //------------------------------- IMPORTANT PANELS ------------------------------------
 			public GameObject PropertiesPanel;
 			public GameObject LoadoutPanel;
@@ -3176,7 +3267,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 			public Button propertiesButton;
 			public Dropdown gamemodeDropdown;
 
-
+	
 			public Toggle testPistolToggle, dualPistolToggle, uziToggle, dualUziToggle, shotgunToggle, assaultRifleToggle, sniperToggle, crossbowToggle, shockRifleToggle, turretGunToggle;
 
 //---------------------------------------------------------------------------------------
