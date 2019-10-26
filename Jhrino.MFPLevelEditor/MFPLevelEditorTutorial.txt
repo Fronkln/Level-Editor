@@ -1,0 +1,130 @@
+using System;
+using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+namespace Jhrino.MFPLevelEditor
+{
+
+
+	public class MFPLevelEditorTutorial : MonoBehaviour
+	{
+
+		public static MFPLevelEditorTutorial Inst;
+
+		public enum MFPTutorialState
+		{
+			INTRODUCTION,
+			ENTER_SNAPMODE,
+			PLACE_OBJECT,
+			ENTER_EDIT_MODE,
+			PLACE_ENTITY,
+			ADJUST_PROPERTIES,
+			ENTER_PLAYMODE
+		}
+
+		public MFPTutorialState tutorialState;
+
+
+
+		public bool doForced = false;
+
+
+		public RootScript root;
+
+
+		public void OnTaskAccomplished()
+		{
+
+			switch(tutorialState)
+			{
+				case MFPTutorialState.INTRODUCTION:
+					tutorialState = MFPTutorialState.ENTER_SNAPMODE;
+					break;
+
+				case MFPTutorialState.ENTER_SNAPMODE:
+					tutorialState = MFPTutorialState.PLACE_OBJECT;
+					break;
+
+				case MFPTutorialState.PLACE_OBJECT:
+					tutorialState = MFPTutorialState.ENTER_EDIT_MODE;
+					break;
+				case MFPTutorialState.ENTER_EDIT_MODE:
+					tutorialState = MFPTutorialState.PLACE_ENTITY;
+					break;
+				case MFPTutorialState.PLACE_ENTITY:
+					tutorialState = MFPTutorialState.ADJUST_PROPERTIES;
+					break;
+				case MFPTutorialState.ADJUST_PROPERTIES:
+					tutorialState = MFPTutorialState.ENTER_PLAYMODE;
+					break;
+			}
+
+			CancelInvoke();
+			RefreshHint();
+		}
+
+
+		public void RefreshHint()
+		{
+			switch(tutorialState)
+			{
+				case MFPTutorialState.INTRODUCTION:
+					OnTaskAccomplished();
+					return;
+				case MFPTutorialState.ENTER_SNAPMODE:
+					MFPEditorUtils.doPedroHint("Press the T key to enter snap building.");
+					break;
+				case MFPTutorialState.PLACE_OBJECT:
+					MFPEditorUtils.doPedroHint("Click on the corner of the floor\n to create a new one.");
+					break;
+				case MFPTutorialState.ENTER_EDIT_MODE:
+					MFPEditorUtils.doPedroHint("Toggle snap mode and click on a object\n to enter edit mode.");
+					break;
+				case MFPTutorialState.PLACE_ENTITY:
+					MFPEditorUtils.doPedroHint("Spawn a gas canister from the entity tab.");
+					break;
+				case MFPTutorialState.ADJUST_PROPERTIES:
+					MFPEditorUtils.doPedroHint("Select the gas canister and modify its\n explosion strength.");
+					break;
+				case MFPTutorialState.ENTER_PLAYMODE:
+					MFPEditorUtils.doPedroHint("Don't forget, you can press P to toggle\n play mode.");
+					LevelEditorHandler.Inst.tutorialContinuing = false;
+					Destroy(gameObject);
+					break;
+				}
+
+			Invoke("RefreshHint", 6);
+
+		}
+
+
+		public void CheckTutorialConditions()
+		{
+
+		}
+
+
+		public void Awake()
+		{
+			if(Inst == null)
+				Inst = this;
+		}
+
+		public void Start()
+		{
+			root = GameObject.FindObjectOfType<RootScript>();
+			MFPEditorUtils.doPedroHint("Welcome to the Level Editor tutorial.");
+			Invoke("RefreshHint", 6);
+		}
+
+		public void Update()
+		{
+			CheckTutorialConditions();
+		}
+
+	}
+
+}

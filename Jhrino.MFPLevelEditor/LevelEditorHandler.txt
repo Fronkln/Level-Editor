@@ -41,24 +41,35 @@ namespace Jhrino.MFPLevelEditor
 
 		public UIWeaponSelectorScript uIWeaponSelector;
 
-
-		//loadda artık bu methodu kullanarak halledeceksin
-
 		
-	
+		public bool tutorialContinuing = false;
 
 
 		public void LoadModel(GameObject target, string modelname, string textureName = "")
 		{
-	
-			target.AddComponent<MeshFilter>().mesh = FastObjImporter.Instance.ImportFile(modelname);
-			target.AddComponent<MeshRenderer>();
-			target.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
-			target.GetComponent<MeshRenderer>().material.mainTexture = MFPEditorUtils.LoadPNG(LoadFileFromDataFolder(textureName));
-			
+			string mdlfilename = Path.GetFileName(modelname);
 
-			MFPEditorLogger.Log("Load model complete");
-		}
+			if(File.Exists(modelname))
+			{
+
+
+				MeshFilter MDLFilter =	target.AddComponent<MeshFilter>();;
+				MeshRenderer MDLRend =	target.AddComponent<MeshRenderer>();
+
+					Mesh loadedMDL = FastObjImporter.Instance.ImportFile(modelname);
+					if(loadedMDL != null)
+					{
+						loadedMDL.name = mdlfilename;
+
+
+						MDLFilter.mesh = loadedMDL;
+						MDLRend.material = new Material(this.DefaultStandardShader);
+						MDLRend.material.mainTexture = MFPEditorUtils.LoadPNG(this.LoadFileFromDataFolder(textureName));
+						MFPEditorLogger.Log("Load model complete");
+					}
+				}
+			}
+
 
 
 		public void ClearAllPlayerWeapons()
@@ -211,6 +222,14 @@ namespace Jhrino.MFPLevelEditor
 					EditingObject.GetComponent<MFPEnemySpawner>().enemyWeapon = int.Parse(field.text);
 					break;
 				case "explosionStrength":
+					if(tutorialContinuing)
+						{
+							if(MFPLevelEditorTutorial.Inst != null)
+								if(MFPLevelEditorTutorial.Inst.tutorialState != MFPLevelEditorTutorial.MFPTutorialState.ADJUST_PROPERTIES)
+									return;
+								else
+									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+						}
 					EditingObject.GetComponent<GasCanisterScript>().explosionSize = int.Parse(field.text);
 					break;
 				
@@ -523,15 +542,26 @@ namespace Jhrino.MFPLevelEditor
 				}
 				if (Input.GetKeyDown(KeyCode.T) && !this.Editing)
 				{
+
 					if(!SnapToBuild)
 					{
-					SnapToBuild = true;
+						if(tutorialContinuing)
+						{
+							if(MFPLevelEditorTutorial.Inst != null)
+								if(MFPLevelEditorTutorial.Inst.tutorialState != MFPLevelEditorTutorial.MFPTutorialState.ENTER_SNAPMODE)
+									return;
+								else
+									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+						}
+
+						SnapToBuild = true;
 						if(Editing)
 							ExitEditMode();
 						ToggleSnapping(true);
 					}
 					else
-					{
+					{			
+
 						SnapToBuild = false;
 						ToggleSnapping(false);
 
@@ -587,6 +617,9 @@ namespace Jhrino.MFPLevelEditor
 								 else
 								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, 0);	
 
+							if(tutorialContinuing && MFPLevelEditorTutorial.Inst != null && MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_OBJECT)
+									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+
 
 								 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
 							 GeometryFloorLump.Add(newFloor);
@@ -631,6 +664,10 @@ namespace Jhrino.MFPLevelEditor
 				Inst = this;
 
 			this.LoadEditorAssets();
+
+			//tutorial
+			new GameObject().AddComponent<MFPLevelEditorTutorial>();
+			tutorialContinuing = true;
 
 			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
 			{
@@ -1414,6 +1451,21 @@ namespace Jhrino.MFPLevelEditor
 			if(Editing)
 				ExitEditMode();
 
+			if(tutorialContinuing)
+			{
+				if(MFPLevelEditorTutorial.Inst != null)
+				{
+					if(MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.ENTER_EDIT_MODE)
+					{
+						MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+					}
+					else
+						if(MFPLevelEditorTutorial.Inst.tutorialState != MFPLevelEditorTutorial.MFPTutorialState.ADJUST_PROPERTIES)
+						return;
+				}
+			}
+
+
 			this.EditingObject = gobject;
 
 			this.CoordinateField.gameObject.SetActive(true);
@@ -1681,7 +1733,7 @@ namespace Jhrino.MFPLevelEditor
 			if (this.PlayMod && !root.levelEnded)
 			{
 
-				MFPEditorUtils.doPedroHint(LevelEditorInfo.levelEditorHints[UnityEngine.Random.Range(0, LevelEditorInfo.levelEditorHints.Length)], -99999);
+				//MFPEditorUtils.doPedroHint(LevelEditorInfo.levelEditorHints[UnityEngine.Random.Range(0, LevelEditorInfo.levelEditorHints.Length)], -99999);
 
 				root.dontAllowActionMode = true;
 				this.EditorButtonsRoot.SetActive(true);
@@ -2401,7 +2453,7 @@ public void DoObjectCleanup()
 		}
 public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale, string[] properties)
 			{
-				
+		
 				switch(entity)
 				{
 					default:
@@ -2459,12 +2511,27 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 						}
 						break;
 			}
+
 			}
 
 
 		public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, Vector3 saveRotation, Vector3 saveScale)
 			{
 				
+				if(tutorialContinuing)
+				{
+					if(MFPLevelEditorTutorial.Inst != null)
+					{
+						if(MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_ENTITY)
+						{
+							if(entity == "gascanister")
+								MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+							else
+								return;
+						}
+					}
+				}
+
 				switch(entity)
 				{
 					default:
@@ -2820,12 +2887,28 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 				}
 				if(menuType == "entities")
 				{
+
+					if(tutorialContinuing)
+						{
+							if(MFPLevelEditorTutorial.Inst != null)
+								if(MFPLevelEditorTutorial.Inst.tutorialState != MFPLevelEditorTutorial.MFPTutorialState.PLACE_ENTITY)
+									return;
+						}
+
 					this.WorldSettingsRoot.SetActive(false);
 					this.EntitySpawnRoot.SetActive(true);
 					PropertiesPanel.SetActive(false);
 				}
 				if(menuType == "properties")
 				{
+
+					if(tutorialContinuing)
+						{
+							if(MFPLevelEditorTutorial.Inst != null)
+								if(MFPLevelEditorTutorial.Inst.tutorialState != MFPLevelEditorTutorial.MFPTutorialState.ADJUST_PROPERTIES)
+									return;
+						}
+
 					MFPEditorLogger.Log("fired menu change");
 					if(WorldSettingsRoot != null)
 					WorldSettingsRoot.SetActive(false);

@@ -1,0 +1,14 @@
+using System;
+using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Jhrino.MFPLevelEditor
+{
+	public static class PrecachedContent
+	{
+		public static ArrayList loadedContent = new ArrayList();
+		public  static List<string> loadedContentRecords = new List<string>();
+	}
+}
