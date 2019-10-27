@@ -851,7 +851,7 @@ namespace Jhrino.MFPLevelEditor
 			Player.AddComponent<WeaponManager>();
 			playerScript = Player.GetComponent<PlayerScript>();
 			ClearAllPlayerWeapons();
-			this.Camera = GameObject.Find("Main Camera");
+			this.Camera = GameObject.Find("Main Camera").GetComponent<Camera>();
 			this.BackgroundCamera = GameObject.Find("HorizonBackground_Theme_1/Background Camera");
 			BackgroundCamera.transform.parent = null;
 		//	Destroy(GameObject.Find("HorizonBackground_Theme_1"));
@@ -882,7 +882,7 @@ namespace Jhrino.MFPLevelEditor
 			SkyColor = Camera.GetComponent<Camera>().backgroundColor;
 
 			this.Player.SetActive(false);
-			this.Camera.SetActive(false);
+			this.Camera.gameObject.SetActive(false);
 			ToggleHUD(false);
 			/* OLD BULDING 
 			GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -1068,10 +1068,25 @@ namespace Jhrino.MFPLevelEditor
 			GameObject gameObject2 = new GameObject();
 			gameObject2.name = "EditorCamera";
 			this.EditorCamera = gameObject2.AddComponent<Camera>();
+
+			EditorCamera.clearFlags = Camera.clearFlags;
+			EditorCamera.cullingMask = Camera.cullingMask;
+			EditorCamera.fieldOfView = Camera.fieldOfView;
+			EditorCamera.nearClipPlane = Camera.nearClipPlane;
+
+			EditorCamera.depth = Camera.depth;
+			EditorCamera.renderingPath = Camera.renderingPath;
+			EditorCamera.useOcclusionCulling = Camera.useOcclusionCulling;
+			EditorCamera.allowHDR = Camera.allowHDR;
+			EditorCamera.allowMSAA = Camera.allowMSAA;
+			EditorCamera.allowDynamicResolution = Camera.allowDynamicResolution;
+
 			this.EditorCamera.gameObject.AddComponent<PostProcessingBehaviour>();
 			this.EditorCamera.gameObject.GetComponent<PostProcessingBehaviour>().profile = this.Camera.GetComponent<PostProcessingBehaviour>().profile;
-			this.EditorCamera.depth = -1f;
-			this.EditorCamera.clearFlags = CameraClearFlags.Depth;
+			//this.EditorCamera.depth = -1f;
+
+		//	this.EditorCamera.clearFlags = CameraClearFlags.Depth;
+
 			this.EditorCamera.transform.position = new Vector3(0f, 0f, -3f);
 			GameObject gameObject3 = new GameObject();
 			gameObject3.transform.position = new Vector3(0f, 0f, -15f);
@@ -1777,7 +1792,7 @@ namespace Jhrino.MFPLevelEditor
 				
 				PreparePlayerLoadout();
 
-				this.Camera.SetActive(true);
+				this.Camera.gameObject.SetActive(true);
 				Camera.transform.position = new Vector3(0,0, Camera.transform.position.z);
 				Camera.GetComponent<CameraScript>().camPos = Camera.transform.position;
 				Camera.GetComponent<CameraScript>().fakePos = Camera.transform.position;
@@ -1917,7 +1932,7 @@ namespace Jhrino.MFPLevelEditor
 				ToggleHUD(false);
 				ClearAllPlayerWeapons();
 				this.Player.SetActive(false);
-				this.Camera.SetActive(false);
+				this.Camera.gameObject.SetActive(false);
 				this.EditorCamera.enabled = true;
 				this.EditorCamera.transform.parent.GetComponent<CameraMovement>().enabled = true;
 				this.PlayMod = false;
@@ -3214,7 +3229,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 		public GameObject Player;
 
 		// Token: 0x04001339 RID: 4921
-		public GameObject Camera;
+		public Camera Camera;
 		public GameObject BackgroundCamera;
 		// Token: 0x0400133A RID: 4922
 		public GameObject HUD;
