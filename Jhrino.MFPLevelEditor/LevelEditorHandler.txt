@@ -246,7 +246,7 @@ namespace Jhrino.MFPLevelEditor
 					Light editLight1 = EditingObject.GetComponent<Light>();
 					Color32 curColorR = (Color32)editLight1.color;
 					Color32 newLightColorR = new Color32(byte.Parse(field.text), curColorR.g, curColorR.b, 255);
-					EditingObject.GetComponent<Light>().color = newLightColorR;
+					editLight1.color = newLightColorR;
 				break;
 
 				case "lightColG":
@@ -255,10 +255,8 @@ namespace Jhrino.MFPLevelEditor
 					Light editLight2 = EditingObject.GetComponent<Light>();
 					Color32 curColorG = (Color32)editLight2.color;
 					Color32 newLightColorG = new Color32(curColorG.g, byte.Parse(field.text), curColorG.b, 255);
-					EditingObject.GetComponent<Light>().color = newLightColorG;
+					editLight2.GetComponent<Light>().color = newLightColorG;
 
-
-					MFPEditorLogger.Log("new green color is: " + EditingObject.GetComponent<Light>().color.g.ToString());
 				break;
 
 				case "lightColB":
@@ -267,7 +265,11 @@ namespace Jhrino.MFPLevelEditor
 					Light editLight3 = EditingObject.GetComponent<Light>();
 					Color32 curColorB = (Color32)editLight3.color;
 					Color32 newLightColorB = new Color32(curColorB.r, curColorB.g, byte.Parse(field.text), 255);
-					EditingObject.GetComponent<Light>().color = newLightColorB;
+					editLight3.GetComponent<Light>().color = newLightColorB;
+				break;
+
+				case "lightrange":
+					EditingObject.GetComponent<Light>().range = float.Parse(field.text);
 				break;
 				
 			}
@@ -459,7 +461,19 @@ namespace Jhrino.MFPLevelEditor
 					{
 						OnInputValueChanged(colBInput, colBInput.text, "lightColB", 0, 255);
 					});
+					
 
+					Text rangeDesc = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, -40.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Range:", "RangeDesc", 48);
+
+					Text RangeText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-200, -40.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, EditingObject.GetComponent<Light>().range.ToString(), "Range", 48);
+
+					InputField rangeInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-200, -40.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "rangeInput", "", RangeText, true, InputField.CharacterValidation.Decimal);
+
+
+					rangeInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(rangeInput, rangeInput.text, "lightrange", 0, 200);
+					});
 
 					propertyElements.Add(intensityInput.gameObject);
 					propertyElements.Add(IntensityDesc.gameObject);
@@ -474,6 +488,11 @@ namespace Jhrino.MFPLevelEditor
 					propertyElements.Add(colRInput.gameObject);
 					propertyElements.Add(colGInput.gameObject);
 					propertyElements.Add(colBInput.gameObject);
+
+					propertyElements.Add(rangeDesc.gameObject);
+					propertyElements.Add(RangeText.gameObject);
+					propertyElements.Add(rangeInput.gameObject);
+
 
 			
 				break;
