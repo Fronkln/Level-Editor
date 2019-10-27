@@ -237,6 +237,38 @@ namespace Jhrino.MFPLevelEditor
 						}
 					EditingObject.GetComponent<GasCanisterScript>().explosionSize = int.Parse(field.text);
 					break;
+
+				case "lightColR":
+
+					if(field.text == "")
+						field.text = "0";
+
+					Light editLight1 = EditingObject.GetComponent<Light>();
+					Color32 curColorR = (Color32)editLight1.color;
+					Color32 newLightColorR = new Color32(byte.Parse(field.text), curColorR.g, curColorR.b, 255);
+					EditingObject.GetComponent<Light>().color = newLightColorR;
+				break;
+
+				case "lightColG":
+					if(field.text == "")
+						field.text = "0";
+					Light editLight2 = EditingObject.GetComponent<Light>();
+					Color32 curColorG = (Color32)editLight2.color;
+					Color32 newLightColorG = new Color32(curColorG.g, byte.Parse(field.text), curColorG.b, 255);
+					EditingObject.GetComponent<Light>().color = newLightColorG;
+
+
+					MFPEditorLogger.Log("new green color is: " + EditingObject.GetComponent<Light>().color.g.ToString());
+				break;
+
+				case "lightColB":
+					if(field.text == "")
+						field.text = "0";
+					Light editLight3 = EditingObject.GetComponent<Light>();
+					Color32 curColorB = (Color32)editLight3.color;
+					Color32 newLightColorB = new Color32(curColorB.r, curColorB.g, byte.Parse(field.text), 255);
+					EditingObject.GetComponent<Light>().color = newLightColorB;
+				break;
 				
 			}
 		}
@@ -394,9 +426,56 @@ namespace Jhrino.MFPLevelEditor
 						OnInputValueChanged(intensityInput, intensityInput.text, "intensity", 0, 50);
 					});
 
+
+					Color32 lightCol32 = (Color32)EditingObject.GetComponent<Light>().color;
+
+					Text colText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-345, 120.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, "Color:", "colText", 48);
+
+					Text colRText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-200, 140.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, lightCol32.r.ToString(), "colRText", 40);
+
+					InputField colRInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-200, 140.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "colRField", "", colRText, true, InputField.CharacterValidation.Decimal);
+
+
+					Text colGText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-200, 100.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, lightCol32.g.ToString(), "colGText", 40);
+
+					InputField colGInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-200, 100.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "colGField", "", colGText, true, InputField.CharacterValidation.Decimal);
+
+					Text colBText = MFPEditorUtils.ReturnCreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleLeft, new Vector2(-200, 60.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), Arial, new Color32(0,0,0, 255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PropertiesPanel, lightCol32.b.ToString(), "colBText", 40);
+
+					InputField colBInput = MFPEditorUtils.ReturnCreateNewInputField(MFPEditorUtils.UIAnchor.middle, new Vector2(-200, 60.5f), new Vector2(160,30), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PropertiesPanel, "colBField", "", colBText, true, InputField.CharacterValidation.Decimal);
+
+
+					colRInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(colRInput, colRInput.text, "lightColR", 0, 255);
+					});
+
+					colGInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(colGInput, colGInput.text, "lightColG", 0, 255);
+					});
+
+					colBInput.onValueChanged.AddListener(delegate
+					{
+						OnInputValueChanged(colBInput, colBInput.text, "lightColB", 0, 255);
+					});
+
+
 					propertyElements.Add(intensityInput.gameObject);
 					propertyElements.Add(IntensityDesc.gameObject);
 					propertyElements.Add(IntensityText.gameObject);
+
+					propertyElements.Add(colText.gameObject);
+
+					propertyElements.Add(colRText.gameObject);
+					propertyElements.Add(colGText.gameObject);
+					propertyElements.Add(colBText.gameObject);
+
+					propertyElements.Add(colRInput.gameObject);
+					propertyElements.Add(colGInput.gameObject);
+					propertyElements.Add(colBInput.gameObject);
+
+			
 				break;
 				
 			}
