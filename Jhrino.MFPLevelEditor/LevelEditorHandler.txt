@@ -600,6 +600,10 @@ namespace Jhrino.MFPLevelEditor
 			}
 			//
 
+			if(root.paused && UIRoot.enabled)
+				UIRoot.enabled = false;
+			if(!root.paused &&	!UIRoot.enabled)
+				UIRoot.enabled = true;
 
 			if(Input.GetKeyDown(KeyCode.L))
 				UnlockWeapon(3);
@@ -1180,6 +1184,10 @@ namespace Jhrino.MFPLevelEditor
 			canvasScaler.scaleFactor = 0.5f;
 			canvasScaler.referencePixelsPerUnit = 100f;
 			gameObject.AddComponent<GraphicRaycaster>().ignoreReversedGraphics = true;
+
+			canvas.sortingOrder = -10;
+
+			UIRoot = canvas;
 
 
 			//
@@ -3386,6 +3394,9 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 		public Mesh lightModel;
 
 //------------------------------- IMPORTANT PANELS ------------------------------------
+
+			public Canvas UIRoot;
+
 			public GameObject PropertiesPanel;
 			public GameObject LoadoutPanel;
 			
