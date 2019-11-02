@@ -738,6 +738,8 @@ namespace Jhrino.MFPLevelEditor
 							GeometryFloorLump.Add(copiedObject);
 						if(copiedObject.name.Contains("Wall"))
 							GeometryWallLump.Add(copiedObject);
+						if(copiedObject.name == "Blackout")
+							blackOuts.Add(copiedObject);
 
 
 
@@ -2110,6 +2112,8 @@ namespace Jhrino.MFPLevelEditor
 			texname = texname.Replace(MFPEditorUtils.LoadFileFromDataFolder(""), "");
 			MFPEditorLogger.Log("Texture name is: " + texname);
 			this.DefaultTexture.name = texname;
+			//levelchangerscript kaydetmeyi unutmuş olabilirsin blackoutmaterial olayını unutma
+			blackOutMaterial = LevelChangerScript.Inst.blackOutMaterialProvided;
 
 			DefaultStandardShader = new Material(Shader.Find("Standard"));
 			
@@ -2226,6 +2230,12 @@ namespace Jhrino.MFPLevelEditor
 			{
 				if(levelFlipTables[j] == null)
 					levelFlipTables.RemoveAt(j);
+			}
+
+			for(int j = blackOuts.Count - 1; j > -1; j--)
+			{
+				if(blackOuts[j] == null)
+					blackOuts.RemoveAt(j);
 			}
 
 		}
@@ -2361,6 +2371,15 @@ namespace Jhrino.MFPLevelEditor
 				SavedLevel.Add(table.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
 			}
 
+			foreach(GameObject blackout in blackOuts)
+			{
+				SavedLevel.Add("!Entity");
+				SavedLevel.Add("entityType = blackout");
+				SavedLevel.Add(blackout.transform.position.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(blackout.transform.eulerAngles.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+				SavedLevel.Add(blackout.transform.localScale.ToString().Replace("(", "").Replace(")", "").Replace(",", ""));
+			}
+
 			File.WriteAllLines(MFPEditorUtils.LoadFileFromDataFolder("Levels/default/level.txt"), SavedLevel.ToArray());
 			this.CalculateLevelHash();
 			MFPEditorLogger.Log("----");
@@ -2407,7 +2426,7 @@ public void DoObjectCleanup()
 	}
 	foreach (Transform transform in this.EnemySpawnpoints)
 	{
-				if(transform != null)
+		if(transform != null)
 		UnityEngine.Object.Destroy(transform.gameObject);
 	}
 
@@ -2427,6 +2446,12 @@ public void DoObjectCleanup()
 	{
 		if (obj != null)
 		UnityEngine.Object.Destroy(obj);
+	}
+
+	foreach (GameObject blackout in blackOuts)
+	{
+		if (blackout != null)
+		UnityEngine.Object.Destroy(blackout);
 	}
 }
 	
@@ -3088,6 +3113,8 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 						newLight.GetComponent<Light>().renderMode = LightRenderMode.ForcePixel;
 						newLight.AddComponent<BoxCollider>();
 
+						newLight.GetComponent<Light>().cullingMask = newLight.GetComponent<Light>().cullingMask & ~(1 << 1);
+
 						newLight.name = "PointLight";
 
 						if(!isSaveObject)
@@ -3106,15 +3133,17 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 						GameObject newBlackout = new GameObject();
 						newBlackout.name = "Blackout";
 
+						newBlackout.layer = 1;
+
 						newBlackout.AddComponent<MeshRenderer>();
 
-						newBlackout.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
-						
+						newBlackout.GetComponent<MeshRenderer>().material = blackOutMaterial;
 						if(blackOut == null)
 							blackOut = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/blackout.obj"));
 
 						newBlackout.AddComponent<MeshFilter>().mesh = blackOut;
-						newBlackout.GetComponent<MeshRenderer>().material.color = new Color(0,0,0);
+
+						newBlackout.AddComponent<MeshCollider>().sharedMesh = blackOut;
 
 						if(!isSaveObject)
 						newBlackout.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 3);
@@ -3124,6 +3153,8 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 							newBlackout.transform.eulerAngles = saveRotation;
 							newBlackout.transform.localScale = saveScale;
 						}
+
+						blackOuts.Add(newBlackout);
 
 					break;
 
@@ -3519,6 +3550,9 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 		public List<GameObject> LevelSkateboards = new List<GameObject>();
 
 		public List<GameObject> levelFlipTables = new List<GameObject>();
+
+
+		public List<GameObject> blackOuts = new List<GameObject>();
 	
 		public GameObject floor_Wood;
 		
@@ -3533,6 +3567,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 
 		//PRELOADED CONTENT
 		public Material DefaultStandardShader;
+		public Material blackOutMaterial;
 		public Font Arial;
 
 		public PhysicMaterial Slippery = new PhysicMaterial();

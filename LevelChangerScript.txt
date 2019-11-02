@@ -120,6 +120,9 @@ public class LevelChangerScript : MonoBehaviour
 	// Token: 0x06000289 RID: 649 RVA: 0x000387E8 File Offset: 0x000369E8
 	public void CullTheWeakPreWarmup()
 	{
+
+		blackOutMaterialProvided = GameObject.Find("Blackout").GetComponent<MeshRenderer>().material;
+
 		GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.FindObjectOfType<SpawnDoorScript>().enemy));
 		gameObject.layer = 13;
 		gameObject.name = "New Enemy";
@@ -164,6 +167,8 @@ public class LevelChangerScript : MonoBehaviour
 
 	// Token: 0x0400076F RID: 1903
 	public GameObject EnemySampleProvided;
+
+	public Material blackOutMaterialProvided;
 
 	// Token: 0x04000770 RID: 1904
 	public static bool leveleditorLoaded;
