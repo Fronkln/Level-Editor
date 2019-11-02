@@ -157,7 +157,7 @@ namespace Jhrino.MFPLevelEditor
 			if(Input.GetKeyDown(KeyCode.Alpha8) && playerScript.weaponActive[7] && playerScript.weapon != 7)
 				playerScript.changeWeapon(7);
 			if(Input.GetKeyDown(KeyCode.Alpha9) && playerScript.weaponActive[8] && playerScript.weapon != 8)
-				playerScript.changeWeapon(7);
+				playerScript.changeWeapon(8);
 
 			
 					if(player.GetButtonDown("Kick"))

@@ -4,11 +4,11 @@ using UnityEngine;
 using UnityEngine.PostProcessing;
 using UnityScript.Lang;
 
-// Token: 0x02000063 RID: 99
+// Token: 0x02000066 RID: 102
 [Serializable]
 public class LevelChangerScript : MonoBehaviour
 {
-	// Token: 0x06000274 RID: 628 RVA: 0x0000350A File Offset: 0x0000170A
+	// Token: 0x06000281 RID: 641 RVA: 0x00003471 File Offset: 0x00001671
 	public LevelChangerScript()
 	{
 		this.levelNumber = 1;
@@ -16,10 +16,7 @@ public class LevelChangerScript : MonoBehaviour
 		this.saveState = true;
 	}
 
-	public static LevelChangerScript Inst;
-
-
-	// Token: 0x06000275 RID: 629 RVA: 0x00003527 File Offset: 0x00001727
+	// Token: 0x06000282 RID: 642 RVA: 0x0000348E File Offset: 0x0000168E
 	public virtual void OnTriggerEnter(Collider col)
 	{
 		if (col.tag == "Player")
@@ -28,7 +25,7 @@ public class LevelChangerScript : MonoBehaviour
 		}
 	}
 
-	// Token: 0x06000276 RID: 630 RVA: 0x00003541 File Offset: 0x00001741
+	// Token: 0x06000283 RID: 643 RVA: 0x000034A8 File Offset: 0x000016A8
 	public virtual void doTheThing()
 	{
 		if (this.dontShowEndScreen)
@@ -40,12 +37,13 @@ public class LevelChangerScript : MonoBehaviour
 		LevelEditorHandler.PlayerisDeadAndForceAutoLoad = true;
 	}
 
-	// Token: 0x06000277 RID: 631 RVA: 0x00036840 File Offset: 0x00034A40
+	// Token: 0x06000284 RID: 644 RVA: 0x00038400 File Offset: 0x00036600
 	public virtual void Start()
 	{
-		if(Inst == null)
-			Inst = this;
-
+		if (LevelChangerScript.Inst == null)
+		{
+			LevelChangerScript.Inst = this;
+		}
 		this.root = (RootScript)GameObject.Find("Root").GetComponent(typeof(RootScript));
 		this.player = GameObject.Find("Player");
 		this.Camera = GameObject.Find("Main Camera");
@@ -55,36 +53,13 @@ public class LevelChangerScript : MonoBehaviour
 		}
 	}
 
-	// Token: 0x06000278 RID: 632 RVA: 0x000368A8 File Offset: 0x00034AA8
-	public virtual void Update()
-	{
-		if (Extensions.get_length(this.inputSwitch) > 0)
-		{
-			int num = -1;
-			int i = 0;
-			SwitchScript[] array = this.inputSwitch;
-			int num2 = array.Length;
-			while (i < num2)
-			{
-				if (array[i].output > (float)num)
-				{
-					num = (int)array[i].output;
-				}
-				i++;
-			}
-			if (num >= 1)
-			{
-				this.doTheThing();
-			}
-		}
-	}
 
-	// Token: 0x06000279 RID: 633 RVA: 0x000020A7 File Offset: 0x000002A7
+	// Token: 0x06000286 RID: 646 RVA: 0x000020A7 File Offset: 0x000002A7
 	public virtual void Main()
 	{
 	}
 
-	// Token: 0x0600027A RID: 634 RVA: 0x000368FC File Offset: 0x00034AFC
+	// Token: 0x06000287 RID: 647 RVA: 0x000384D0 File Offset: 0x000366D0
 	public void CullTheWeak()
 	{
 		this.CullTheWeakPreWarmup();
@@ -114,16 +89,14 @@ public class LevelChangerScript : MonoBehaviour
 		MFPEditorLogger.Log("Culled the weak");
 	}
 
-	// Token: 0x0600027B RID: 635 RVA: 0x00036A38 File Offset: 0x00034C38
+	// Token: 0x06000288 RID: 648 RVA: 0x00038630 File Offset: 0x00036830
 	public void EnterEditor()
 	{
 		new GameObject
 		{
 			name = "Level Editor Handler"
 		}.AddComponent<LevelEditorHandler>();
-
-		LevelEditorHandler.Inst.EnemySample = EnemySampleProvided;
-
+		LevelEditorHandler.Inst.EnemySample = this.EnemySampleProvided;
 		this.player.transform.position = new Vector3(0f, 0f, 0f);
 		new GameObject().name = "Level";
 		GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -144,56 +117,57 @@ public class LevelChangerScript : MonoBehaviour
 		LevelChangerScript.leveleditorLoaded = true;
 	}
 
-	// Token: 0x0600027C RID: 636 RVA: 0x00036BE0 File Offset: 0x00034DE0
+	// Token: 0x06000289 RID: 649 RVA: 0x000387E8 File Offset: 0x000369E8
 	public void CullTheWeakPreWarmup()
 	{
-			GameObject enemy = UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.FindObjectOfType<SpawnDoorScript>().enemy));
-			enemy.layer = 13;
-			enemy.name = "New Enemy";
-			enemy.transform.position = this.player.transform.position;
-			enemy.SetActive(true);
-
-			EnemySampleProvided = GameObject.Find("New Enemy");
-			EnemySampleProvided.SetActive(false);
-
+		GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.Instantiate<GameObject>(UnityEngine.Object.FindObjectOfType<SpawnDoorScript>().enemy));
+		gameObject.layer = 13;
+		gameObject.name = "New Enemy";
+		gameObject.transform.position = this.player.transform.position;
+		gameObject.SetActive(true);
+		this.EnemySampleProvided = GameObject.Find("New Enemy");
+		this.EnemySampleProvided.SetActive(false);
 		MFPEditorLogger.Log("Cull the weak warmup done");
 	}
 
-	// Token: 0x0600027D RID: 637 RVA: 0x000020A7 File Offset: 0x000002A7
+	// Token: 0x0600028A RID: 650 RVA: 0x000020A7 File Offset: 0x000002A7
 	static LevelChangerScript()
 	{
 	}
 
-	// Token: 0x04000732 RID: 1842
+	// Token: 0x04000766 RID: 1894
 	public SwitchScript[] inputSwitch;
 
-	// Token: 0x04000733 RID: 1843
+	// Token: 0x04000767 RID: 1895
 	private float switchInput;
 
-	// Token: 0x04000734 RID: 1844
+	// Token: 0x04000768 RID: 1896
 	public int levelNumber;
 
-	// Token: 0x04000735 RID: 1845
+	// Token: 0x04000769 RID: 1897
 	public bool relative;
 
-	// Token: 0x04000736 RID: 1846
+	// Token: 0x0400076A RID: 1898
 	public bool saveState;
 
-	// Token: 0x04000737 RID: 1847
+	// Token: 0x0400076B RID: 1899
 	public bool dontShowEndScreen;
 
-	// Token: 0x04000738 RID: 1848
+	// Token: 0x0400076C RID: 1900
 	private RootScript root;
 
-	// Token: 0x04000739 RID: 1849
+	// Token: 0x0400076D RID: 1901
 	public GameObject player;
 
-	// Token: 0x0400073A RID: 1850
+	// Token: 0x0400076E RID: 1902
 	public GameObject Camera;
 
-	// Token: 0x0400073B RID: 1851
+	// Token: 0x0400076F RID: 1903
 	public GameObject EnemySampleProvided;
 
-	// Token: 0x0400073C RID: 1852
+	// Token: 0x04000770 RID: 1904
 	public static bool leveleditorLoaded;
+
+	// Token: 0x04000771 RID: 1905
+	public static LevelChangerScript Inst;
 }

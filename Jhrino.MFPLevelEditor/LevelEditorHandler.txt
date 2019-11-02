@@ -587,6 +587,76 @@ namespace Jhrino.MFPLevelEditor
 
 		}
 
+
+		public void SpawnFloor(int floorType = 0, snaphelper snappy = null)
+		{
+				GameObject newFloor = Instantiate(floor_Wood);
+				newFloor.name = "Wooden Floor";
+				newFloor.SetActive(true);
+
+			if(snappy != null)
+			{
+				 if(snappy.snapaxis == snaphelper.Axis.NegativeX)
+					 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);
+				 else
+					newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);
+			}
+			else
+				newFloor.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+
+						if(tutorialContinuing && MFPLevelEditorTutorial.Inst != null && MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_OBJECT)
+									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+
+					foreach(GameObject @object in GeometryWallLump)
+					{
+						if(newFloor.transform.position == @object.transform.position)
+						{
+							Destroy(newFloor);
+							return;
+						}
+					}
+
+
+					MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
+					 GeometryFloorLump.Add(newFloor);
+		}
+
+		public void SpawnWall(int floorType = 0, snaphelper snappy = null)
+		{
+			GameObject newWall = Instantiate(this.wall_Brick);
+			newWall.transform.name = "Brick Wall #" + GeometryWallLump.Count().ToString();
+			newWall.SetActive(true);
+
+			if(snappy != null)
+			{
+				newWall.transform.position = new Vector3(SnapTarget.transform.position.x, SnapTarget.transform.position.y, SnapTarget.transform.position.z);
+
+				if(!snappy.transform.parent.name.Contains("Floor"))
+					newWall.transform.rotation = snappy.transform.parent.rotation;
+				else
+				    newWall.transform.eulerAngles = new Vector3(0, -90, 0);
+			}
+			else
+			{
+				newWall.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
+
+		    newWall.transform.eulerAngles = new Vector3(0, -90, 0);
+			}
+
+			foreach(GameObject @object in GeometryWallLump)
+			{
+				if(newWall.transform.position == @object.transform.position)
+				{
+					Destroy(newWall);
+					return;
+				}
+			}
+
+
+			GeometryWallLump.Add(newWall);
+			MFPEditorLogger.Log(newWall.name + " added");
+		}
+
 		// Token: 0x06000615 RID: 1557
 		private void Update()
 		{
@@ -600,13 +670,15 @@ namespace Jhrino.MFPLevelEditor
 			}
 			//
 
-			if(root.paused && UIRoot.enabled)
+		if(root.paused)
+		{
+			if(!PlayMod && UIRoot.enabled)
 				UIRoot.enabled = false;
-			if(!root.paused &&	!UIRoot.enabled)
-				UIRoot.enabled = true;
 
-			if(Input.GetKeyDown(KeyCode.L))
-				UnlockWeapon(3);
+			EditorCamera.GetComponent<PostProcessingBehaviour>().profile = Camera.GetComponent<PostProcessingBehaviour>().profile;
+		}
+		if(!PlayMod && !root.paused && !UIRoot.enabled)
+				UIRoot.enabled = true;
 
 			if(Gamemode == MFPGamemode.SKYFALL && PlayMod && levelInitialized)
 			{
@@ -619,14 +691,7 @@ namespace Jhrino.MFPLevelEditor
 				this.PlayMode();
 				this.PrototypeSave();
 			}
-			if (Input.GetKeyDown(KeyCode.N) && !this.PlayMod)
-			{
-				this.PrototypeLoad();
-			}
-			if (Input.GetKeyDown(KeyCode.M) && !this.PlayMod)
-			{
-				this.PrototypeSave();
-			}
+
 			//delete this sometime
 			if(this.Editing && Input.GetKeyDown(KeyCode.X))
 				ExitEditMode();
@@ -645,6 +710,46 @@ namespace Jhrino.MFPLevelEditor
 				{
 					this.EditingMode();
 				}
+
+				if (Input.GetKeyDown(KeyCode.N) && !this.PlayMod)
+				{
+					this.PrototypeLoad();
+				}
+				if (Input.GetKeyDown(KeyCode.M) && !this.PlayMod)
+				{
+					this.PrototypeSave();
+				}
+
+
+				if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.V))
+				{
+					if(EditingObject != null)
+					{
+						if(Editing)
+							ExitEditMode();
+
+						GameObject copiedObject = Instantiate(CopiedObject);
+
+						if(copiedObject.name.Contains("FryingPan"))
+							FryingPans.Add(copiedObject);
+						if(copiedObject.name.Contains("GasCanister"))
+							GasCanisters.Add(copiedObject);
+						if(copiedObject.name.Contains("Floor"))
+							GeometryFloorLump.Add(copiedObject);
+						if(copiedObject.name.Contains("Wall"))
+							GeometryWallLump.Add(copiedObject);
+
+
+
+						foreach(LevelEditorAxis extraAxis in copiedObject.GetComponentsInChildren<LevelEditorAxis>())
+						{
+							Destroy(extraAxis.gameObject);
+						}
+
+						EnterEditMode(copiedObject);
+					}
+				}
+
 
 				/* şuanlık buglu
 				if(Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.V))
@@ -747,59 +852,11 @@ namespace Jhrino.MFPLevelEditor
 						{
 							if(!snappy.isWallNode)
 							{
-								GameObject newFloor = Instantiate(floor_Wood);
-								newFloor.name = "Wooden Floor";
-								newFloor.SetActive(true);
-
-								 if(snappy.snapaxis == snaphelper.Axis.NegativeX)
-								 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);
-								 else
-								newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);	
-
-							if(tutorialContinuing && MFPLevelEditorTutorial.Inst != null && MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_OBJECT)
-									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
-
-								foreach(GameObject @object in GeometryWallLump)
-								{
-									if(newFloor.transform.position == @object.transform.position)
-									{
-										Destroy(newFloor);
-										return;
-									}
-								}
-
-
-								 MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
-							 GeometryFloorLump.Add(newFloor);
-							
+								SpawnFloor(0, snappy);
 							}
 							if(SnapTarget.GetComponent<snaphelper>().isWallNode)
 							{
-
-
-								GameObject newWall = Instantiate(this.wall_Brick);
-								newWall.transform.name = "Brick Wall #" + GeometryWallLump.Count().ToString();
-								newWall.SetActive(true);
-							    newWall.transform.position = new Vector3(SnapTarget.transform.position.x, SnapTarget.transform.position.y, SnapTarget.transform.position.z);
-								 newWall.transform.eulerAngles = new Vector3(0, -90, 0);
-
-								foreach(GameObject @object in GeometryWallLump)
-								{
-									if(newWall.transform.position == @object.transform.position)
-									{
-										Destroy(newWall);
-										return;
-									}
-								}
-
-
-								SnapTarget.GetComponent<snaphelper>().SnappedObject = newWall;
-
-
-									GeometryWallLump.Add(newWall);
-									MFPEditorLogger.Log(newWall.name + " added");
-
-								
+								SpawnWall(0, snappy);
 							}
 							
 							SnapTarget = null;
@@ -833,9 +890,7 @@ namespace Jhrino.MFPLevelEditor
 			//
 			//
 			//new GameObject().AddComponent<MFPLevelEditorTutorial>();
-
-
-			tutorialContinuing = true;
+			//tutorialContinuing = true;
 
 			if (!Directory.Exists(MFPEditorUtils.LoadFileFromDataFolder("default")))
 			{
@@ -843,7 +898,11 @@ namespace Jhrino.MFPLevelEditor
 			}
 			this.root = GameObject.Find("Root").GetComponent<RootScript>();
 			
-			UnityEngine.Object.FindObjectOfType<OptimizerScript>().enabled = false;
+			foreach(OptimizerScript optiScript in GameObject.FindObjectsOfType<OptimizerScript>())
+			{
+				Destroy(optiScript);
+			}
+			
 			this.root.nrOfEnemiesTotal = 0;
 			root.stopSpeechBubble();
 			root.dontAllowActionMode = true;
@@ -1460,7 +1519,12 @@ namespace Jhrino.MFPLevelEditor
 			});
 
 
-			Button miscButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.bottomRight, new Vector2(-128f, -1000f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "MiscButton", "EditorAssets/icons/ico_entities.png");
+			Button geometryButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.topRight, new Vector2(-128f, -1000f), new Vector2(100,100), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), gameObject, "GeometryButton", "EditorAssets/icons/ico_entities.png");
+
+			geometryButton.onClick.AddListener(delegate()
+			{
+				this.ToggleSettingsMenu("geometry", false);
+			});
 
 			toggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(toggle.isOn, bloomIntensity, allowColorGrading, SkyColor, allowFog);});
 
@@ -1487,6 +1551,30 @@ namespace Jhrino.MFPLevelEditor
 
 			allowColorGradingToggle.onValueChanged.AddListener(delegate{AdjustPostProcessing(allowPostProcess, bloomIntensity, allowColorGradingToggle.isOn, SkyColor, allowFog);});
 
+
+		    GeometryPanel = MFPEditorUtils.ReturnCreateNewPanel(MFPEditorUtils.UIAnchor.middle, new Vector2(0,0), new Vector2(628.2f, 440.51f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), new Color32(255,255,255, 100), gameObject, "EntityPanel", "");
+
+			Button geoFloorButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 158f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), GeometryPanel, "GeometryFloorButton", "");
+
+			geoFloorButton.onClick.AddListener(delegate()
+			{
+				this.SpawnFloor();
+			});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, geoFloorButton.gameObject, "Floor", "GeometryFloorText", 64);
+
+
+
+			Button geoBlackoutButton = MFPEditorUtils.ReturnCreateNewButton(MFPEditorUtils.UIAnchor.middle, new Vector2(0, 118f), new Vector2(254.86f, 30f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), GeometryPanel, "GeometryBlackOutButton", "");
+
+			geoBlackoutButton.onClick.AddListener(delegate()
+			{
+				SpawnEntity("blackout", false, new Vector3(0,0,0), new Vector3(0,0,0), new Vector3(0,0,0));
+			});
+
+			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.MiddleCenter,new Vector2(0,0), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.45943f, 0.45943f, 0.45943f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, geoBlackoutButton.gameObject, "Blackout", "GeometryBlackoutText", 64);
+
+			GeometryPanel.SetActive(false);
 			EntitySpawnRoot.SetActive(false);
 
 			MFPEditorLogger.Log("Hud load complete");
@@ -1762,6 +1850,13 @@ namespace Jhrino.MFPLevelEditor
 
 			if (!this.PlayMod)
 			{
+				if(Gamemode == MFPGamemode.SKYFALL)
+					if(EnemySpawnpoints.Count == 0)
+					{
+						MFPEditorUtils.doPedroHint("You must have one enemy to\n enter skyfall.");
+						return;
+					}
+
 				if (this.Editing)
 				{
 					this.ExitEditMode();
@@ -1769,7 +1864,8 @@ namespace Jhrino.MFPLevelEditor
 				root.stopSpeechBubble();
 				root.dontAllowActionMode = false;
 				root.pedroHintTimer = 0;
-				UIRoot.enabled = false;
+				
+
 				this.ToggleSettingsMenu(null, true);
 				this.root.nrOfEnemiesTotal = 0;
 				LevelEditorHandler.levelTimer = 0f;
@@ -1841,6 +1937,9 @@ namespace Jhrino.MFPLevelEditor
 
 					newCanister.GetComponent<GasCanisterScript>().explosionSize = Canister.GetComponent<GasCanisterScript>().explosionSize;
 
+					if(Gamemode == MFPGamemode.SKYFALL)
+						newCanister.AddComponent<SkyfallObjectScript>();
+
 					LevelGasCanisters.Add(newCanister);
 
 					Canister.SetActive(false);
@@ -1864,6 +1963,9 @@ namespace Jhrino.MFPLevelEditor
 					newPan.AddComponent<PhysicsSoundsScript>();
 					newPan.AddComponent<AutoAimTargetScript>();
 					newPan.AddComponent<OptimizerScript>();
+
+					if(Gamemode == MFPGamemode.SKYFALL)
+						newPan.AddComponent<SkyfallObjectScript>();
 
 					LevelFryingPans.Add(newPan);
 
@@ -1893,6 +1995,9 @@ namespace Jhrino.MFPLevelEditor
 						collider.enabled = true;
 					}
 
+					if(Gamemode == MFPGamemode.SKYFALL)
+						newSkateboard.AddComponent<SkyfallObjectScript>();
+
 					LevelSkateboards.Add(newSkateboard);
 
 					board.SetActive(false);
@@ -1916,6 +2021,15 @@ namespace Jhrino.MFPLevelEditor
 				this.root.dontAllowCheckpointSave = true;
 
 				levelInitialized = true;
+
+				UIRoot.enabled = false;
+
+				EnemyScript[] allEnemiesSC = GameObject.FindObjectsOfType<EnemyScript>();
+
+				for(int i = 0; i <= allEnemiesSC.Length; i++)
+				{
+					root.allEnemies[i] = allEnemiesSC[i].transform;
+				}
 
 				return;
 			}
@@ -2969,6 +3083,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 						meshRend.receiveShadows = false;
 
 						newLight.AddComponent<Light>();
+						newLight.GetComponent<Light>().renderMode = LightRenderMode.ForcePixel;
 						newLight.AddComponent<BoxCollider>();
 
 						newLight.name = "PointLight";
@@ -2984,6 +3099,32 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 			
 
 					break;
+
+					case "blackout": 
+						GameObject newBlackout = new GameObject();
+						newBlackout.name = "Blackout";
+
+						newBlackout.AddComponent<MeshRenderer>();
+
+						newBlackout.GetComponent<MeshRenderer>().material = new Material(DefaultStandardShader);
+						
+						if(blackOut == null)
+							blackOut = FastObjImporter.Instance.ImportFile(MFPEditorUtils.LoadFileFromDataFolder("EditorAssets/BaseGame/blackout.obj"));
+
+						newBlackout.AddComponent<MeshFilter>().mesh = blackOut;
+						newBlackout.GetComponent<MeshRenderer>().material.color = new Color(0,0,0);
+
+						if(!isSaveObject)
+						newBlackout.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 3);
+						else
+						{
+							newBlackout.transform.position = savePosition;
+							newBlackout.transform.eulerAngles = saveRotation;
+							newBlackout.transform.localScale = saveScale;
+						}
+
+					break;
+
 				}
 
 			}
@@ -3099,6 +3240,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 					this.WorldSettingsRoot.SetActive(true);
 					this.EntitySpawnRoot.SetActive(false);
 					PropertiesPanel.SetActive(false);
+					this.GeometryPanel.SetActive(false);
 				}
 				if(menuType == "entities")
 				{
@@ -3113,6 +3255,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 					this.WorldSettingsRoot.SetActive(false);
 					this.EntitySpawnRoot.SetActive(true);
 					PropertiesPanel.SetActive(false);
+					this.GeometryPanel.SetActive(false);
 				}
 				if(menuType == "properties")
 				{
@@ -3132,6 +3275,8 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 					if(PropertiesPanel != null)
 					PropertiesPanel.SetActive(true);
 
+					this.GeometryPanel.SetActive(false);
+
 					PropertiesSetup(PropertiesWarmup(EditingObject.name));
 
 				}
@@ -3141,6 +3286,15 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 					this.EntitySpawnRoot.SetActive(false);
 					this.PropertiesPanel.SetActive(false);
 					this.LoadoutPanel.SetActive(true);
+					this.GeometryPanel.SetActive(false);
+				}
+
+				if (menuType == "geometry")
+				{
+					this.WorldSettingsRoot.SetActive(false);
+					this.EntitySpawnRoot.SetActive(false);
+					PropertiesPanel.SetActive(false);
+					this.GeometryPanel.SetActive(true);
 				}
 
 				this.adjustingSettings = true;
@@ -3152,6 +3306,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 				this.EntitySpawnRoot.SetActive(false);
 				this.PropertiesPanel.SetActive(false);
 				this.LoadoutPanel.SetActive(false);
+				this.GeometryPanel.SetActive(false);
 
 				this.adjustingSettings = false;
 			}
@@ -3382,7 +3537,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 		public PhysicMaterial SkateboardTop = new PhysicMaterial();
 
 
-		public Mesh lightModel;
+		public Mesh lightModel, blackOut;
 
 //------------------------------- IMPORTANT PANELS ------------------------------------
 
@@ -3390,6 +3545,7 @@ public void SpawnEntity(string entity, bool isSaveObject, Vector3 savePosition, 
 
 			public GameObject PropertiesPanel;
 			public GameObject LoadoutPanel;
+			public GameObject GeometryPanel;
 			
 			public List<GameObject> propertyElements = new List<GameObject>();
 
