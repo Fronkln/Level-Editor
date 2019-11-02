@@ -2024,13 +2024,6 @@ namespace Jhrino.MFPLevelEditor
 
 				UIRoot.enabled = false;
 
-				EnemyScript[] allEnemiesSC = GameObject.FindObjectsOfType<EnemyScript>();
-
-				for(int i = 0; i <= allEnemiesSC.Length; i++)
-				{
-					root.allEnemies[i] = allEnemiesSC[i].transform;
-				}
-
 				return;
 			}
 			if (this.PlayMod && !root.levelEnded)
@@ -2750,6 +2743,15 @@ public void DoObjectCleanup()
 					spawn.GetComponent<MFPEnemySpawner>().UpdateData();
 					spawn.GetComponent<MFPEnemySpawner>().SpawnEnemy();
 				}
+
+				List<Transform> EnemiesTransform = new List<Transform>();
+
+				foreach(GameObject enemy in Enemies)
+				{
+					EnemiesTransform.Add(enemy.transform);
+				}
+
+				root.allEnemies = EnemiesTransform.ToArray();
 
 
 				MFPEditorLogger.Log("End spawn");
