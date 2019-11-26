@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -588,73 +588,95 @@ namespace Jhrino.MFPLevelEditor
 		}
 
 
-		public void SpawnFloor(int floorType = 0, snaphelper snappy = null)
+public void SpawnFloor(int floorType = 0, snaphelper snappy = null)
 		{
-				GameObject newFloor = Instantiate(floor_Wood);
-				newFloor.name = "Wooden Floor";
-				newFloor.SetActive(true);
-
-			if(snappy != null)
+			try
 			{
-				 if(snappy.snapaxis == snaphelper.Axis.NegativeX)
-					 newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x - 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);
-				 else
-					newFloor.transform.position = new Vector3(SnapTarget.transform.parent.position.x + 2, SnapTarget.transform.parent.position.y, SnapTarget.transform.parent.position.z);
-			}
-			else
-				newFloor.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
-
-						if(tutorialContinuing && MFPLevelEditorTutorial.Inst != null && MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_OBJECT)
-									MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
-
-					foreach(GameObject @object in GeometryWallLump)
-					{
-						if(newFloor.transform.position == @object.transform.position)
-						{
-							Destroy(newFloor);
-							return;
-						}
-					}
-
-
-					MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
-					 GeometryFloorLump.Add(newFloor);
-		}
-
-		public void SpawnWall(int floorType = 0, snaphelper snappy = null)
-		{
-			GameObject newWall = Instantiate(this.wall_Brick);
-			newWall.transform.name = "Brick Wall #" + GeometryWallLump.Count().ToString();
-			newWall.SetActive(true);
-
-			if(snappy != null)
+			GameObject newFloor = UnityEngine.Object.Instantiate<GameObject>(this.floor_Wood);
+			newFloor.name = "Wooden Floor";
+			newFloor.SetActive(true);
+			if (snappy != null)
 			{
-				newWall.transform.position = new Vector3(SnapTarget.transform.position.x, SnapTarget.transform.position.y, SnapTarget.transform.position.z);
+				newFloor.transform.localScale = snappy.transform.parent.localScale;
 
-				if(!snappy.transform.parent.name.Contains("Floor"))
-					newWall.transform.rotation = snappy.transform.parent.rotation;
-				else
-				    newWall.transform.eulerAngles = new Vector3(0, -90, 0);
-			}
-			else
-			{
-				newWall.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0);
-
-		    newWall.transform.eulerAngles = new Vector3(0, -90, 0);
-			}
-
-			foreach(GameObject @object in GeometryWallLump)
-			{
-				if(newWall.transform.position == @object.transform.position)
+				if (snappy.snapaxis == snaphelper.Axis.NegativeX)
 				{
-					Destroy(newWall);
+					newFloor.transform.position = new Vector3(this.SnapTarget.transform.parent.position.x - 2f, this.SnapTarget.transform.parent.position.y, this.SnapTarget.transform.parent.position.z);
+				}
+				else
+				{
+					newFloor.transform.position = new Vector3(this.SnapTarget.transform.parent.position.x + 2f, this.SnapTarget.transform.parent.position.y, this.SnapTarget.transform.parent.position.z);
+				}
+			}
+			else
+			{
+				newFloor.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0f);
+			}
+			if (this.tutorialContinuing && MFPLevelEditorTutorial.Inst != null && MFPLevelEditorTutorial.Inst.tutorialState == MFPLevelEditorTutorial.MFPTutorialState.PLACE_OBJECT)
+			{
+				MFPLevelEditorTutorial.Inst.OnTaskAccomplished();
+			}
+			foreach (GameObject @object in this.GeometryWallLump)
+			{
+			if(@object != null)
+			{
+				if (newFloor.transform.position == @object.transform.position)
+				{
+					UnityEngine.Object.Destroy(newFloor);
 					return;
 				}
 			}
+			}
+			MFPEditorLogger.Log("new floor at " + newFloor.transform.position.ToString());
+			this.GeometryFloorLump.Add(newFloor);
+			}
+			catch{}
+		}
 
+		// Token: 0x06000674 RID: 1652
+		public void SpawnWall(int floorType = 0, snaphelper snappy = null)
+		{
+			try
+			{
+			GameObject newWall = UnityEngine.Object.Instantiate<GameObject>(this.wall_Brick);
+			newWall.transform.name = "Brick Wall #" + this.GeometryWallLump.Count<GameObject>().ToString();
+			newWall.SetActive(true);
+			if (snappy != null)
+			{
+				newWall.transform.position = new Vector3(this.SnapTarget.transform.position.x, this.SnapTarget.transform.position.y, this.SnapTarget.transform.position.z);
+				
+				newWall.transform.localScale = snappy.transform.parent.localScale;
 
-			GeometryWallLump.Add(newWall);
+				if (!snappy.transform.parent.name.Contains("Floor"))
+				{
+					newWall.transform.rotation = snappy.transform.parent.rotation;
+				}
+				else
+				{
+					newWall.transform.eulerAngles = new Vector3(0f, -90f, 0f);
+				}
+			}
+			else
+			{
+				newWall.transform.position = new Vector3(this.EditorCamera.transform.position.x, this.EditorCamera.transform.position.y, 0f);
+				newWall.transform.eulerAngles = new Vector3(0f, -90f, 0f);
+			}
+			foreach (GameObject @object in this.GeometryWallLump)
+			{
+			if(@object != null)
+			{
+				if (newWall.transform.position == @object.transform.position)
+				{
+					UnityEngine.Object.Destroy(newWall);
+					return;
+				}
+			}
+			}
+
+			this.GeometryWallLump.Add(newWall);
 			MFPEditorLogger.Log(newWall.name + " added");
+			}
+			catch{}
 		}
 
 		// Token: 0x06000615 RID: 1557
@@ -1537,9 +1559,10 @@ namespace Jhrino.MFPLevelEditor
 			allowColorGradingToggle = MFPEditorUtils.ReturnCreateNewToggle(MFPEditorUtils.UIAnchor.middle, new Vector2(97.5f, 121.1f), new Vector2(20.41f, 20f), new Vector2(0.5f, 0.5f), new Vector3(1,1,1), PanelOBJ2, "ColorGradToggle", "", "");
 			allowColorGradingToggle.isOn = true;
 
-			string[] options = new string[2];
+			string[] options = new string[3];
 			options[0] = "NORMAL";
 			options[1] = "SKYFALL";
+			options[2] = "MOTORCYCLE";
 
 			MFPEditorUtils.CreateNewText(MFPEditorUtils.UIAnchor.middle, TextAnchor.UpperLeft,new Vector2(-252, 80f), new Vector2(100,100), new Vector2(0.5f,0.5f), new Vector3(0.49257f, 0.49257f, 0.49257f), Arial, new Color32(0,0,0,255), VerticalWrapMode.Overflow, HorizontalWrapMode.Overflow, PanelOBJ2, "Gamemode:", "ModeText", 64);
 
@@ -1607,25 +1630,11 @@ namespace Jhrino.MFPLevelEditor
 			bool isFocused = this.CoordinateField.isFocused;
 			if (this.CoordinateField.isFocused)
 			{
-				if (this.editType != "position")
-				{
 					this.UpdateCoordinates(this.editType, this.CoordinateField.text);
-					return;
-				}
-				this.ExitEditMode();
 			}
 			else
-				{
-					if(!this.CoordinateField.isFocused)
-					{
-					if(this.editType == "position")
-					{
-						CoordinateField.text = EditingObject.transform.position.ToString(); 
-					}
-					}
-					else
-					ExitEditMode();
-				}
+				if(editType == "position")
+				CoordinateField.text = EditingObject.transform.position.ToString();
 		}
 
 		// Token: 0x0600061B RID: 1563
@@ -1652,8 +1661,14 @@ namespace Jhrino.MFPLevelEditor
 					})[2]);
 					if(type == "position")
 					{
+						
+					float[] vec3 = Array.ConvertAll(coordinates.Split(new char[] { ' ' }), float.Parse);
 
-						CoordinateField.text = coordinates;
+
+					MFPEditorLogger.Log(vec3[0].ToString() + vec3[1].ToString() + vec3[2].ToString());
+						
+					EditingObject.transform.position = new Vector3(vec3[0], vec3[1], vec3[2]);
+					CoordinateField.text = EditingObject.transform.position.ToString();
 
 					}
 
@@ -1748,10 +1763,7 @@ namespace Jhrino.MFPLevelEditor
 			this.EditingObject = gobject;
 
 			this.CoordinateField.gameObject.SetActive(true);
-			if (this.editType != "position")
-			{
-				this.CoordinateField.ActivateInputField();
-			}
+
 			if (this.editType == "position")
 			{
 				this.CoordinateField.text = gobject.transform.position.ToString();
@@ -1827,6 +1839,18 @@ namespace Jhrino.MFPLevelEditor
 					this.Editing = false;
 				}
 
+				if(EditingObject.name.Contains("Blackout"))
+				{
+					foreach(GameObject bout in blackOuts)
+					{
+						if(bout != EditingObject)
+						{
+							bout.GetComponent<MeshRenderer>().sharedMaterial = StandardShaderUtils.ChangeRenderMode(bout.GetComponent<MeshRenderer>().sharedMaterial, StandardShaderUtils.BlendMode.Transparent);
+							bout.GetComponent<MeshRenderer>().sharedMaterial.color = new Color(0,0,0, 0.5f);
+						}
+					}
+				}
+
 				Color32 Color255 = (Color32)gobject.GetComponent<MeshRenderer>().material.color;
 
 				string totext255 = Color255.ToString();
@@ -1853,6 +1877,13 @@ namespace Jhrino.MFPLevelEditor
 			if (!this.PlayMod)
 			{
 				if(Gamemode == MFPGamemode.SKYFALL)
+					if(EnemySpawnpoints.Count == 0)
+					{
+						MFPEditorUtils.doPedroHint("You must have one enemy to\n enter skyfall.");
+						return;
+					}
+
+				if(Gamemode == MFPGamemode.MOTORCYCLE)
 					if(EnemySpawnpoints.Count == 0)
 					{
 						MFPEditorUtils.doPedroHint("You must have one enemy to\n enter skyfall.");
@@ -2560,6 +2591,9 @@ public void DoObjectCleanup()
 						case "SKYFALL":
 								Gamemode = MFPGamemode.SKYFALL;
 								break;
+						case "MOTORCYCLE":
+								Gamemode = MFPGamemode.MOTORCYCLE;
+								break;
 
 					}
 
@@ -2758,6 +2792,9 @@ public void DoObjectCleanup()
 					break;
 				case MFPGamemode.SKYFALL:
 					playerScript.skyfall = true;
+					break;
+				case MFPGamemode.MOTORCYCLE:
+					playerScript.onMotorcycle = true;
 					break;
 			}
 
