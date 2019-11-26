@@ -17,7 +17,7 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000613 RID: 1555 RVA: 0x00091DF8 File Offset: 0x0008FFF8
 		private void Update()
 		{
-			if(!LevelEditorHandler.Inst.Editing)
+			if(!LevelEditorHandler.Inst.CoordinateField.isFocused)
 			{
 				if (Input.GetKey(KeyCode.LeftShift))
 				{
