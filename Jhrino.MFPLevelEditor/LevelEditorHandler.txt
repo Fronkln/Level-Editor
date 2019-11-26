@@ -1764,15 +1764,16 @@ public void SpawnFloor(int floorType = 0, snaphelper snappy = null)
 
 			this.CoordinateField.gameObject.SetActive(true);
 
+			gobject.GetComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(gobject.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Transparent);
+			Color color = gobject.GetComponent<MeshRenderer>().material.color;
+			color.a = 0.5f;
+			Material material = new Material(Shader.Find("Standard"));
+			gobject.GetComponent<MeshRenderer>().material.color = color;
+
 			if (this.editType == "position")
 			{
 				this.CoordinateField.text = gobject.transform.position.ToString();
-				gobject.GetComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(gobject.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Transparent);
-				Color color = gobject.GetComponent<MeshRenderer>().material.color;
-				color.a = 0.5f;
 				this.ToggleEditingObjectColliders(gobject, false);
-				Material material = new Material(Shader.Find("Standard"));
-				gobject.GetComponent<MeshRenderer>().material.color = color;
 				GameObject gameObject = new GameObject();
 				gameObject.name = "AxeContainer";
 				gameObject.transform.parent = gobject.transform;
@@ -2112,10 +2113,12 @@ public void SpawnFloor(int floorType = 0, snaphelper snappy = null)
 			string text = this.CoordinateField.text;
 			this.CoordinateField.DeactivateInputField();
 			this.CoordinateField.gameObject.SetActive(false);
+
+			this.EditingObject.GetComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(this.EditingObject.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Opaque);
+
 			if (this.EditAxes != null)
 			{
 				UnityEngine.Object.Destroy(this.EditAxes);
-				this.EditingObject.GetComponent<MeshRenderer>().material = StandardShaderUtils.ChangeRenderMode(this.EditingObject.GetComponent<MeshRenderer>().material, StandardShaderUtils.BlendMode.Opaque);
 				Color color = this.EditingObject.GetComponent<MeshRenderer>().material.color;
 				color.a = 1f;
 				this.EditingObject.GetComponent<MeshRenderer>().material.color = color;
