@@ -17,27 +17,30 @@ namespace Jhrino.MFPLevelEditor
 		// Token: 0x06000613 RID: 1555 RVA: 0x00091DF8 File Offset: 0x0008FFF8
 		private void Update()
 		{
-			if (Input.GetKey(KeyCode.LeftShift))
+			if(!LevelEditorHandler.Inst.Editing)
 			{
-				this.speed = this.runSpeed;
+				if (Input.GetKey(KeyCode.LeftShift))
+				{
+					this.speed = this.runSpeed;
+				}
+				else
+				{
+					this.speed = this.normalSpeed;
+				}
+				if (Input.GetKey(KeyCode.Q))
+				{
+					this.Up = -1f;
+				}
+				if (Input.GetKey(KeyCode.E))
+				{
+					this.Up = 1f;
+				}
+				if (!Input.GetKey(KeyCode.Q) && !Input.GetKey(KeyCode.E))
+				{
+					this.Up = 0f;
+				}
+				base.transform.Translate(new Vector3(Input.GetAxis("Horizontal"), this.Up, Input.GetAxis("Vertical")) * this.speed * Time.deltaTime);
 			}
-			else
-			{
-				this.speed = this.normalSpeed;
-			}
-			if (Input.GetKey(KeyCode.Q))
-			{
-				this.Up = -1f;
-			}
-			if (Input.GetKey(KeyCode.E))
-			{
-				this.Up = 1f;
-			}
-			if (!Input.GetKey(KeyCode.Q) && !Input.GetKey(KeyCode.E))
-			{
-				this.Up = 0f;
-			}
-			base.transform.Translate(new Vector3(Input.GetAxis("Horizontal"), this.Up, Input.GetAxis("Vertical")) * this.speed * Time.deltaTime);
 		}
 
 		// Token: 0x06000614 RID: 1556 RVA: 0x00004EA2 File Offset: 0x000030A2
